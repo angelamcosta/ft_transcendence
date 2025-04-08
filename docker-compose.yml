@@ -1,3 +1,12 @@
+volumes:
+  sqlite:
+    name: sqlite
+    driver: local
+    driver_opts:
+      device: /home/migas/ft_transcendence/data/sqlite
+      o: bind
+      type: none
+
 services:
   server:
     build:
@@ -13,14 +22,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-  # auth:
-  #   build:
-  #     context: ./srcs/auth
-  #     dockerfile: Dockerfile
-  # sqlite:
-  #   build:
-  #     context: ./srcs/sqlite
-  #     dockerfile: Dockerfile
+  auth:
+    build:
+      context: ./srcs/auth
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+  sqlite:
+    build:
+      context: ./srcs/sqlite/
+      dockerfile: Dockerfile
+    volumes:
+    - sqlite:/db
 
 networks:
   transcendence:

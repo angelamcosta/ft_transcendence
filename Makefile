@@ -1,6 +1,7 @@
 all: build up
 
 build:
+	mkdir -p ./data/sqlite
 	docker-compose build
 
 up:
@@ -15,5 +16,6 @@ clean:
 	docker image prune -a --force
 	docker volume prune -a --force
 	docker builder prune -a --force
+	sudo rm -rf ./data/
 
 re: clean all
