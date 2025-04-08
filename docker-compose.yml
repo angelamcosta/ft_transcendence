@@ -14,8 +14,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
+    networks:
+      - transcendence
   user:
     build:
       context: ./srcs/user/
@@ -28,14 +30,22 @@ services:
     build:
       context: ./srcs/auth
       dockerfile: Dockerfile
+    volumes:
+      - sqlite:/db
     ports:
       - "4000:4000"
+    env_file:
+      - .env
+    networks:
+      - transcendence
   sqlite:
     build:
       context: ./srcs/sqlite/
       dockerfile: Dockerfile
     volumes:
     - sqlite:/db
+    networks:
+      - transcendence
 
 networks:
   transcendence:
