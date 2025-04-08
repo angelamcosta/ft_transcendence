@@ -101,3 +101,4 @@ API Integration.
 - [Fastify - Getting Started](https://fastify.dev/docs/latest/Guides/Getting-Started/)
 - [Token based authentication with Fastify, JWT, and Typescript](https://medium.com/@atatijr/token-based-authentication-with-fastify-jwt-and-typescript-1fa5cccc63c5)
 - [Password Hashing & Salting - Function and Algorithm Explained](https://www.authgear.com/post/password-hashing-salting-function-and-algorithm-explained)
+- [Fastiy Documentation](https://fastify.dev/docs/latest/)
