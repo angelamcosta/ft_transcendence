@@ -3,7 +3,7 @@ volumes:
     name: sqlite
     driver: local
     driver_opts:
-      device: /home/migas/ft_transcendence/data/sqlite
+      device: ./data/sqlite
       o: bind
       type: none
 
@@ -14,18 +14,26 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
-    # env_file:
-    #   - .env
+    env_file:
+      - .env
     networks:
       - transcendence
+    depends_on:
+      - sqlite
   user:
     build:
       context: ./srcs/user/
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    volumes:
+      - sqlite:/db
     env_file:
       - .env
+    networks:
+      - transcendence
+    depends_on:
+      - sqlite
   auth:
     build:
       context: ./srcs/auth
@@ -38,12 +46,14 @@ services:
       - .env
     networks:
       - transcendence
+    depends_on:
+      - sqlite
   sqlite:
     build:
       context: ./srcs/sqlite/
       dockerfile: Dockerfile
     volumes:
-    - sqlite:/db
+      - sqlite:/db
     networks:
       - transcendence
 
