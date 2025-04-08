@@ -58,7 +58,7 @@ To attain 100% project completion, a minimum of 7 major modules is required. Two
 - [ ] Major module: Store the score of a tournament in the Blockchain.
 
 ### User Management
-- [ ] Major module: Standard user management, authentication, users across tournaments.
+- [x] Major module: Standard user management, authentication, users across tournaments.
 - [ ] Major module: Implementing a remote authentication.
 
 ### Gameplay and User Experience
@@ -94,8 +94,7 @@ To attain 100% project completion, a minimum of 7 major modules is required. Two
 
 ### Server-Side Pong
 - [ ] Major module: Replacing Basic Pong with Server-Side Pong and Implementing an API.
-- [ ] Major module: Enabling Pong Gameplay via CLI against Web Users with
-API Integration.
+- [ ] Major module: Enabling Pong Gameplay via CLI against Web Users with API Integration.
 
 ## References
 - [Fastify - Getting Started](https://fastify.dev/docs/latest/Guides/Getting-Started/)
