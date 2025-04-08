@@ -12,7 +12,6 @@ COPY ./tools/app.mjs .
 
 RUN npm cache clean --force && \
     npm init -y && \
-    npm install fastify && \
-    npm install tailwindcss @tailwindcss/cli
+    npm install fastify
 
 CMD [ "node", "app.mjs" ]
