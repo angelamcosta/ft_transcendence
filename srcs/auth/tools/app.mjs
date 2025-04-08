@@ -1,7 +1,8 @@
 import Fastify from 'fastify';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { createHash, randomBytes } from 'crypto';
+import { loginUser } from './login.mjs';
+import { registerUser } from './register.mjs';
 
 const db = await open({
 	filename: process.env.DB_PATH,
@@ -32,34 +33,22 @@ app.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
 	err ? (console.error(err), process.exit(1)) : console.log(`Server running on ${PORT}`)
 })
 
-function hasPassword(password, salt = randomBytes(32).toString('hex')) {
-	const hash = createHash('sha256')
-		.update(password + salt)
-		.digest('hex')
-	return `${salt}:${hash}`
-}
-
-
 app.post('/register', async (req, reply) => {
-	const {username, email, password } = req.body;
-
-	if (!username || email || password) {
-		reply.status(400).send({error: 'Missing fields!'});
+	try {
+		const result = await registerUser(db, req.body)
+		return reply.code(201).send({ success: result.message })
+	} catch (error) {
+		const statusCode = error.statusCode
+		return reply.code(statusCode).send({ error: error.message})
 	}
+})
 
-	const userExists = await db.get('SELECT id FROM users where username = ?', [username]);
-
-	if (userExists) {
-		reply.status(400).send({error: 'Username is already registered.'});
+app.post('/login', async (req, reply) => {
+	try {
+		const result = await loginUser(db, req.body)
+		return reply.code(200).send({ success: result.message })
+	} catch (error) {
+		const statusCode = error.statusCode
+		return reply.code(statusCode).send({ error: error.message})
 	}
-
-	const emailExists = await db.get('SELECT id FROM users where email = ?', [email]);
-
-	if (emailExists) {
-		reply.status(400).send({error: 'Email is already registered.'});
-	}
-
-	const hashed = hasPassword(password)
-
-	await db.run('INSERT INTO users VALUES (username, email, password) VALUES (?, ?, ?', [username, email, hashed])
-});
+})

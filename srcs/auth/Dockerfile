@@ -11,6 +11,6 @@ COPY ./tools/package.json .
 RUN npm cache clean --force && \
     npm install fastify
 	
-COPY ./tools/app.mjs .
+COPY ./tools/ .
 
 CMD [ "node", "app.mjs" ]
