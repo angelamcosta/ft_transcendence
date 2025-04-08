@@ -15,7 +15,7 @@ export default async function userRoutes(fastify, option) {
         if (!user)
             return reply.code(404).send({ error: 'User not found' });
 
-        await db.run('UPDATE users SET username = ? WHERE id = ?', [displayName, id]);
+        await db.run('UPDATE users SET display_name = ? WHERE id = ?', [displayName, id]);
         return { message: 'Display name updated successfully' };
     });
 
