@@ -39,4 +39,4 @@ services:
 
 networks:
   transcendence:
-    driver: brigde
+    driver: bridge
