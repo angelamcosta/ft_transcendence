@@ -8,10 +8,10 @@ RUN apt-get update -y && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./tools/app.mjs .
+COPY ./tools/* .
 
 RUN npm cache clean --force && \
     npm init -y && \
-    npm install fastify
+    npm install fastify sqlite sqlite3
 
 CMD [ "node", "app.mjs" ]
