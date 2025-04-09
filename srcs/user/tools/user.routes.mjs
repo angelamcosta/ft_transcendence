@@ -1,4 +1,4 @@
-import { db } from 'utils.mjs'
+import { db } from './utils.mjs'
 
 export default async function userRoutes(fastify, option) {
     fastify.addHook('preHandler', async (req, res) => {
