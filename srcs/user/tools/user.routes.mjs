@@ -1,31 +1,47 @@
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
-
-const db = await open({
-    filename: process.env.DB_PATH,
-    driver: sqlite3.Database
-});
+import { db } from 'utils.mjs'
 
 export default async function userRoutes(fastify, option) {
-    fastify.post('/users/{:id}/display-name', async (req, reply) => {
-        const { id } = req.params;
-        const { displayName } = req.body;
+    fastify.addHook('preHandler', async (req, res) => {
+        if (req.params.id) {
+            const user = await db.get('SELECT * FROM users WHERE id = ?', [req.params.id]);
+            if (!user) throw fastify.httpErrors.notFound('User not found');
+            req.user = user;
+        }
+    })
 
-        const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
-        if (!user)
-            return reply.code(404).send({ error: 'User not found' });
-
-        await db.run('UPDATE users SET display_name = ? WHERE id = ?', [displayName, id]);
-        return { message: 'Display name updated successfully' };
+    fastify.get('/users/:id', async (req, res) => {
+        return res.send(req.user);
     });
 
-    fastify.get('/users/:id', async (req, reply) => {
-        const { id } = req.params;
+    fastify.put('/users/:id', async (req, res) => {
+        const { email, display_name } = req.body;
 
-        const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
-        if (!user)
-            return reply.code(404).send({ error: 'User not found' });
+        if (email === undefined && display_name === undefined)
+            throw fastify.httpErrors.badRequest('No fields provided');
 
-        return user;
+        const updates = [];
+        const params = [];
+
+        if (email !== undefined) {
+            if (!email.includes('@')) throw fastify.httpErrors.badRequest('Invalid email');
+            updates.push('email = ?');
+            params.push(email);
+        }
+
+        if (display_name !== undefined) {
+            if (display_name.length > 20) throw fastify.httpErrors.badRequest('Display name too long');
+            updates.push('display_name = ?');
+            params.push(display_name);
+        }
+
+        params.push(req.params.id);
+
+        try {
+            await db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
+            return { message: 'User updated successfully' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw fastify.httpErrors.internalServerError('Database update failed');
+        }
     });
 }
