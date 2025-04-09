@@ -1,4 +1,4 @@
-import { hashPassword } from "./auth-utils.mjs"
+import { hashPassword, generateJWT } from "./auth-utils.mjs"
 
 export async function loginUser(db, {email, password}) {
 	if (!email || !password) {
@@ -22,5 +22,7 @@ export async function loginUser(db, {email, password}) {
         throw error
 	}
 
-	return ({ message: 'Login successful' })
+	const token = generateJWT({ userId: user.id, email: user.email })
+	
+	return ({ cookie: `auth=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=90` })
 }
