@@ -1,9 +1,0 @@
-{
-	"name": "auth-service",
-	"type": "module",
-	"dependencies": {
-	  "fastify": "^4.28.0",
-	  "sqlite3": "^5.1.6",
-	  "sqlite": "^4.1.2"
-	}
-  }

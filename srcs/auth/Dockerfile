@@ -3,14 +3,15 @@ FROM debian:stable-slim
 WORKDIR /auth
 
 RUN apt-get update -y && \
-    apt-get upgrade -y && \
-    apt-get install -y nodejs npm python3 make g++
+    apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY ./tools/package.json .
-	
+COPY ./tools/* .
+
 RUN npm cache clean --force && \
-    npm install fastify
-	
-COPY ./tools/ .
+    npm init -y && \
+    npm install fastify sqlite sqlite3
 
 CMD [ "node", "app.mjs" ]
