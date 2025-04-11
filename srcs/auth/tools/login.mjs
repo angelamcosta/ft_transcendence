@@ -10,15 +10,15 @@ export async function loginUser(db, {email, password}) {
 	const user = await db.get('SELECT * FROM users where email = ?', [email])
 	if (!user) {
 		const error = new Error('Invalid credentials')
-        error.statusCode = 401
-        throw error
+		error.statusCode = 401
+		throw error
 	}
 	
 	const { hash } = hashPassword(password, user.salt)
 	if (hash !== user.passwordHash) {
 		const error = new Error('Invalid credentials')
-        error.statusCode = 401
-        throw error
+		error.statusCode = 401
+		throw error
 	}
 
 	const token = generateJWT({ userId: user.id, email: user.email })

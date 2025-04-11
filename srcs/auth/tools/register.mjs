@@ -10,8 +10,8 @@ export async function registerUser(db, {email, password}) {
 	const emailExists = await db.get('SELECT id FROM users where email = ?', [email])
 	if (emailExists) {
 		const error = new Error('Email already registered')
-        error.statusCode = 409
-        throw error
+		error.statusCode = 409
+		throw error
 	}
 
 	const { salt , hash } = hashPassword(password)
@@ -21,8 +21,8 @@ export async function registerUser(db, {email, password}) {
 	} catch (dbError) {
 		console.log('Database error details:', dbError)
 		const error = new Error('Registration failed')
-        error.statusCode = 500
-        error.originalError = dbError
-        throw error
+		error.statusCode = 500
+		error.originalError = dbError
+		throw error
 	}
 }

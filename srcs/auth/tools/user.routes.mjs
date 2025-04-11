@@ -54,7 +54,7 @@ export default async function userRoutes(fastify) {
 			const user = await db.get('SELECT id, email FROM users WHERE id = ?', [req.user.userId])
 			if (!user) {
 				const error = new Error('No user found with this ID')
-				   error.statusCode = 404
+				error.statusCode = 404
 				throw error
 			}
 			return reply.send({ user })
