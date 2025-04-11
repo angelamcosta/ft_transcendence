@@ -1,4 +1,4 @@
-import { hashPassword } from './auth-utils.mjs';
+import { hashPassword } from './utils.mjs';
 
 export async function registerUser(db, {email, password}) {
 	if (!email || !password) {

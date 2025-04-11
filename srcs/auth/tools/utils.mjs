@@ -1,4 +1,11 @@
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 import { createHash, randomBytes, createHmac } from 'crypto';
+
+export const db = await open({
+	filename: process.env.DB_PATH,
+	driver: sqlite3.Database
+});
 
 const SECRET_KEY = process.env.JWT_SECRET
 const HEADER = Buffer.from(JSON.stringify({ 

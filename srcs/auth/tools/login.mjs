@@ -1,4 +1,4 @@
-import { hashPassword, generateJWT } from "./auth-utils.mjs"
+import { hashPassword, generateJWT } from "./utils.mjs"
 
 export async function loginUser(db, {email, password}) {
 	if (!email || !password) {
@@ -9,7 +9,6 @@ export async function loginUser(db, {email, password}) {
 
 	const user = await db.get('SELECT * FROM users where email = ?', [email])
 	if (!user) {
-		console.log('Error in user')
 		const error = new Error('Invalid credentials')
         error.statusCode = 401
         throw error
