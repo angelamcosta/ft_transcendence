@@ -2,7 +2,7 @@ import { loginUser } from './login.mjs';
 import { registerUser } from './register.mjs';
 import { verifyJWT, db } from './utils.mjs';
 
-export default async function userRoutes(fastify) {
+export default async function authRoutes(fastify) {
 	fastify.addHook('onRequest', (req, reply, done) => {
 		req.cookies = {};
 		const cookieHeader = req.headers.cookie;
@@ -26,7 +26,7 @@ export default async function userRoutes(fastify) {
 				
 				req.user = verifyJWT(token);
 			} catch (error) {
-				return reply.code(401).send({ error: error.message === 'Token expired' ? 'Invalid signature' : 'Unauthorized' });
+				return reply.code(401).send({ error: error.message === 'Token expired' ? 'Invalid signature' : 'Invalid token' });
 			}
 		}
 	})

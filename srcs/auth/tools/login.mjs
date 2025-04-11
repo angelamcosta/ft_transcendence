@@ -23,5 +23,5 @@ export async function loginUser(db, {email, password}) {
 
 	const token = generateJWT({ userId: user.id, email: user.email })
 	
-	return ({ cookie: `auth=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=90` })
+	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=90` })
 }
