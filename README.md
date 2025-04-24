@@ -27,7 +27,7 @@
 
 </div>
 
-This project is about creating a website for the mighty Pong contest! The subject of the project can be found [here](https://raw.githubusercontent.com/angelamcosta/ft_transcendence/main/en.subject.pdf).
+This project is about creating a website to play Pong versus other players! The subject of the project can be found [here](https://raw.githubusercontent.com/angelamcosta/ft_transcendence/main/en.subject.pdf).
 
 ## Minimal technical requirement
 
@@ -39,13 +39,25 @@ The project must comply with the following rules:
 - Development of the site can be done with or without a backend.
   - If a backend is included, it must be written in pure PHP, unless overridden by the [Framework module](#web).
   - If a backend or framework uses a database, the constraints of the [Database module](#web) must be followed.
-- The frontend should be developed using Typescript, unless altered through the [FrontEnd module](#web).
-- The website must be a single-page application, allowing the use of the Back and Forward buttons in the browser.
-- Compatibility with the latest stable version of _Google Chrome_ is required.
+- The frontend should be developed using _Typescript_, unless altered through the [FrontEnd module](#web).
+- The website must be a *single-page application*, allowing the use of the Back and Forward buttons in the browser.
+- Compatibility with the latest stable version of _Mozilla Firefox_ is required.
 - Users should not encounter any unhandled errors or warnings while browsing the website.
 - The entire project must be launched with a single command line to run an autonomous container provided by Docker. Example: `docker-compose up --build` or `make`.
+- Any password stored in your database, if applicable, must be hashed.
+- Your website must be protected against _SQL injections/XSS_ attacks.
+- If you have a backend or any other features, it is mandatory to enable an HTTPS connection for all aspects (use wss instead of ws for example).
+
+> [!CAUTION]
+> The use of libraries or tools that provide an immediate and complete solution for an entire feature or module is prohibited.
+
+> [!NOTE]
+> The use of a small library or tool that solves a simple, unique task, representing a subcomponent of a larger feature or module, is allowed.
 
 ## Modules
+
+> [!TIP]
+> Two Minor Modules count as one Major Module.
 
 To attain 100% project completion, a minimum of 7 major modules is required. Two Minor Modules are equivalent to one Major Module.
 
