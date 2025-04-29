@@ -3,7 +3,7 @@ import { db } from './utils.mjs'
 export default async function userRoutes(fastify) {
     // ! /users
     fastify.get('/users/', {
-        preValidation: [fastify.validateMethod],
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
     }, async (req, res) => {
         try {
             const users = await db.all('SELECT id, display_name FROM users');
@@ -15,14 +15,14 @@ export default async function userRoutes(fastify) {
     });
 
     fastify.get('/users/:id', {
-        preValidation: [fastify.validateMethod],
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadUser],
     }, async (req, res) => {
         return res.send(req.user);
     });
 
-    fastify.post('/users/:id', {
-        preValidation: [fastify.validateData, fastify.validateMethod],
+    fastify.put('/users/:id', {
+        preValidation: [fastify.authenticateRequest, fastify.validateData, fastify.validateMethod],
         preHandler: [fastify.loadUser],
     }, async (req) => {
         const { email, display_name } = req.body;
@@ -51,7 +51,7 @@ export default async function userRoutes(fastify) {
     });
 
     fastify.delete('/users/:id', {
-        preValidation: [fastify.validateMethod],
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadUser]
     }, async (req) => {
         try {
@@ -65,14 +65,15 @@ export default async function userRoutes(fastify) {
 
     // ! avatar
     fastify.get('/users/:id/avatar', {
-        preValidation: [fastify.validateMethod],
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadAvatar],
     }, async (req, res) => {
         return res.send(req.avatar);
     });
 
+    // TODO : - catch more errors, like missing extension for example
     fastify.put('/users/:id/avatar', {
-        preValidation: [fastify.validateMethod],
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadUser],
     }, async (req) => {
         const { avatar } = req.body;
@@ -90,7 +91,7 @@ export default async function userRoutes(fastify) {
     });
 
     fastify.delete('/users/:id/avatar', {
-        preValidation: [fastify.validateMethod],
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadUser]
     }, async (req) => {
         try {

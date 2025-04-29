@@ -1,13 +1,4 @@
-import { db, fetchUserById, idRegex, emailRegex } from './utils.mjs'
-
-// TODO : - add auth layer as middleware (token)
-
-export function validateMethod(fastify) {
-    return async (req) => {
-        if ((req.method === 'PUT' || req.method === 'POST') && Object.keys(req.body || {}).length === 0)
-            throw fastify.httpErrors.badRequest('Request body is required');
-    };
-}
+import { fetchUserById, idRegex, emailRegex } from './utils.mjs'
 
 export function loadUser(fastify) {
     return async (req) => {
@@ -50,4 +41,39 @@ export function validateData(fastify) {
                 throw fastify.httpErrors.badRequest('Display name too long');
         }
     };
+}
+
+export function validateMethod(fastify) {
+    return async (req) => {
+        if ((req.method === 'PUT' || req.method === 'POST') && Object.keys(req.body || {}).length === 0)
+            throw fastify.httpErrors.badRequest('Request body is required');
+    };
+}
+
+export function authenticateRequest(fastify) {
+    return async (req) => {
+        const token = req.cookies?.auth;
+
+        if (!token)
+            throw fastify.httpErrors.unauthorized('Unauthorized');
+
+        try {
+            const response = await fetch('http://auth:4000/verify', {
+                method: 'GET',
+                headers: {
+                    'cookie': `auth=${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                console.error(`Response failed with status: ${response.status}`);
+                throw fastify.httpErrors.unauthorized('Invalid token');
+            }
+
+            const data = await response.json();
+            req.user = data.user;
+        } catch (err) {
+            throw fastify.httpErrors.unauthorized('Auth failed');
+        }
+    }
 }
