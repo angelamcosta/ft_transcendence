@@ -1,9 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import Fastify from 'fastify'
-import fastifyCookie from '@fastify/cookie';
 import userRoutes from './user.routes.mjs'
-import { loadUser, loadAvatar, validateData, validateMethod, authenticateRequest } from './middleware.mjs'
+import fastifyCookie from '@fastify/cookie';
+import fastifyMultipart from '@fastify/multipart';
+import { loadUser, loadAvatar, validateData, validateMethod, loadFriendship, authenticateRequest } from './middleware.mjs'
 
 const PORT = process.env.USER_PORT;
 const KEY = process.env.USER_KEY;
@@ -20,6 +21,12 @@ const app = Fastify({
 
 app.register(fastifyCookie);
 
+app.register(fastifyMultipart, {
+	limits: {
+	  fileSize: 2 * 1024 * 1024
+	}
+  });
+
 const shutdown = async () => {
 	await app.close();
 	process.exit(0);
@@ -31,6 +38,7 @@ process.on('SIGTERM', shutdown);
 app.decorate('loadUser', loadUser(app));
 app.decorate('loadAvatar', loadAvatar(app));
 app.decorate('validateData', validateData(app));
+app.decorate('loadFriendship', loadFriendship(app));
 app.decorate('validateMethod', validateMethod(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
 
@@ -38,4 +46,4 @@ app.register(userRoutes, { prefix: '/api' });
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
 	err ? (console.error(err), process.exit(1)) : console.log(`Server running on ${PORT}`);
-})
+});

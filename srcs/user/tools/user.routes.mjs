@@ -1,4 +1,5 @@
 import { db } from './utils.mjs'
+import { promises as fsp } from 'fs';
 
 export default async function userRoutes(fastify) {
     // ! /users
@@ -53,13 +54,13 @@ export default async function userRoutes(fastify) {
     fastify.delete('/users/:id', {
         preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadUser]
-    }, async (req) => {
+    }, async (req, res) => {
         try {
             await db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
-            return { message: 'User delete successfully' };
+            return { message: 'User deleted successfully' };
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
-            throw fastify.httpErrors.internalServerError('Failed to delete user: ' + err.message);
+            throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
         }
     })
 
@@ -71,19 +72,29 @@ export default async function userRoutes(fastify) {
         return res.send(req.avatar);
     });
 
-    // TODO : - catch more errors, like missing extension for example
     fastify.put('/users/:id/avatar', {
         preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadUser],
     }, async (req) => {
-        const { avatar } = req.body;
+        const data = await req.file();
 
-        if (typeof avatar !== 'string' || avatar.trim() === '')
-            throw fastify.httpErrors.badRequest('Invalid avatar');
+        if (!data)
+            throw fastify.httpErrors.badRequest('No file uploaded');
+
+        const allowedMimeTypes = ['image/jpeg', 'image/png'];
+        if (!allowedMimeTypes.includes(data.mimetype))
+            throw fastify.httpErrors.unsupportedMediaType('Only JPEG and PNG images are allowed');
 
         try {
-            await db.run(`UPDATE users SET avatar = ? WHERE id = ?`, [avatar, req.params.id]);
-            return { message: 'Avatar updated successfully' };
+            const fileExt = path.extname(data.filename);
+            const uniqueName = crypto.randomUUID() + fileExt;
+            const uploadPath = path.join('/app/uploads/avatars', uniqueName);
+
+            await fsp.mkdir(path.dirname(uploadPath), { recursive: true });
+            await fsp.writeFile(uploadPath, await data.toBuffer());
+            await db.run('UPDATE users SET avatar = ? WHERE id = ?', [uniqueName, req.user.id]);
+
+            return { message: 'Avatar uploaded successfully', avatar: uniqueName };
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
             throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
@@ -93,13 +104,93 @@ export default async function userRoutes(fastify) {
     fastify.delete('/users/:id/avatar', {
         preValidation: [fastify.authenticateRequest, fastify.validateMethod],
         preHandler: [fastify.loadUser]
-    }, async (req) => {
+    }, async (req, res) => {
         try {
             await db.run('UPDATE users SET avatar = NULL WHERE id = ?', [req.params.id]);
-            return { message: 'Avatar removed successfully' };
+            return { message: 'Avatar deleted successfully' };
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
-            throw fastify.httpErrors.internalServerError('Failed to remove avatar: ' + err.message);
+            return res.code(204).send();
         }
-    })
+    });
+
+    // ! friends
+    fastify.get('/users/:id/friends', {
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod, fastify.loadUser]
+    }, async (req, res) => {
+        try {
+            const userId = req.params.id
+            const friends = await db.all(`SELECT * FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'accepted'`, [userId, userId]);
+            return res.send(friends);
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
+    });
+
+    fastify.post('/users/:id/friends/:friend_id', {
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod, fastify.loadFriendship]
+    }, async (req) => {
+        const { user_id, friend_id } = req.orderedIds;
+
+        if (req.friendship)
+            throw fastify.httpErrors.conflict('Friendship already exists or pending');
+
+        try {
+            await db.run(`INSERT INTO friends (user_id, friend_id, friendship_status) VALUES (?, ?, ?)`, [user_id, friend_id, 'pending']);
+            return { message: 'Friend request sent' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
+    });
+
+    fastify.put('/users/:id/friends/:friend_id/accept', {
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod, fastify.loadFriendship]
+    }, async (req) => {
+        if (!req.friendship)
+            throw fastify.httpErrors.notFound('Friend request not found');
+
+        if (req.friendship.friendship_status !== 'pending')
+            throw fastify.httpErrors.badRequest('Friendship is not pending');
+        try {
+            await db.run(`UPDATE friends SET friendship_status = 'accepted' WHERE user_id = ? and friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
+            return { message: 'Friend request accepted' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
+    });
+
+    fastify.put('/users/:id/friends/:friend_id/reject', {
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod, fastify.loadFriendship]
+    }, async (req) => {
+        if (!req.friendship)
+            throw fastify.httpErrors.notFound('Friend request not found');
+
+        if (req.friendship.friendship_status !== 'pending')
+            throw fastify.httpErrors.badRequest('Friendship is not pending');
+        try {
+            await db.run(`UPDATE friends SET friendship_status = 'rejected' WHERE user_id = ? and friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
+            return { message: 'Friend request rejected' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
+    });
+
+    fastify.delete('/users/:id/friends/:friend_id', {
+        preValidation: [fastify.authenticateRequest, fastify.validateMethod, fastify.loadFriendship]
+    }, async (req) => {
+        if (!req.friendship)
+            throw fastify.httpErrors.notFound('Friend request not found');
+
+        try {
+            await db.run(`DELETE FROM friends WHERE user_id = ? and friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
+            return { message: 'Friend removed' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
+    });
 }
