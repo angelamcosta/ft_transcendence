@@ -110,7 +110,7 @@ export default async function userRoutes(fastify) {
             return { message: 'Avatar deleted successfully' };
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
-            return res.code(204).send();
+            throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
         }
     });
 
