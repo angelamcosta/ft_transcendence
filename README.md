@@ -9,7 +9,6 @@
     <td align="center"><a href="https://github.com/angelamcosta"><img src="https://avatars.githubusercontent.com/u/14792447?v=4?s=100" width="100px;" alt="Angela Lima"/><br /><sub><b>Angela Lima</b></sub></a><br /><a href="https://github.com/angelamcosta" title="Angela Lima"></a></td>
     <td align="center"><a href="https://github.com/gcssilva"><img src="https://avatars.githubusercontent.com/u/108615291?v=4" width="100px;" alt="Gustavo Silva"/><br /><sub><b>Gustavo Silva</b></sub></a><br /><a href="https://github.com/gcssilva" title="Gustavo Silva"></a></td>
     <td align="center"><a href="http://github.com/mgdiogo"><img src="https://avatars.githubusercontent.com/u/109535612?v=4?s=100" width="100px;" alt="Miguel Diogo"/><br /><sub><b>Miguel Diogo</b></sub></a><br /><a href="https://github.com/mgdiogo/" title="Miguel Diogo"></a></td>
-    <td align="center"><a href="http://github.com/Vasco23"><img src="https://cdn.intra.42.fr/users/a5168643884fed14a9997fd95c6c4263/vcacador.jpg" height="100px;" alt="Vasco Caçador"/><br /><sub><b>Vasco Caçador</b></sub></a><br /><a href="https://github.com/Vasco23/" title="Vasco Caçador"></a></td>
     <td align="center"><a href="http://github.com/bascb"><img src="https://cdn.intra.42.fr/users/290299ddc2ce9f9172f728b42acf51b3/bcastelo.jpg" height="100px;" alt="Bernardo Castelo"/><br /><sub><b>Bernardo Castelo</b></sub></a><br /><a href="https://github.com/bascb" title="Bernardo Castelo"></a></td>
   </tr>
 </table>
