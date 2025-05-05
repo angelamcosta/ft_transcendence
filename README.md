@@ -56,9 +56,8 @@ The project must comply with the following rules:
 ## Modules
 
 > [!TIP]
+> To attain 100% project completion, a minimum of 7 major modules is required.
 > Two Minor Modules count as one Major Module.
-
-To attain 100% project completion, a minimum of 7 major modules is required. Two Minor Modules are equivalent to one Major Module.
 
 ### Web
 - [x] Major module: Use a Framework as backend.
