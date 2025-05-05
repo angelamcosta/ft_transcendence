@@ -18,7 +18,7 @@ export function generateJWT(payload) {
 	const claims = {
 		...payload,
 		iat: now,
-		exp: now + 90
+		exp: now + 3600
 	}
 
 	const encondedPayload = Buffer.from(JSON.stringify(claims)).toString('base64url')

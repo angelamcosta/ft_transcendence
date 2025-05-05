@@ -20,8 +20,14 @@ export async function loginUser(db, {email, password}) {
 		error.statusCode = 401
 		throw error
 	}
-
+	console.log(`'twofa verify -> ${user.twofa_verify}'`)
+	if (user.twofa_verify == 'pending') {
+		const error = new Error('Email is not verified')
+		error.statusCode = 401
+		throw error
+	}
+		
 	const token = generateJWT({ userId: user.id, email: user.email })
 	
-	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=90` })
+	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600` })
 }

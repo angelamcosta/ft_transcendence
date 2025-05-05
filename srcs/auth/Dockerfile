@@ -12,6 +12,6 @@ COPY ./tools/* .
 
 RUN npm cache clean --force && \
     npm init -y && \
-    npm install fastify sqlite sqlite3
+    npm install fastify sqlite sqlite3 nodemailer
 
 CMD [ "node", "app.mjs" ]
