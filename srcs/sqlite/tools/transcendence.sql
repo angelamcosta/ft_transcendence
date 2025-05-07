@@ -3,6 +3,11 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     passwordHash TEXT NOT NULL,
 	salt TEXT NOT NULL,
+	twofa_status NOT NULL DEFAULT 'pending',
+	otp INTEGER,
+	expire INTEGER,
+	attempts INTEGER DEFAULT 0,
+	temp_blocked INTEGER,
     display_name TEXT UNIQUE,
     avatar TEXT DEFAULT 'default.png'
 );

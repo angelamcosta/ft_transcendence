@@ -1,6 +1,6 @@
 import { loginUser } from './login.mjs';
 import { registerUser } from './register.mjs';
-import { verifyJWT, db } from './utils.mjs';
+import { generateJWT, verifyJWT, db } from './utils.mjs';
 
 export default async function authRoutes(fastify) {
 	fastify.addHook('onRequest', (req, reply, done) => {
@@ -42,38 +42,77 @@ export default async function authRoutes(fastify) {
 	
 	fastify.post('/login', async (req, reply) => {
 		try {
-			const { cookie } = await loginUser(db, req.body)
-			return reply.header('set-cookie', cookie).code(200).send({ success: "Login successful" })
+			const result = await loginUser(db, req.body)
+			if (result.twofa === 'disabled')
+				return reply.header('set-cookie', result.cookie).code(200).send({ success: "Login successful" })
+			else if (result.twofa === 'enabled')
+				return reply.code(200).send({ success: result.message })
 		} catch (error) {
 			return reply.code(error.statusCode).send({ error: error.message})
 		}
 	})
 
-	fastify.post('/verify-email', async (req, reply) => {
-		try {
-			const { email, otp } = req.body
+	fastify.post('/fa-test', async (req, reply) =>{
+		const { email, fa } = req.body
+		const user = await db.get('SELECT email FROM users WHERE email = ?', [email])
 
+		if (!user)
+			return reply.code(400).send({ error: 'User not found'})
+
+		if (!fa)
+			return reply.code(400).send({error: '2FA set option not specified'})
+		else if (fa === 'disable') {
+			await db.run(`UPDATE users SET twofa_status = 'disabled' WHERE email = ?`, [email])
+			return reply.code(200).send({ success: '2FA disabled'})
+		}
+		else if (fa === 'enable') {
+			await db.run(`UPDATE users SET twofa_status = 'enabled' WHERE email = ?`, [email])
+			return reply.code(200).send({ success: '2FA enabled'})
+		}
+	})
+
+	fastify.post('/verify-2fa', async (req, reply) => {
+		try {
+			const { email, otp } = req.body 
+			
 			if (!email || !otp)
 				return reply.code(400).send({ error: 'Email and OTP are required' })
-
-			const user = await db.get('SELECT otp, expire, twofa_verify from USERS where email = ?', [email])
+			
+			const user = await db.get('SELECT * FROM users WHERE email = ?', [email])
 			if (!user)
-				return reply.code(400).send({ error: 'User not found'})
-			if (user.twofa_verify == 'verified')
-				return reply.code(400).send({ error: 'Email already verified'})
+				return reply.code(400).send({ error: 'User not found' })
+			let blocked = user.temp_blocked
+			if (user.twofa_status !== 'enabled')
+				return reply.code(400).send({ error: '2FA not enabled for this user' })
+			if (!user.otp || !user.expire)
+				return reply.code(400).send({ error: 'No pending OTP verification' })
+			const now = new Date();
+			if (now > new Date(user.expire))
+				return reply.code(400).send({ error: 'OTP has expired' })
+			if (user.temp_blocked && now > new Date(user.temp_blocked)) {
+				await db.run(`UPDATE users SET attempts = 0, temp_blocked = NULL WHERE email = ?`, [email])
+				user.attempts = 0;
+				user.temp_blocked = null;
+			}
+			if (user.attempts >= 4) {
+				if (!user.temp_blocked) {
+					blocked = new Date(Date.now() + 1 * 60 * 1000).toISOString()
+					await db.run(`UPDATE users SET temp_blocked = ? WHERE email = ?`, [blocked, email])
+				}
+				return reply.code(400).send({ error: `Login has been blocked until ${blocked} due to successive failed attempts`})
+			}
+			if (user.otp != otp) {
+				await db.run(`UPDATE users SET attempts = attempts + 1 WHERE email = ?`, [email])
+				return reply.code(400).send({ error: 'Invalid OTP' })
+			}
+			await db.run(`UPDATE users SET otp = NULL, expire = NULL WHERE email = ?`, [email])
 
-			const now = new Date()
-			if (now > user.expire)
-				return reply.code(400).send({ error: 'Verification code has expired'})
-			if (user.otp != otp)
-				return reply.code(400).send({ error: 'Verification code is invalid'})
-
-			await db.run(`UPDATE users SET twofa_verify = 'verified', twofa_status = 'enabled', otp = NULL, expire = NULL WHERE email = ?`, [email])
-
-			return reply.send({ success: 'Email verified successfully' })
+			const token = generateJWT({ userId: user.id, email: user.email })
+			const cookie = `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600`
+			return reply.header('set-cookie', cookie).code(200).send({ success: 'Login successful' })
 		}
 		catch (error) {
-			console.error('Verification error:', error)
+			console.error('2FA verification error:', error)
 			return reply.code(500).send({ error: 'Internal Server Error' })
 		}
 	})

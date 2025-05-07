@@ -1,4 +1,5 @@
 import { hashPassword, generateJWT } from "./utils.mjs"
+import { sendEmail } from "./emailService.mjs"
 
 export async function loginUser(db, {email, password}) {
 	if (!email || !password) {
@@ -20,14 +21,16 @@ export async function loginUser(db, {email, password}) {
 		error.statusCode = 401
 		throw error
 	}
-	console.log(`'twofa verify -> ${user.twofa_verify}'`)
-	if (user.twofa_verify == 'pending') {
-		const error = new Error('Email is not verified')
-		error.statusCode = 401
-		throw error
-	}
-		
-	const token = generateJWT({ userId: user.id, email: user.email })
 	
-	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600` })
+	if (user.twofa_status === 'enabled') {
+		await db.run(`UPDATE users SET otp = NULL, expire = NULL WHERE email = ?`, [email])
+		const otp_code = Math.floor(100000 + Math.random() * 900000)
+		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+		await db.run(`UPDATE users SET otp = ?, expire = ? WHERE email = ?`, [otp_code, expiresAt, email])
+		sendEmail(email, otp_code)
+		return ({ message: 'Verification code sent', twofa: 'enabled' })
+	}
+
+	const token = generateJWT({ userId: user.id, email: user.email })
+	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600`, twofa: 'disabled' })
 }
