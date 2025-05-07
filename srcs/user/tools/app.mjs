@@ -4,7 +4,7 @@ import Fastify from 'fastify'
 import userRoutes from './user.routes.mjs'
 import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
-import { loadUser, loadAvatar, validateData, validateMethod, loadFriendship, authenticateRequest } from './middleware.mjs'
+import { loadUser, isBlocked, loadAvatar, notBlocked, validateData, validateUsers, loadFriendship, authenticateRequest } from './middleware.mjs'
 
 const PORT = process.env.USER_PORT;
 const KEY = process.env.USER_KEY;
@@ -13,6 +13,7 @@ const __dirname = new URL('.', import.meta.url).pathname;
 
 const app = Fastify({
 	logger: true,
+	ignoreTrailingSlash: true,
 	https: {
 		key: fs.readFileSync(path.join(__dirname, KEY)),
 		cert: fs.readFileSync(path.join(__dirname, CERT)),
@@ -36,10 +37,12 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 app.decorate('loadUser', loadUser(app));
+app.decorate('isBlocked', isBlocked(app));
 app.decorate('loadAvatar', loadAvatar(app));
+app.decorate('notBlocked', notBlocked(app));
 app.decorate('validateData', validateData(app));
+app.decorate('validateUsers', validateUsers(app));
 app.decorate('loadFriendship', loadFriendship(app));
-app.decorate('validateMethod', validateMethod(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
 
 app.register(userRoutes, { prefix: '/api' });

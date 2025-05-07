@@ -1,4 +1,4 @@
-import { db } from './utils.mjs'
+import { db, idRegex } from './utils.mjs'
 import { promises as fsp } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -8,7 +8,7 @@ export default async function userRoutes(fastify) {
 
     // ! users
     fastify.get('/users/', {
-        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
+        preValidation: [fastify.authenticateRequest],
     }, async (req, res) => {
         try {
             const users = await db.all('SELECT id, display_name FROM users');
@@ -20,16 +20,29 @@ export default async function userRoutes(fastify) {
     });
 
     fastify.get('/users/:id', {
-        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
-        preHandler: [fastify.loadUser],
+        preValidation: [fastify.authenticateRequest, fastify.loadUser],
     }, async (req, res) => {
-        return res.send(req.user);
+        if (req.user.id === req.params.id)
+            return res.send(req.user);
+        else {
+            try {
+                if (idRegex.test(req.params.id))
+                    return await db.get('SELECT display_name, avatar, id FROM users WHERE id = ?', [req.params.id]);
+                else
+                    return await db.get('SELECT display_name, avatar, id FROM users WHERE display_name = ?', [req.params.id]);
+            } catch (err) {
+                fastify.log.error(`Database error: ${err.message}`);
+                throw httpErrors.internalServerError('Database update failed: ' + err.message);
+            }
+        }
     });
 
     fastify.put('/users/:id', {
-        preValidation: [fastify.authenticateRequest, fastify.validateData, fastify.validateMethod],
-        preHandler: [fastify.loadUser],
+        preValidation: [fastify.authenticateRequest, fastify.validateData, fastify.loadUser],
     }, async (req) => {
+        if (req.user.id !== req.params.id)
+            throw httpErrors.forbidden('You cannot modify another user');
+
         const { email, display_name } = req.body;
         const updates = [];
         const params = [];
@@ -44,7 +57,7 @@ export default async function userRoutes(fastify) {
             params.push(display_name);
         }
 
-        params.push(req.params.id);
+        params.push(req.user.id);
 
         try {
             await db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
@@ -56,11 +69,10 @@ export default async function userRoutes(fastify) {
     });
 
     fastify.delete('/users/:id', {
-        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
-        preHandler: [fastify.loadUser]
-    }, async (req, res) => {
+        preValidation: [fastify.authenticateRequest, fastify.loadUser]
+    }, async (req) => {
         try {
-            await db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
+            await db.run('DELETE FROM users WHERE id = ?', [req.user.id]);
             return { message: 'User deleted successfully' };
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
@@ -68,24 +80,42 @@ export default async function userRoutes(fastify) {
         }
     });
 
-    fastify.post('/users/:id/block/:target_id', {
-        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
-        preHandler: [fastify.loadUser]
+    // ! block / unblock
+    fastify.post('/users/:id/block', {
+        preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship],
     }, async (req) => {
-        // TODO : - block user
+        try {
+            if (req.friendship)
+                await db.run(`DELETE FROM friends WHERE user_id = ? AND friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
+            await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)`, [req.userId, req.targetId]);
+            return { message: 'User blocked successfully' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
+    });
+
+    fastify.post('/users/:id/unblock', {
+        preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.isBlocked],
+    }, async (req) => {
+        try {
+            await db.run(`DELETE FROM blocked_users WHERE blocker_id = ? and blocked_id = ?`, [req.userId, req.targetId]);
+            return { message: 'User unblocked successfully' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
     });
 
     // ! avatar
     fastify.get('/users/:id/avatar', {
-        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
-        preHandler: [fastify.loadAvatar],
+        preValidation: [fastify.authenticateRequest, fastify.loadAvatar],
     }, async (req, res) => {
         return res.send(req.avatar);
     });
 
     fastify.put('/users/:id/avatar', {
-        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
-        preHandler: [fastify.loadUser],
+        preValidation: [fastify.authenticateRequest, fastify.loadUser],
     }, async (req) => {
         const data = await req.file();
 
@@ -113,11 +143,10 @@ export default async function userRoutes(fastify) {
     });
 
     fastify.delete('/users/:id/avatar', {
-        preValidation: [fastify.authenticateRequest, fastify.validateMethod],
-        preHandler: [fastify.loadUser]
+        preValidation: [fastify.authenticateRequest, fastify.loadUser],
     }, async (req, res) => {
         try {
-            await db.run('UPDATE users SET avatar = NULL WHERE id = ?', [req.params.id]);
+            await db.run('UPDATE users SET avatar = NULL WHERE id = ?', [req.user.id]);
             return { message: 'Avatar deleted successfully' };
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
@@ -128,11 +157,9 @@ export default async function userRoutes(fastify) {
     // ! friends
     fastify.get('/users/:id/friends', {
         preValidation: [fastify.authenticateRequest, fastify.loadUser],
-        preHandler: [fastify.loadUser]
     }, async (req, res) => {
         try {
-            const userId = req.params.id;
-            const friends = await db.all(`SELECT * FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'accepted'`, [userId, userId]);
+            const friends = await db.all(`SELECT display_name, avatar, id FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'accepted'`, [req.user.id, req.user.id]);
             return res.send(friends);
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
@@ -140,9 +167,8 @@ export default async function userRoutes(fastify) {
         }
     });
 
-    fastify.post('/users/:id/friends/:friend_id', {
-        preValidation: [fastify.authenticateRequest, fastify.loadFriendship],
-        preHandler: [fastify.loadUser]
+    fastify.get('/users/:id/friends/:friend_id', {
+        preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
     }, async (req) => {
         if (req.friendship?.friendship_status === "accepted")
             return { friend: req.friend };
@@ -150,9 +176,8 @@ export default async function userRoutes(fastify) {
             throw httpErrors.notFound('Friend not found');
     });
 
-    fastify.post('/users/:id/friends/add/:friend_id', {
-        preValidation: [fastify.authenticateRequest, fastify.loadFriendship],
-        preHandler: [fastify.loadUser]
+    fastify.post('/users/:id/friends/add', {
+        preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
     }, async (req) => {
         const { user_id, friend_id } = req.orderedIds;
 
@@ -171,9 +196,8 @@ export default async function userRoutes(fastify) {
         }
     });
 
-    fastify.put('/users/:id/friends/accept/:friend_id', {
-        preValidation: [fastify.authenticateRequest, fastify.loadFriendship],
-        preHandler: [fastify.loadUser]
+    fastify.put('/users/:id/friends/accept', {
+        preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
     }, async (req) => {
         if (!req.friendship)
             throw httpErrors.notFound('Friend request not found');
@@ -190,9 +214,8 @@ export default async function userRoutes(fastify) {
         }
     });
 
-    fastify.put('/users/:id/friends/reject/:friend_id', {
-        preValidation: [fastify.authenticateRequest, fastify.loadFriendship],
-        preHandler: [fastify.loadUser]
+    fastify.put('/users/:id/friends/reject', {
+        preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
     }, async (req) => {
         if (!req.friendship)
             throw httpErrors.notFound('Friend request not found');
@@ -209,16 +232,27 @@ export default async function userRoutes(fastify) {
         }
     });
 
-    fastify.delete('/users/:id/friends/delete/:friend_id', {
-        preValidation: [fastify.authenticateRequest, fastify.loadFriendship],
-        preHandler: [fastify.loadUser]
+    fastify.delete('/users/:id/friends', {
+        preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
     }, async (req) => {
         if (!req.friendship)
             throw httpErrors.notFound('Friend request not found');
 
         try {
-            await db.run(`DELETE FROM friends WHERE user_id = ? and friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
+            await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
             return { message: 'Friend removed' };
+        } catch (err) {
+            fastify.log.error(`Database error: ${err.message}`);
+            throw httpErrors.internalServerError('Database update failed: ' + err.message);
+        }
+    });
+
+    fastify.get('/users/:id/friends/requests', {
+        preValidation: [fastify.authenticateRequest, fastify.loadUser],
+    }, async (req, res) => {
+        try {
+            const requests = await db.all(`SELECT * FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'pending'`, [req.user.id, req.user.id]);
+            return res.send(requests);
         } catch (err) {
             fastify.log.error(`Database error: ${err.message}`);
             throw httpErrors.internalServerError('Database update failed: ' + err.message);

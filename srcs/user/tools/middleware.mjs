@@ -1,11 +1,8 @@
-import { db, fetchUserById, idRegex, emailRegex } from './utils.mjs';
+import { db, fetchUserById, emailRegex } from './utils.mjs';
 
 export function loadUser(fastify) {
 	return async (req) => {
 		const id = req.params.id;
-
-		if (!idRegex.test(id))
-			throw fastify.httpErrors.badRequest('Invalid ID format');
 
 		const user = await fetchUserById(id);
 		if (!user)
@@ -18,8 +15,6 @@ export function loadUser(fastify) {
 export function loadAvatar(fastify) {
 	return async (req) => {
 		const id = req.params.id;
-		if (!idRegex.test(id))
-			throw fastify.httpErrors.badRequest('Invalid ID format');
 
 		const user = await fetchUserById(id);
 		if (!user)
@@ -49,13 +44,6 @@ export function validateData(fastify) {
 					throw fastify.httpErrors.badRequest('Display name too long');
 			}
 		}
-	};
-}
-
-export function validateMethod(fastify) {
-	return async (req) => {
-		if ((req.method === 'PUT' || req.method === 'POST') && Object.keys(req.body || {}).length === 0)
-			throw fastify.httpErrors.badRequest('Request body is required');
 	};
 }
 
@@ -96,25 +84,16 @@ export function authenticateRequest(fastify) {
 
 export function loadFriendship(fastify) {
 	return async (req) => {
-		const { id, friend_id } = req.params;
+		const { userId, targetId } = req;
 
-		const userId = parseInt(id, 10);
-		const friendId = parseInt(friend_id, 10);
-
-		if (!Number.isInteger(userId) || !Number.isInteger(friendId))
-			throw fastify.httpErrors.badRequest('Invalid id format');
-	
-		if (userId === friendId)
-			throw fastify.httpErrors.badRequest('Cannot perform this operation on yourself');
-
-		const [idA, idB] = userId < friendId ? [userId, friendId]
-			: [friendId, userId];
+		const [idA, idB] = userId < targetId ? [userId, targetId]
+			: [targetId, userId];
 		req.orderedIds = { user_id: idA, friend_id: idB };
 
 		try {
 			const [user, friend] = await Promise.all([
 				fetchUserById(userId),
-				fetchUserById(friendId)
+				fetchUserById(targetId)
 			]);
 
 			if (!user || !friend)
@@ -136,4 +115,55 @@ export function loadFriendship(fastify) {
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	};
+}
+
+export function validateUsers(fastify) {
+	return async (req) => {
+		const { id } = req.params;
+		const target_id = req.body?.target_id || req.params.friend_id;
+
+		if (id === target_id)
+			throw fastify.httpErrors.badRequest('Cannot perform this operation on yourself');
+
+		try {
+			const [user, target] = await Promise.all([
+				fetchUserById(id),
+				fetchUserById(target_id)
+			]);
+
+			if (!user || !target)
+				throw fastify.httpErrors.notFound('One or both users not found');
+			req.userId = user.id;
+			req.targetId = target.id;
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	}
+}
+
+export function notBlocked(fastify) {
+	return async (req) => {
+		const { userId, targetId } = req;
+
+		const isBlocked = await db.get(
+			'SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?',
+			[userId, targetId]
+		);
+		if (isBlocked)
+			throw fastify.httpErrors.conflict('User is already blocked');
+	}
+}
+
+export function isBlocked(fastify) {
+	return async (req) => {
+		const { userId, targetId } = req;
+
+		const isBlocked = await db.get(
+			'SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?',
+			[userId, targetId]
+		);
+		if (!isBlocked)
+			throw fastify.httpErrors.conflict('Block does not exist');
+	}
 }

@@ -3,10 +3,6 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     passwordHash TEXT NOT NULL,
 	salt TEXT NOT NULL,
-	twofa_verify NOT NULL DEFAULT 'pending',
-	twofa_status NOT NULL DEFAULT 'pending',
-	otp INTEGER,
-	expire INTEGER,
     display_name TEXT UNIQUE,
     avatar TEXT DEFAULT 'default.png'
 );
@@ -18,4 +14,12 @@ CREATE TABLE IF NOT EXISTS friends (
     PRIMARY KEY (user_id, friend_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS blocked_users (
+    blocker_id INTEGER NOT NULL,
+    blocked_id INTEGER NOT NULL,
+    PRIMARY KEY (blocker_id, blocked_id),
+    FOREIGN KEY (blocker_id) REFERENCES users(id),
+    FOREIGN KEY (blocked_id) REFERENCES users(id)
 );
