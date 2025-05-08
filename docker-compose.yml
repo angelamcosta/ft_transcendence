@@ -6,6 +6,13 @@ volumes:
       device: ./data/sqlite
       o: bind
       type: none
+  public:
+    name: public
+    driver: local
+    driver_opts:
+      device: ./data/public
+      o: bind
+      type: none
 
 services:
   server:
@@ -28,6 +35,7 @@ services:
       - "8000:8000"
     volumes:
       - sqlite:/db
+      - public:/public
     env_file:
       - .env
     networks:

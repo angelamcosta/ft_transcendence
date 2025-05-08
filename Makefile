@@ -16,6 +16,6 @@ clean:
 	docker image prune -a --force
 	docker volume prune -a --force
 	docker builder prune -a --force
-	sudo rm -rf ./data/
+	sudo rm -rf ./data/sqlite
 
 re: clean all
