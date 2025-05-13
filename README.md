@@ -10,7 +10,6 @@
     <td align="center"><a href="https://github.com/gcssilva"><img src="https://avatars.githubusercontent.com/u/108615291?v=4" width="100px;" alt="Gustavo Silva"/><br /><sub><b>Gustavo Silva</b></sub></a><br /><a href="https://github.com/gcssilva" title="Gustavo Silva"></a></td>
     <td align="center"><a href="http://github.com/mgdiogo"><img src="https://avatars.githubusercontent.com/u/109535612?v=4?s=100" width="100px;" alt="Miguel Diogo"/><br /><sub><b>Miguel Diogo</b></sub></a><br /><a href="https://github.com/mgdiogo/" title="Miguel Diogo"></a></td>
     <td align="center"><a href="http://github.com/bascb"><img src="https://cdn.intra.42.fr/users/290299ddc2ce9f9172f728b42acf51b3/bcastelo.jpg" height="100px;" alt="Bernardo Castelo"/><br /><sub><b>Bernardo Castelo</b></sub></a><br /><a href="https://github.com/bascb" title="Bernardo Castelo"></a></td>
-    <td align="center"><a href="http://github.com/koska"><img src="https://cdn.intra.42.fr/users/a6037ff0f45b745c9a05c47fc703efa5/mzarichn.jpg" height="100px;" alt="Miguel Ângelo"/><br /><sub><b>Miguel Ângelo</b></sub></a><br /><a href="https://github.com/koska" title="Miguel Ângelo"></a></td>
   </tr>
 </table>
 
