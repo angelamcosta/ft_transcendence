@@ -1,6 +1,7 @@
-import { loginUser } from './login.mjs';
-import { registerUser } from './register.mjs';
-import { generateJWT, verifyJWT, db } from './utils.mjs';
+import { loginUser } from './login.mjs'
+import { registerUser } from './register.mjs'
+import { generateJWT, db } from './utils.mjs'
+import { jwtMiddleware } from './middleware.mjs'
 
 export default async function authRoutes(fastify) {
 	fastify.addHook('onRequest', (req, reply, done) => {
@@ -14,21 +15,6 @@ export default async function authRoutes(fastify) {
 		  })
 		}
 		done()
-	})
-
-	fastify.addHook('preHandler', async (req, reply) => {
-		if (req.url === '/verify') {
-			try {
-				const token = req.cookies.auth;
-				if (!token) {
-					return reply.code(401).send({ error: 'Missing token' })
-				}
-				
-				req.user = verifyJWT(token);
-			} catch (error) {
-				return reply.code(401).send({ error: error.message === 'Token expired' ? 'Invalid signature' : 'Invalid token' })
-			}
-		}
 	})
 
 	fastify.post('/register', async (req, reply) => {
@@ -52,24 +38,9 @@ export default async function authRoutes(fastify) {
 		}
 	})
 
-	fastify.post('/fa-test', async (req, reply) =>{
-		const { email, fa } = req.body
-		const user = await db.get('SELECT email FROM users WHERE email = ?', [email])
-
-		if (!user)
-			return reply.code(400).send({ error: 'User not found'})
-
-		if (!fa)
-			return reply.code(400).send({error: '2FA set option not specified'})
-		else if (fa === 'disable') {
-			await db.run(`UPDATE users SET twofa_status = 'disabled' WHERE email = ?`, [email])
-			return reply.code(200).send({ success: '2FA disabled'})
-		}
-		else if (fa === 'enable') {
-			await db.run(`UPDATE users SET twofa_status = 'enabled' WHERE email = ?`, [email])
-			return reply.code(200).send({ success: '2FA enabled'})
-		}
-	})
+	fastify.post('/logout', { preHandler: jwtMiddleware }, async (req, reply) => {
+		return reply.header('set-cookie', 'auth=; Path=/; HttpOnly; Max-Age=0; SameSite=Strict').code(200).send({ success: 'Logged out successfully' })
+})
 
 	fastify.post('/verify-2fa', async (req, reply) => {
 		try {
@@ -99,7 +70,7 @@ export default async function authRoutes(fastify) {
 					blocked = new Date(Date.now() + 1 * 60 * 1000).toISOString()
 					await db.run(`UPDATE users SET temp_blocked = ? WHERE email = ?`, [blocked, email])
 				}
-				return reply.code(400).send({ error: `Login has been blocked until ${blocked} due to successive failed attempts`})
+				return reply.code(400).send({ error: `Login has been blocked for five minutes due to successive failed attempts`})
 			}
 			if (user.otp != otp) {
 				await db.run(`UPDATE users SET attempts = attempts + 1 WHERE email = ?`, [email])
@@ -117,17 +88,13 @@ export default async function authRoutes(fastify) {
 		}
 	})
 
-	fastify.get('/verify', async (req, reply) => {
-		try {
-			const user = await db.get('SELECT id, email FROM users WHERE id = ?', [req.user.userId])
-			if (!user) {
-				const error = new Error('No user found with this ID')
-				error.statusCode = 404
-				throw error
-			}
-			return reply.send({ user })
-		} catch (error) {
-			return reply.code(500).send({ error: 'Internal Server Error'})
-		}
+	fastify.post('/set-2fa', { preHandler: jwtMiddleware }, async (req, reply) => {
+		const userId = req.user.userId
+		const { status } = req.body
+
+		if (status !== 'enabled' && status !== 'disabled')
+			return reply.code(400).send({ error: 'Invalid 2FA status' })
+		await db.run('UPDATE users SET twofa_status = ? WHERE id = ?', [status, userId]);
+		reply.send({ success: `2FA ${status}` })
 	})
 }
