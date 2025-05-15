@@ -8,7 +8,7 @@ export default async function userRoutes(fastify) {
 
 	// ! users
 	fastify.get('/users/', {
-		preValidation: [fastify.authenticateRequest],
+		preValidation: [fastify.authenticateRequest, fastify.isAdmin],
 	}, async (req, res) => {
 		try {
 			const users = await db.all('SELECT id, display_name FROM users');
@@ -20,7 +20,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.get('/users/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.loadUser],
+		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.isUser],
 	}, async (req, res) => {
 		if (req.user.id === req.params.id)
 			return res.send(req.user);
@@ -35,7 +35,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.put('/users/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateData, fastify.loadUser],
+		preValidation: [fastify.authenticateRequest, fastify.validateData, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		if (req.user.id !== req.params.id)
 			throw httpErrors.forbidden('You cannot modify another user');
@@ -66,7 +66,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.delete('/users/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.loadUser]
+		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		try {
 			await db.run('DELETE FROM users WHERE id = ?', [req.user.id]);
@@ -79,7 +79,7 @@ export default async function userRoutes(fastify) {
 
 	// ! block / unblock
 	fastify.post('/users/:id/block', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		try {
 			if (req.friendship)
@@ -93,7 +93,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.post('/users/:id/unblock', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.isBlocked],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.isBlocked, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		try {
 			await db.run(`DELETE FROM blocked_users WHERE blocker_id = ? and blocked_id = ?`, [req.userId, req.targetId]);
@@ -106,13 +106,13 @@ export default async function userRoutes(fastify) {
 
 	// ! avatar
 	fastify.get('/users/:id/avatar', {
-		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.loadAvatar],
+		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.loadAvatar, fastify.isUser],
 	}, async (req, res) => {
 		return res.send(req.avatar);
 	});
 
 	fastify.put('/users/:id/avatar', {
-		preValidation: [fastify.authenticateRequest, fastify.loadUser],
+		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.isUser],
 	}, async (req, res) => {
 		const { httpErrors } = fastify;
 		const data = await req.file();
@@ -141,7 +141,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.delete('/users/:id/avatar', {
-		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.loadAvatar],
+		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.loadAvatar, fastify.isUser],
 	}, async (req) => {
 		if (req.avatar === 'default.png')
 			return { message: 'You currently have no avatar uploaded' };
@@ -167,7 +167,7 @@ export default async function userRoutes(fastify) {
 
 	// ! friends
 	fastify.get('/users/:id/friends', {
-		preValidation: [fastify.authenticateRequest, fastify.loadUser],
+		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.isUser],
 	}, async (req, res) => {
 		try {
 			const friends = await db.all(`SELECT display_name, avatar, id FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'accepted'`, [req.user.id, req.user.id]);
@@ -179,7 +179,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.get('/users/:id/friends/:friend_id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		if (req.friendship?.friendship_status === "accepted")
 			return { friend: req.friend };
@@ -188,7 +188,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.post('/users/:id/friends/add', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		const { user_id, friend_id } = req.orderedIds;
 
@@ -208,7 +208,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.put('/users/:id/friends/accept', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		if (!req.friendship)
 			throw httpErrors.notFound('Friend request not found');
@@ -226,7 +226,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.put('/users/:id/friends/reject', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		if (!req.friendship)
 			throw httpErrors.notFound('Friend request not found');
@@ -244,7 +244,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.delete('/users/:id/friends', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		if (!req.friendship)
 			throw httpErrors.notFound('Friend request not found');
@@ -259,7 +259,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.get('/users/:id/friends/requests', {
-		preValidation: [fastify.authenticateRequest, fastify.loadUser],
+		preValidation: [fastify.authenticateRequest, fastify.loadUser, fastify.isUser],
 	}, async (req, res) => {
 		try {
 			const requests = await db.all(`SELECT * FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'pending'`, [req.user.id, req.user.id]);
