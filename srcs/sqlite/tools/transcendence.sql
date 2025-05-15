@@ -38,9 +38,11 @@ CREATE TABLE IF NOT EXISTS tournaments (
 
 CREATE TABLE players (
     id TEXT PRIMARY KEY,
-    alias TEXT NOT NULL,
-    tournament_id TEXT,
-    FOREIGN KEY(tournament_id) REFERENCES tournaments(id)
+    alias TEXT UNIQUE NOT NULL,
+    tournament_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
+    FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
 CREATE TABLE matches (
