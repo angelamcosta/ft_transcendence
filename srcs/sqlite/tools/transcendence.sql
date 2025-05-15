@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
 );
 
 CREATE TABLE players (
-    id TEXT PRIMARYKEY,
+    id TEXT PRIMARY KEY,
     alias TEXT NOT NULL,
     tournament_id TEXT,
     FOREIGN KEY(tournament_id) REFERENCES tournaments(id)
