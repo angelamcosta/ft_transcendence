@@ -71,7 +71,7 @@ export function authenticateRequest(fastify) {
 			}
 
 			const data = await response.json();
-			req.user = data.user;
+			req.authUser = data.user;
 		} catch (err) {
 			if (err.name === 'AbortError')
 				console.error('Auth request timed out');
@@ -165,5 +165,19 @@ export function isBlocked(fastify) {
 		);
 		if (!isBlocked)
 			throw fastify.httpErrors.conflict('Block does not exist');
+	}
+}
+
+export function isUser(fastify) {
+	return async (req) => {
+		if (req.authUser.id != req.params.id)
+			throw fastify.httpErrors.forbidden("Operation not allowed on another user");
+	};
+}
+
+export function isAdmin(fastify) {
+	return async (req) => {
+		// TODO : - add admin vs user logic
+		throw fastify.httpErrors("Operation not allowed for users");
 	}
 }
