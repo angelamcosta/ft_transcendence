@@ -61,3 +61,7 @@ CREATE TABLE matchmaking_queue (
     joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(player_id) REFERENCES players(id)
 );
+
+CREATE TABLE matchmaking_queue (
+  player_id TEXT PRIMARY KEY
+);
