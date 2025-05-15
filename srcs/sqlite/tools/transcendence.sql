@@ -28,3 +28,36 @@ CREATE TABLE IF NOT EXISTS blocked_users (
     FOREIGN KEY (blocker_id) REFERENCES users(id),
     FOREIGN KEY (blocked_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS tournaments (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE players (
+    id TEXT PRIMARYKEY,
+    alias TEXT NOT NULL,
+    tournament_id TEXT,
+    FOREIGN KEY(tournament_id) REFERENCES tournaments(id)
+);
+
+CREATE TABLE matches (
+    id TEXT PRIMARY KEY,
+    tournament_id TEXT,
+    player1_id TEXT NOT NULL,
+    player2_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    result TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
+    FOREIGN KEY(player1_id) REFERENCES players(id),
+    FOREIGN KEY(player2_id) REFERENCES players(id)
+);
+
+CREATE TABLE matchmaking_queue (
+    player_id TEXT PRIMARY KEY,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(player_id) REFERENCES players(id)
+);

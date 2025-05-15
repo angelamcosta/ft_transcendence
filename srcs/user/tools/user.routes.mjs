@@ -135,8 +135,12 @@ export default async function userRoutes(fastify) {
 
 			return { message: 'Avatar uploaded successfully', avatar: uniqueName };
 		} catch (err) {
-			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			if (err.code == 'FST_REQ_FILE_TOO_LARGE')
+				res.status(413).send({ error: 'Image exceeds 2MB limit.' });
+			else {
+				fastify.log.error(`Database error: ${err.message}`);
+				throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			}
 		}
 	});
 

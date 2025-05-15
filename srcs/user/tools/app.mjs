@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import Fastify from 'fastify'
-import userRoutes from './user.routes.mjs'
+import Fastify from 'fastify';
+import userRoutes from './user.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
-import { isUser, isAdmin, loadUser, isBlocked, loadAvatar, notBlocked, validateData, validateUsers, loadFriendship, authenticateRequest } from './middleware.mjs'
+import { isUser, isAdmin, loadUser, isBlocked, loadAvatar, notBlocked, validateData, validateUsers, loadFriendship, authenticateRequest } from './middleware.mjs';
 
 const PORT = process.env.USER_PORT;
 const KEY = process.env.USER_KEY;
