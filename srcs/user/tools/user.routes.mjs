@@ -82,10 +82,12 @@ export default async function userRoutes(fastify) {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship, fastify.loadUser, fastify.isUser],
 	}, async (req) => {
 		try {
-			if (req.friendship)
-				await db.run(`DELETE FROM friends WHERE user_id = ? AND friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
-			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)`, [req.userId, req.targetId]);
-			return { message: 'User blocked successfully' };
+			await db.transaction(async (tx) => {
+				if (req.friendship)
+					await tx.run(`DELETE FROM friends WHERE user_id = ? AND friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
+				await tx.run(`INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)`, [req.userId, req.targetId]);
+				return { message: 'User blocked successfully' };
+			});
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
 			throw httpErrors.internalServerError('Database update failed: ' + err.message);
