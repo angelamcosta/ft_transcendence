@@ -18,3 +18,13 @@ export async function fetchTournamentById(id) {
 		throw httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 	}
 }
+
+export async function fetchMatchById(id) {
+	try {
+		if (idRegex.test(id))
+			return await db.get('SELECT * FROM matches WHERE id = ?', [id]);
+	} catch (err) {
+		fastify.log.error(`Database error: ${err.message}`);
+		throw httpErrors.internalServerError('Failed to fetch users: ' + err.message);
+	}
+}

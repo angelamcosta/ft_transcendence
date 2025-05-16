@@ -1,4 +1,4 @@
-import { fetchTournamentById } from './utils.mjs';
+import { fetchTournamentById, fetchMatchById } from './utils.mjs';
 
 export function loadTournament(fastify) {
     return async (req) => {
@@ -9,6 +9,18 @@ export function loadTournament(fastify) {
             throw fastify.httpErrors.notFound('User not found');
 
         req.tournament = tournament;
+    }
+}
+
+export function loadMatch(fastify) {
+    return async (req) => {
+        const id = req.params.id;
+
+        const match = await fetchMatchById(id);
+        if (!match)
+            throw fastify.httpErrors.notFound('User not found');
+
+        req.match = match;
     }
 }
 

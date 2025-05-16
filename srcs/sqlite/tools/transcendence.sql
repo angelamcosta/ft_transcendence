@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS blocked_users (
 CREATE TABLE IF NOT EXISTS tournaments (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'active',
+    status TEXT NOT NULL DEFAULT 'open',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -41,6 +41,7 @@ CREATE TABLE players (
     alias TEXT UNIQUE NOT NULL,
     tournament_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
     FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
@@ -50,9 +51,11 @@ CREATE TABLE matches (
     tournament_id TEXT,
     player1_id TEXT NOT NULL,
     player2_id TEXT NOT NULL,
+    winner_id TEXT NOT NULL DEFAULT 'pending',
     status TEXT NOT NULL DEFAULT 'pending',
-    result TEXT,
+    score TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
     FOREIGN KEY(player1_id) REFERENCES players(id),
     FOREIGN KEY(player2_id) REFERENCES players(id)

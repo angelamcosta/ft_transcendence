@@ -27,6 +27,7 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 app.decorate('loadUser', loadUser(app));
+app.decorate('loadMatch', loadMatch(app));
 app.decorate('loadTournament', loadTournament(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
 
