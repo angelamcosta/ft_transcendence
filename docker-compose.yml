@@ -1,13 +1,11 @@
 volumes:
   sqlite:
-    name: sqlite
     driver: local
     driver_opts:
       device: ./data/sqlite
       o: bind
       type: none
   public:
-    name: public
     driver: local
     driver_opts:
       device: ./data/public
@@ -27,6 +25,7 @@ services:
       - transcendence
     depends_on:
       - sqlite
+
   user:
     build:
       context: ./srcs/user/
@@ -42,6 +41,23 @@ services:
       - transcendence
     depends_on:
       - sqlite
+
+  matches:
+    build:
+      context: ./srcs/matches/
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - sqlite:/db
+    env_file:
+      - .env
+    networks:
+      - transcendence
+    depends_on:
+      - sqlite
+      - user
+
   auth:
     build:
       context: ./srcs/auth
@@ -56,6 +72,7 @@ services:
       - transcendence
     depends_on:
       - sqlite
+
   sqlite:
     build:
       context: ./srcs/sqlite/

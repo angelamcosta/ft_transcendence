@@ -51,7 +51,7 @@ CREATE TABLE matches (
     tournament_id TEXT,
     player1_id TEXT NOT NULL,
     player2_id TEXT NOT NULL,
-    winner_id TEXT NOT NULL DEFAULT 'pending',
+    winner_id TEXT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     score TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

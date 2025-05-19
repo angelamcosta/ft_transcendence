@@ -1,10 +1,13 @@
+import fs from 'fs';
+import path from 'path';
 import Fastify from 'fastify';
 import matchRoutes from './match.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
+import { loadTournament, loadMatch, authenticateRequest } from './middleware.mjs';
 
+const PORT = process.env.MATCH_PORT;
 const KEY = process.env.MATCH_KEY;
 const CERT = process.env.MATCH_CERT;
-const PORT = process.env.MATCH_PORT;
 const __dirname = new URL('.', import.meta.url).pathname;
 
 const app = Fastify({
@@ -19,14 +22,13 @@ const app = Fastify({
 app.register(fastifyCookie);
 
 const shutdown = async () => {
-	await app.close();
-	process.exit(0);
+    await app.close();
+    process.exit(0);
 };
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-app.decorate('loadUser', loadUser(app));
 app.decorate('loadMatch', loadMatch(app));
 app.decorate('loadTournament', loadTournament(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
