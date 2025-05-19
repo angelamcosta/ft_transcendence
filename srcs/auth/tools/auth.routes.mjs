@@ -29,7 +29,10 @@ export default async function authRoutes(fastify) {
 	fastify.post('/login', async (req, reply) => {
 		try {
 			const result = await loginUser(db, req.body)
-			if (result.twofa === 'disabled')
+
+			if (result.twofa === 'failed')
+				return reply.code(500).send({ error: result.message })
+			else if (result.twofa === 'disabled')
 				return reply.header('set-cookie', result.cookie).code(200).send({ success: "Login successful" })
 			else if (result.twofa === 'enabled')
 				return reply.code(200).send({ success: result.message })
@@ -45,9 +48,9 @@ export default async function authRoutes(fastify) {
 	fastify.post('/verify-2fa', async (req, reply) => {
 		try {
 			const { email, otp } = req.body 
-			
+
 			if (!email || !otp)
-				return reply.code(400).send({ error: 'Email and OTP are required' })
+				return reply.code(400).send({ error: 'Invalid OTP Request' })
 			
 			const user = await db.get('SELECT * FROM users WHERE email = ?', [email])
 			if (!user)
