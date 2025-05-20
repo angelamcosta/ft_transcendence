@@ -4,7 +4,7 @@ import Fastify from 'fastify';
 import sensible from '@fastify/sensible';
 import matchRoutes from './match.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
-import { loadTournament, loadMatch, authenticateRequest } from './middleware.mjs';
+import { loadTournament, loadMatch } from './middleware.mjs';
 
 const PORT = process.env.MATCH_PORT;
 const KEY = process.env.MATCH_KEY;
@@ -32,7 +32,6 @@ process.on('SIGTERM', shutdown);
 
 app.decorate('loadMatch', loadMatch(app));
 app.decorate('loadTournament', loadTournament(app));
-app.decorate('authenticateRequest', authenticateRequest(app));
 
 await app.register(sensible);
 
