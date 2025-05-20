@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Fastify from 'fastify';
+import sensible from '@fastify/sensible';
 import userRoutes from './user.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
@@ -46,6 +47,8 @@ app.decorate('validateData', validateData(app));
 app.decorate('validateUsers', validateUsers(app));
 app.decorate('loadFriendship', loadFriendship(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
+
+await app.register(sensible);
 
 app.register(userRoutes, { prefix: '/api' });
 
