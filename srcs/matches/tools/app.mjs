@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Fastify from 'fastify';
+import sensible from '@fastify/sensible';
 import matchRoutes from './match.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
 import { loadTournament, loadMatch, authenticateRequest } from './middleware.mjs';
@@ -32,6 +33,10 @@ process.on('SIGTERM', shutdown);
 app.decorate('loadMatch', loadMatch(app));
 app.decorate('loadTournament', loadTournament(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
+
+await app.register(sensible);
+
+await app.register(userRoutes);
 
 app.register(matchRoutes, { prefix: '/api' });
 

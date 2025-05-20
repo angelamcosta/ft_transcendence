@@ -30,14 +30,14 @@ CREATE TABLE IF NOT EXISTS blocked_users (
 );
 
 CREATE TABLE IF NOT EXISTS tournaments (
-    id TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'open',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE players (
-    id TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     alias TEXT UNIQUE NOT NULL,
     tournament_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE players (
 );
 
 CREATE TABLE matches (
-    id TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     tournament_id TEXT,
     player1_id TEXT NOT NULL,
     player2_id TEXT NOT NULL,

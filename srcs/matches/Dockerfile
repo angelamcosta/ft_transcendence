@@ -14,6 +14,6 @@ RUN openssl req -x509 -newkey rsa:4096 -subj "/CN=localhost" -keyout /app/key.pe
 
 RUN npm cache clean --force && \
     npm init -y && \
-    npm install fastify @fastify/cookie sqlite sqlite3
+    npm install fastify @fastify/cookie @fastify/sensible sqlite sqlite3
 
 CMD [ "node", "app.mjs" ]

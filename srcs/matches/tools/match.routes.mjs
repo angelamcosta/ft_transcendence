@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { autoPairPlayers, db } from './utils.mjs'
 
 export default async function userRoutes(fastify) {
@@ -8,18 +7,38 @@ export default async function userRoutes(fastify) {
 
 	const { httpErrors } = fastify;
 
-	fastify.post('/tournaments', {
-		preValidation: [fastify.authenticateRequest],
-	}, async (req) => {
+	fastify.get('/matches', {
+		preValidation: [fastify.isAdmin],
+	}, async (req, res) => {
+		try {
+			const matches = await db.all('SELECT player1_id, player2_id, status FROM matches');
+			return res.send(matches);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw httpErrors.internalServerError('Failed to fetch matches: ' + err.message);
+		}
+	});
+
+	fastify.get('/tournaments', {
+		preValidation: [fastify.isAdmin],
+	}, async (req, res) => {
+		try {
+			const tournaments = await db.all('SELECT id, name, status FROM tournaments');
+			return res.send(tournaments);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw httpErrors.internalServerError('Failed to fetch tournaments: ' + err.message);
+		}
+	});
+
+	fastify.post('/tournaments', async (req) => {
 		try {
 			const { name } = req.body;
 
 			if (!name || name === undefined || typeof (name) !== 'string')
 				throw httpErrors.unprocessableEntity('Request body is required');
 
-			const id = crypto.randomUUID();
-
-			await db.run('INSERT INTO tournaments (id, name) VALUES (?, ?)', [id, name]);
+			await db.run('INSERT INTO tournaments (name) VALUES (?)', [name]);
 			return { message: 'Tournament created successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -28,7 +47,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.post('/tournaments/:id/players', {
-		preValidation: [fastify.authenticateRequest, fastify.loadTournament],
+		preValidation: [fastify.loadTournament],
 	}, async (req) => {
 		try {
 			const userid = req.authUser.id;
@@ -42,12 +61,10 @@ export default async function userRoutes(fastify) {
 			if (existing)
 				throw httpErrors.conflict('Player already registered in this tournament');
 
-			const id = crypto.randomUUID();
-
 			if (!alias || alias === undefined || typeof (alias) !== 'string')
 				throw httpErrors.unprocessableEntity('Request body is required');
 
-			await db.run('INSERT INTO players (id, alias, tournament_id, user_id) VALUES (?, ?, ?, ?)', [id, alias, req.tournament.id, userid]);
+			await db.run('INSERT INTO players (alias, tournament_id, user_id) VALUES (?, ?, ?)', [alias, req.tournament.id, userid]);
 			return { message: 'Player added to tournament successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -56,7 +73,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.get('/tournaments/:id/matches', {
-		preValidation: [fastify.authenticateRequest, fastify.loadTournament],
+		preValidation: [fastify.loadTournament],
 	}, async (req) => {
 		try {
 			const matches = await db.all('SELECT m.id, p1.alias as player1_alias, p2.alias as player2_alias, m.status, m.score, m.created_at FROM matches m LEFT JOIN players p1 ON m.player1_id = p1.id LEFT JOIN players p2 ON m.player2_id = p2.id WHERE m.tournament_id = ? ORDER BY m.created_at DESC', [req.tournament.id]);
@@ -68,7 +85,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	fastify.post('/matches/:id/result', {
-		preValidation: [fastify.authenticateRequest, fastify.loadMatch],
+		preValidation: [fastify.loadMatch],
 	}, async (req) => {
 		try {
 			const { winnerId, score } = req.body;
@@ -99,9 +116,7 @@ export default async function userRoutes(fastify) {
 		}
 	});
 
-	fastify.get('/matches/:id', {
-		preValidation: [fastify.authenticateRequest]
-	}, async (req) => {
+	fastify.get('/matches/:id', async (req) => {
 		try {
 			const match = await db.get('SELECT m.*, p1.alias as player1_alias, p2.alias as player2_alias, w.alias as winner_alias FROM matches m LEFT JOIN players p1 ON m.player1_id = p1.id LEFT JOIN players p2 ON m.player2_id = p2.id LEFT JOIN players w ON m.winner_id = w.id WHERE m.id = ?', [req.params.id]);
 			return { match };
@@ -112,9 +127,7 @@ export default async function userRoutes(fastify) {
 	});
 
 	// ! matchmaking
-	fastify.delete('/matchmaking/leave', {
-		preValidation: [fastify.authenticateRequest],
-	}, async (req) => {
+	fastify.delete('/matchmaking/leave', async (req) => {
 		try {
 			await db.run(`DELETE FROM matchmaking_queue WHERE player_id = ?`, [req.authUser.id]);
 			return { "left": true };
