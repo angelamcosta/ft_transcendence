@@ -6,10 +6,6 @@ const app = Fastify({ logger: true })
 const PORT = process.env.SERVER_PORT;
 const AUTH_URL = process.env.AUTH_URL;
 
-console.log('AUTH_URL =', AUTH_URL);
-console.log('PORT =', PORT);
-
-
 await app.register(cors, {
 	origin: 'http://localhost:5173',
 	credentials: true
