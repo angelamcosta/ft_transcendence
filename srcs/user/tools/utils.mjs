@@ -16,6 +16,6 @@ export async function fetchUserById(id) {
 		return await db.get('SELECT * FROM users WHERE display_name = ?', [id]);
 	} catch (err) {
 		fastify.log.error(`Database error: ${err.message}`);
-		throw httpErrors.internalServerError('Failed to fetch users: ' + err.message);
+		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 	}
 }

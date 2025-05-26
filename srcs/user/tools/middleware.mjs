@@ -1,29 +1,5 @@
 import { db, fetchUserById, emailRegex } from './utils.mjs';
 
-export function loadUser(fastify) {
-	return async (req) => {
-		const id = req.params.id;
-
-		const user = await fetchUserById(id);
-		if (!user)
-			throw fastify.httpErrors.notFound('User not found');
-
-		req.user = user;
-	}
-}
-
-export function loadAvatar(fastify) {
-	return async (req) => {
-		const id = req.params.id;
-
-		const user = await fetchUserById(id);
-		if (!user)
-			throw fastify.httpErrors.notFound('User not found');
-
-		req.avatar = user.avatar;
-	}
-}
-
 export function validateData(fastify) {
 	return async (req) => {
 		if (req.method === 'PUT') {
@@ -119,21 +95,20 @@ export function loadFriendship(fastify) {
 
 export function validateUsers(fastify) {
 	return async (req) => {
-		const { id } = req.params;
-		const target_id = req.body?.target_id || req.params.friend_id;
+		const target_id = Number(req.params.id);
 
-		if (id === target_id)
+		if (req.authUser.id === target_id)
 			throw fastify.httpErrors.badRequest('Cannot perform this operation on yourself');
 
 		try {
 			const [user, target] = await Promise.all([
-				fetchUserById(id),
+				fetchUserById(req.authUser.id),
 				fetchUserById(target_id)
 			]);
 
 			if (!user || !target)
 				throw fastify.httpErrors.notFound('One or both users not found');
-			req.userId = user.id;
+			req.userId = req.authUser.id;
 			req.targetId = target.id;
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -166,13 +141,6 @@ export function isBlocked(fastify) {
 		if (!isBlocked)
 			throw fastify.httpErrors.conflict('Block does not exist');
 	}
-}
-
-export function isUser(fastify) {
-	return async (req) => {
-		if (req.authUser.id != req.params.id)
-			throw fastify.httpErrors.forbidden("Operation not allowed on another user");
-	};
 }
 
 export function isAdmin(fastify) {
