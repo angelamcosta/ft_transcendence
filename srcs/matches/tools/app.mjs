@@ -20,7 +20,8 @@ const app = Fastify({
     },
 });
 
-app.register(fastifyCookie);
+await app.register(sensible);
+await app.register(fastifyCookie);
 
 const shutdown = async () => {
     await app.close();
@@ -32,10 +33,6 @@ process.on('SIGTERM', shutdown);
 
 app.decorate('loadMatch', loadMatch(app));
 app.decorate('loadTournament', loadTournament(app));
-
-await app.register(sensible);
-
-await app.register(userRoutes);
 
 app.register(matchRoutes, { prefix: '/api' });
 

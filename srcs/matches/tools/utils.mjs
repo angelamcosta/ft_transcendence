@@ -15,7 +15,7 @@ export async function fetchTournamentById(id) {
 		return await db.get('SELECT * FROM tournaments WHERE name = ?', [id]);
 	} catch (err) {
 		fastify.log.error(`Database error: ${err.message}`);
-		throw httpErrors.internalServerError('Failed to fetch users: ' + err.message);
+		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 	}
 }
 
@@ -25,7 +25,7 @@ export async function fetchMatchById(id) {
 			return await db.get('SELECT * FROM matches WHERE id = ?', [id]);
 	} catch (err) {
 		fastify.log.error(`Database error: ${err.message}`);
-		throw httpErrors.internalServerError('Failed to fetch users: ' + err.message);
+		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 	}
 }
 
@@ -57,6 +57,6 @@ export async function autoPairPlayers(fastify) {
 		}
 	} catch (err) {
 		fastify.log.error(`Database error: ${err.message}`);
-		throw httpErrors.internalServerError('Database update failed: ' + err.message);
+		throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 	}
 }

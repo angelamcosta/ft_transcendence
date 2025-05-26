@@ -1,33 +1,31 @@
 import { autoPairPlayers, db } from './utils.mjs'
 
-export default async function userRoutes(fastify) {
+export default async function matchRoutes(fastify) {
 	setInterval(() => {
 		autoPairPlayers(fastify);
 	}, 15000);
 
-	const { httpErrors } = fastify;
-
 	fastify.get('/matches', {
-		preValidation: [fastify.isAdmin],
+		preValidation: fastify.isAdmin,
 	}, async (req, res) => {
 		try {
 			const matches = await db.all('SELECT player1_id, player2_id, status FROM matches');
 			return res.send(matches);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Failed to fetch matches: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Failed to fetch matches: ' + err.message);
 		}
 	});
 
 	fastify.get('/tournaments', {
-		preValidation: [fastify.isAdmin],
+		preValidation: fastify.isAdmin,
 	}, async (req, res) => {
 		try {
 			const tournaments = await db.all('SELECT id, name, status FROM tournaments');
 			return res.send(tournaments);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Failed to fetch tournaments: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Failed to fetch tournaments: ' + err.message);
 		}
 	});
 
@@ -36,18 +34,18 @@ export default async function userRoutes(fastify) {
 			const { name } = req.body;
 
 			if (!name || name === undefined || typeof (name) !== 'string')
-				throw httpErrors.unprocessableEntity('Request body is required');
+				throw fastify.httpErrors.unprocessableEntity('Request body is required');
 
 			await db.run('INSERT INTO tournaments (name) VALUES (?)', [name]);
 			return { message: 'Tournament created successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
 
 	fastify.post('/tournaments/:id/players', {
-		preValidation: [fastify.loadTournament],
+		preValidation: fastify.loadTournament,
 	}, async (req) => {
 		try {
 			const userid = req.authUser.id;
@@ -59,46 +57,46 @@ export default async function userRoutes(fastify) {
 			const existing = await db.get('SELECT id FROM players WHERE tournament_id = ? and user_id = ?', [req.tournament.id, userid]);
 
 			if (existing)
-				throw httpErrors.conflict('Player already registered in this tournament');
+				throw fastify.httpErrors.conflict('Player already registered in this tournament');
 
 			if (!alias || alias === undefined || typeof (alias) !== 'string')
-				throw httpErrors.unprocessableEntity('Request body is required');
+				throw fastify.httpErrors.unprocessableEntity('Request body is required');
 
 			await db.run('INSERT INTO players (alias, tournament_id, user_id) VALUES (?, ?, ?)', [alias, req.tournament.id, userid]);
 			return { message: 'Player added to tournament successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
 
 	fastify.get('/tournaments/:id/matches', {
-		preValidation: [fastify.loadTournament],
+		preValidation: fastify.loadTournament,
 	}, async (req) => {
 		try {
 			const matches = await db.all('SELECT m.id, p1.alias as player1_alias, p2.alias as player2_alias, m.status, m.score, m.created_at FROM matches m LEFT JOIN players p1 ON m.player1_id = p1.id LEFT JOIN players p2 ON m.player2_id = p2.id WHERE m.tournament_id = ? ORDER BY m.created_at DESC', [req.tournament.id]);
 			return { matches };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
 
 	fastify.post('/matches/:id/result', {
-		preValidation: [fastify.loadMatch],
+		preValidation: fastify.loadMatch,
 	}, async (req) => {
 		try {
 			const { winnerId, score } = req.body;
 			const match = req.match;
 
 			if (![match.player1_id, match.player2_id].includes(winnerId))
-				throw httpErrors.unprocessableEntity('Invalid winnerId: not a player in this match');
+				throw fastify.httpErrors.unprocessableEntity('Invalid winnerId: not a player in this match');
 
 			if (typeof winnerId !== 'string' || typeof score !== 'string')
-				throw httpErrors.unprocessableEntity('winnerId and score are required');
+				throw fastify.httpErrors.unprocessableEntity('winnerId and score are required');
 
 			if (match.status === 'finished')
-				throw httpErrors.conflict('Match is already finished');
+				throw fastify.httpErrors.conflict('Match is already finished');
 
 			const loserId = winnerId === match.player1_id ? match.player2_id : match.player1_id;
 
@@ -112,7 +110,7 @@ export default async function userRoutes(fastify) {
 			return { "success": true };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
 
@@ -122,7 +120,7 @@ export default async function userRoutes(fastify) {
 			return { match };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
 
@@ -133,7 +131,7 @@ export default async function userRoutes(fastify) {
 			return { "left": true };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
 }
