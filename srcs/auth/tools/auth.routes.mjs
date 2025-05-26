@@ -94,7 +94,12 @@ export default async function authRoutes(fastify) {
 	fastify.post('/set-2fa', { preHandler: jwtMiddleware }, async (req, reply) => {
 		const userId = req.user.userId
 		const { status } = req.body
+		const user = await db.get('SELECT twofa_status FROM users WHERE id = ?', [userId])
 
+		if (user.twofa_status === 'enabled' && status === 'enabled')
+			return reply.code(400).send({ error: '2FA is already enabled for this user' })
+		if (user.twofa_status === 'disabled' && status === 'disabled')
+			return reply.code(400).send({ error: '2FA is already disabled for this user' })
 		if (status !== 'enabled' && status !== 'disabled')
 			return reply.code(400).send({ error: 'Invalid 2FA status' })
 		await db.run('UPDATE users SET twofa_status = ? WHERE id = ?', [status, userId]);
