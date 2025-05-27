@@ -1,7 +1,18 @@
 import Fastify from 'fastify/fastify.js'
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = Fastify({ logger: true })
 const PORT = process.env.SERVER_PORT;
+
+app.register(fastifyStatic, {
+	root: path.join(__dirname, 'public'),
+	prefix: '/', // optional: makes files available at "/"
+  });
 
 const listeners = ['SIGINT', 'SIGTERM']
 listeners.forEach((signal) => {
@@ -12,7 +23,7 @@ listeners.forEach((signal) => {
 })
 
 app.get('/', async function handler(request, reply) {
-	return { message: 'Success!' }
+	return reply.sendFile('index.html');
 })
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
