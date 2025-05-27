@@ -1,6 +1,12 @@
 import Fastify from 'fastify/fastify.js'
 import { fetch } from 'undici'
 import cors from '@fastify/cors'
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = Fastify({ logger: true })
 const PORT = process.env.SERVER_PORT;
@@ -11,6 +17,11 @@ await app.register(cors, {
 	credentials: true
 })
 
+app.register(fastifyStatic, {
+	root: path.join(__dirname, 'public'),
+	prefix: '/', // optional: makes files available at "/"
+  });
+
 const listeners = ['SIGINT', 'SIGTERM']
 listeners.forEach((signal) => {
 	process.on(signal, async () => {
@@ -20,7 +31,7 @@ listeners.forEach((signal) => {
 })
 
 app.get('/', async function handler(request, reply) {
-	return { message: 'Success!' }
+	return reply.sendFile('index.html');
 })
 
 app.post('/register', async (req, reply) => {

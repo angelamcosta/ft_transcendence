@@ -1,0 +1,11 @@
+{
+    "name": "fastify-frontend",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+      "build": "npm run build:css && npm run build:ts",
+      "build:css": "tailwindcss -i ./style.css -o ./public/style.css --minify",
+      "build:ts": "tsc",
+      "start": "node app.mjs"
+    }
+}
