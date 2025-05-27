@@ -142,10 +142,3 @@ export function isBlocked(fastify) {
 			throw fastify.httpErrors.conflict('Block does not exist');
 	}
 }
-
-export function isAdmin(fastify) {
-	return async (req) => {
-		// TODO : - add admin vs user logic
-		throw fastify.httpErrors("Operation not allowed for users");
-	}
-}

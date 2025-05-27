@@ -6,7 +6,7 @@ import matchRoutes from './match.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
 import { loadTournament, loadMatch } from './middleware.mjs';
 
-const PORT = process.env.MATCH_PORT;
+const PORT = process.env.MATCH_PORT || 8001;
 const KEY = process.env.MATCH_KEY;
 const CERT = process.env.MATCH_CERT;
 const __dirname = new URL('.', import.meta.url).pathname;
