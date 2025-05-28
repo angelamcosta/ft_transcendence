@@ -1,13 +1,14 @@
 import { autoPairPlayers, db } from './utils.mjs'
 
 export default async function matchRoutes(fastify) {
-	setInterval(() => {
-		autoPairPlayers(fastify);
-	}, 15000);
+	const interval = setInterval(() => { autoPairPlayers(fastify); }, 15000);
 
-	fastify.get('/matches', {
-		preValidation: fastify.isAdmin,
-	}, async (req, res) => {
+	fastify.addHook('onClose', async (_instance, done) => {
+		clearInterval(interval);
+		done();
+	})
+
+	fastify.get('/matches', async (req, res) => {
 		try {
 			const matches = await db.all('SELECT player1_id, player2_id, status FROM matches');
 			return res.send(matches);
@@ -17,9 +18,7 @@ export default async function matchRoutes(fastify) {
 		}
 	});
 
-	fastify.get('/tournaments', {
-		preValidation: fastify.isAdmin,
-	}, async (req, res) => {
+	fastify.get('/tournaments', async (req, res) => {
 		try {
 			const tournaments = await db.all('SELECT id, name, status FROM tournaments');
 			return res.send(tournaments);
@@ -125,10 +124,27 @@ export default async function matchRoutes(fastify) {
 	});
 
 	// ! matchmaking
-	fastify.delete('/matchmaking/leave', async (req) => {
+	fastify.delete('/matchmaking/leave', async (req, reply) => {
+		const { user_id } = req.body?.user_id;
+		if (!user_id) throw fastify.httpErrors.un
 		try {
-			await db.run(`DELETE FROM matchmaking_queue WHERE player_id = ?`, [req.authUser.id]);
-			return { "left": true };
+			const result = await db.run(`DELETE FROM matchmaking_queue WHERE player_id = ?`, [user_id]);
+			return { "left": result.changes > 0 };
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	});
+
+	fastify.post('/matchmaking/join', async (req, reply) => {
+		const { user_id } = req.body?.user_id;
+		if (!user_id) throw fastify.httpErrors.unauthorized();
+		try {
+			const exists = await db.get('SELECT 1 FROM matchmaking_queue WHERE player_id = ?', [user_id])
+			if (exists)
+				throw fastify.httpErrors.conflict('Player already in queue');
+			await db.run('INSERT INTO matchmaking_queue (player_id) VALUES (?)', [user_id]);
+			return { "queued": true };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);

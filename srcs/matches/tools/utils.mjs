@@ -9,10 +9,12 @@ export const db = await open({
 });
 
 export async function fetchTournamentById(id) {
-	if (idRegex.test(id))
-		return await db.get('SELECT * FROM tournaments WHERE id = ?', [id]);
+	if (!id) throw new Error('fetchTournamentById: missing id');
+
+	const sql = idRegex.test(id) ? 'SELECT * FROM tournaments WHERE id = ?' : 'SELECT * FROM tournaments WHERE name = ?';
 	try {
-		return await db.get('SELECT * FROM tournaments WHERE name = ?', [id]);
+		const row = await db.get(sql, [id]);
+		return row || null;
 	} catch (err) {
 		fastify.log.error(`Database error: ${err.message}`);
 		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
@@ -20,9 +22,11 @@ export async function fetchTournamentById(id) {
 }
 
 export async function fetchMatchById(id) {
+	if (!id) throw new Error('fetchTournamentById: missing id');
 	try {
-		if (idRegex.test(id))
-			return await db.get('SELECT * FROM matches WHERE id = ?', [id]);
+		const sql = idRegex.test(id) ? 'SELECT * FROM matches WHERE id = ?' : (() => {throw new Error('fetchMatchById: id must be numeric')});
+		const row = await db.get(sql, [id]);
+		return row || null;
 	} catch (err) {
 		fastify.log.error(`Database error: ${err.message}`);
 		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
