@@ -10,10 +10,11 @@ export const db = await open({
 });
 
 export async function fetchUserById(id) {
-	if (idRegex.test(id))
-		return await db.get('SELECT * FROM users WHERE id = ?', [id]);
+	if (!id) throw new Error('fetchUserById: missing id');
+
+	const sql = idRegex.test(id) ? 'SELECT * FROM users WHERE id = ?' : 'SELECT * FROM users WHERE display_name = ?';
 	try {
-		return await db.get('SELECT * FROM users WHERE display_name = ?', [id]);
+		return await db.get(sql, [id]);
 	} catch (err) {
 		fastify.log.error(`Database error: ${err.message}`);
 		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);

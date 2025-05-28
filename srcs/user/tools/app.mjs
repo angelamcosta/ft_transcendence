@@ -5,7 +5,7 @@ import sensible from '@fastify/sensible';
 import userRoutes from './user.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
-import { isAdmin, isBlocked, notBlocked, validateData, validateUsers, loadFriendship, authenticateRequest } from './middleware.mjs';
+import { isBlocked, notBlocked, validateData, validateUsers, loadFriendship, authenticateRequest } from './middleware.mjs';
 
 const PORT = process.env.USER_PORT;
 const KEY = process.env.USER_KEY;
@@ -38,7 +38,6 @@ const shutdown = async () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-app.decorate('isAdmin', isAdmin(app));
 app.decorate('isBlocked', isBlocked(app));
 app.decorate('notBlocked', notBlocked(app));
 app.decorate('validateData', validateData(app));

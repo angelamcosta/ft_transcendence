@@ -18,9 +18,7 @@ export default async function matchRoutes(fastify) {
 		}
 	});
 
-	fastify.get('/tournaments', {
-		preValidation: fastify.isAdmin,
-	}, async (req, res) => {
+	fastify.get('/tournaments', async (req, res) => {
 		try {
 			const tournaments = await db.all('SELECT id, name, status FROM tournaments');
 			return res.send(tournaments);
