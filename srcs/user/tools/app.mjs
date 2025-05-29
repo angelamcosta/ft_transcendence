@@ -48,7 +48,7 @@ app.decorate('validateUsers', validateUsers(app));
 app.decorate('loadFriendship', loadFriendship(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
 
-app.register(userRoutes, { prefix: '/api' });
+await app.register(userRoutes, { prefix: '/api' });
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
 	err ? (console.error(err), process.exit(1)) : console.log(`Server running on ${PORT}`);

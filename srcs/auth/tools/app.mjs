@@ -20,7 +20,7 @@ const app = Fastify({
 	},
 });
 
-await app.register(authRoutes);
+await app.register(authRoutes, { prefix: '/api' });
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
 	if (err) {

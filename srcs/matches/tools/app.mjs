@@ -37,7 +37,7 @@ process.on('SIGTERM', shutdown);
 app.decorate('loadMatch', loadMatch(app));
 app.decorate('loadTournament', loadTournament(app));
 
-app.register(matchRoutes, { prefix: '/api' });
+await app.register(matchRoutes, { prefix: '/api' });
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err) => {
     err ? (console.error(err), process.exit(1)) : console.log(`Server running on ${PORT}`);

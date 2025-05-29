@@ -1,14 +1,14 @@
 import { hashPassword } from './utils.mjs';
 
 export async function registerUser(db, {email, password, display_name}) {
-	if (!email || !password) {
+	if (!email || !password || !display_name) {
 		const error = new Error('Missing fields')
 		error.statusCode = 400
 		throw error
 	}
 
-	if (/\s/.test(email) || /\s/.test(password) || /\s/.teste(display_name)) {
-		const error = new Error('EFields must not contain whitespaces')
+	if (/\s/.test(email) || /\s/.test(password) || /\s/.test(display_name)) {
+		const error = new Error('Fields must not contain whitespaces')
 		error.statusCode = 400
 		throw error
 	}

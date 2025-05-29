@@ -40,7 +40,7 @@ app.get('/', async () => ({ message: 'Success!' }));
 
 app.post('/register', async (req, reply) => {
 	try {
-		const res = await fetch(`${AUTH_URL}/register`, {
+		const res = await fetch(`${AUTH_URL}/api/register`, {
 			dispatcher: tlsAgent,
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -56,7 +56,7 @@ app.post('/register', async (req, reply) => {
 
 app.post('/login', async (req, reply) => {
 	try {
-		const res = await fetch(`${AUTH_URL}/login`, {
+		const res = await fetch(`${AUTH_URL}/api/login`, {
 			dispatcher: tlsAgent,
 			method: 'POST',
 			headers: {
@@ -77,15 +77,17 @@ app.post('/login', async (req, reply) => {
 
 app.post('/logout', async (req, reply) => {
 	try {
-		const res = await fetch(`${AUTH_URL}/logout`, { 
+		const res = await fetch(`${AUTH_URL}/api/logout`, { 
 			dispatcher: tlsAgent,
-			method: 'POST'
+			method: 'POST',
+			headers: {
+				cookie: req.headers.cookie,
+			}
 		});
 		const data = await res.json();
-		reply
-			.header('set-cookie', 'auth=; Path=/; HttpOnly; Secure; Max-Age=0; SameSite=Strict')
-			.code(res.status)
-			.send(data);
+		const setCookie = res.headers.get('set-cookie');
+		if (setCookie) reply.header('set-cookie', setCookie);
+		return reply.code(res.status).send(data)
 	} catch (e) {
 		console.error('Proxy /logout error:', e);
 		return reply.code(500).send({ error: 'Proxy error during logout' });
@@ -94,7 +96,7 @@ app.post('/logout', async (req, reply) => {
 
 app.post('/set-2fa', async (req, reply) => {
 	try {
-		const res = await fetch(`${AUTH_URL}/set-2fa`, {
+		const res = await fetch(`${AUTH_URL}/api/set-2fa`, {
 			dispatcher: tlsAgent,
 			method: 'POST',
 			headers: {
@@ -113,7 +115,7 @@ app.post('/set-2fa', async (req, reply) => {
 
 app.post('/verify-2fa', async (req, reply) => {
 	try {
-		const res = await fetch(`${AUTH_URL}/verify-2fa`, {
+		const res = await fetch(`${AUTH_URL}/api/verify-2fa`, {
 			dispatcher: tlsAgent,
 			method: 'POST',
 			headers: {
@@ -134,7 +136,7 @@ app.post('/verify-2fa', async (req, reply) => {
 
 app.get('/users', async (req, reply) => {
 	try {
-		const res = await fetch(`${USER_URL}/users`, {
+		const res = await fetch(`${USER_URL}/api/users`, {
 			dispatcher: tlsAgent,
 			method: 'GET',
 			headers: {
