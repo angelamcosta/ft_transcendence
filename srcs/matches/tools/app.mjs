@@ -1,15 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import Fastify from 'fastify';
+import { fileURLToPath } from 'url';
 import sensible from '@fastify/sensible';
 import matchRoutes from './match.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
 import { loadTournament, loadMatch } from './middleware.mjs';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const PORT = process.env.MATCH_PORT || 8001;
 const KEY = process.env.MATCH_KEY;
 const CERT = process.env.MATCH_CERT;
-const __dirname = new URL('.', import.meta.url).pathname;
 
 const app = Fastify({
     logger: true,
