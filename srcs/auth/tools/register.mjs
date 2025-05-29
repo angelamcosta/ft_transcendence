@@ -1,14 +1,14 @@
 import { hashPassword } from './utils.mjs';
 
-export async function registerUser(db, {email, password}) {
+export async function registerUser(db, {email, password, display_name}) {
 	if (!email || !password) {
 		const error = new Error('Missing fields')
 		error.statusCode = 400
 		throw error
 	}
 
-	if (/\s/.test(email) || /\s/.test(password)) {
-		const error = new Error('Email and password must not contain whitespace')
+	if (/\s/.test(email) || /\s/.test(password) || /\s/.teste(display_name)) {
+		const error = new Error('EFields must not contain whitespaces')
 		error.statusCode = 400
 		throw error
 	}
@@ -36,7 +36,7 @@ export async function registerUser(db, {email, password}) {
 
 	const { salt , hash } = hashPassword(password)
 	try {
-		await db.run(`INSERT INTO users (email, passwordHash, salt, twofa_status) VALUES (?, ?, ?, 'disabled')`, [email, hash, salt])
+		await db.run(`INSERT INTO users (email, passwordHash, salt, twofa_status, display_name) VALUES (?, ?, ?, 'disabled', ?)`, [email, hash, salt, display_name])
 		return { message: 'Registration successful' }
 	} catch (dbError) {
 		console.log('Database error details:', dbError)
