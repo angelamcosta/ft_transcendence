@@ -20,6 +20,6 @@ RUN npm cache clean --force && \
 
 # Build TailwindCSS and TypeScript
 RUN npx @tailwindcss/cli -i ./style.css -o ./public/style.css --minify && \
-    npx tsc ts/main.ts --outDir public
+    npx tsc
 
 CMD [ "node", "app.mjs" ]
