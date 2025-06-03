@@ -2,7 +2,7 @@ import { fetch, Agent as UndiciAgent } from 'undici';
 import { db, fetchUserById, emailRegex } from './utils.mjs';
 
 const tlsAgent = new UndiciAgent({
-  connect: { rejectUnauthorized: false }
+	connect: { rejectUnauthorized: false }
 });
 
 export function validateData(fastify) {
@@ -68,30 +68,29 @@ export function loadFriendship(fastify) {
 	return async (req) => {
 		const { userId, targetId } = req;
 
-		const [idA, idB] = userId < targetId ? [userId, targetId]
-			: [targetId, userId];
-		req.orderedIds = { user_id: idA, friend_id: idB };
-
 		try {
-			const [user, friend] = await Promise.all([
-				fetchUserById(userId),
-				fetchUserById(targetId)
-			]);
+			const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
 
-			if (!user || !friend)
-				throw fastify.httpErrors.notFound('One or both users not found');
+			if (blocked)
+				throw fastify.httpErrors.forbidden('You cannot add this user');
 
-			const friendship = await db.get('SELECT * FROM friends WHERE user_id = ? AND friend_id = ?', [idA, idB]);
+			const friendship = await db.get(`SELECT * FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, targetId, targetId, userId]);
 
 			req.friendship = friendship || null;
 
-			if (friendship?.friendship_status === "accepted") {
-				req.friend = {
-					id: friend.id,
-					display_name: friend.display_name,
-					avatar: friend.avatar
-				};
+			if (friendship?.friendship_status === 'accepted') {
+				const friendId = friendship.user_id === userId ? friendship.friend_id : friendship.user_id;
+				const friend = await fetchUserById(friendId);
+
+				if (friend) {
+					req.friend = {
+						id: friend.id,
+						display_name: friend.display_name,
+						avatar: friend.avatar
+					};
+				}
 			}
+
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);

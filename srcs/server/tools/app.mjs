@@ -473,7 +473,5 @@ app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
 
 // Stuff to fix:
 //
-// Uploading avatars more than once won't update the avatar, avatar keeps being the same
-// Sending a friend request as user 2 to user 3 and then sending a request to /users/friends/accept/3 as user 2 will accept the own sent request
 // Even when user 3 is blocked, i can still send a friend request, and user 3 can see the request and accept it
 // When friend request is rejected, resending the friend request causes database error
