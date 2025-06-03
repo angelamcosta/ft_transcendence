@@ -38,7 +38,7 @@ export function authenticateRequest(fastify) {
 			const controller = new AbortController();
 			const timeout = setTimeout(() => controller.abort(), 5000);
 
-			const response = await fetch('https://auth:4000/verify', {
+			const response = await fetch('https://auth:4000/api/verify', {
 				dispatcher: tlsAgent,
 				method: 'GET',
 				headers: { 'cookie': `auth=${token}` },
