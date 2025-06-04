@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
 	expire INTEGER,
 	attempts INTEGER DEFAULT 0,
 	temp_blocked INTEGER,
-    display_name TEXT UNIQUE,
+    display_name TEXT UNIQUE NOT NULL,
     avatar TEXT DEFAULT 'default.png'
 );
 

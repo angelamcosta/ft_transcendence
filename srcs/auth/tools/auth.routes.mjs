@@ -41,8 +41,8 @@ export default async function authRoutes(fastify) {
 		}
 	})
 
-	fastify.post('/logout', { preHandler: jwtMiddleware }, async (req, reply) => {
-		return reply.header('set-cookie', 'auth=; Path=/; HttpOnly; Max-Age=0; SameSite=Strict').code(200).send({ success: 'Logged out successfully' })
+	fastify.post('/logout', async (req, reply) => {
+		return reply.header('set-cookie', 'auth=; Path=/; HttpOnly; Secure; Max-Age=0; SameSite=Strict').code(200).send({ success: 'Logged out successfully' })
 	})
 
 	fastify.post('/verify-2fa', async (req, reply) => {
@@ -82,7 +82,7 @@ export default async function authRoutes(fastify) {
 			await db.run(`UPDATE users SET otp = NULL, expire = NULL WHERE email = ?`, [email])
 
 			const token = generateJWT({ userId: user.id, email: user.email })
-			const cookie = `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600`
+			const cookie = `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`
 			return reply.header('set-cookie', cookie).code(200).send({ success: 'Login successful' })
 		}
 		catch (error) {

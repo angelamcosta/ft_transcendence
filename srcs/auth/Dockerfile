@@ -10,6 +10,8 @@ RUN apt-get update -y && \
 
 COPY ./tools/* .
 
+RUN openssl req -x509 -newkey rsa:4096 -subj "/CN=localhost" -keyout /auth/key.pem -out /auth/cert.pem -days 365 -nodes
+
 RUN npm cache clean --force && \
     npm init -y && \
     npm install fastify sqlite sqlite3 nodemailer
