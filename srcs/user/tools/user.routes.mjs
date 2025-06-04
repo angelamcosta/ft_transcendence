@@ -86,14 +86,15 @@ export default async function userRoutes(fastify) {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship],
 	}, async (req) => {
 		try {
+			const userId = req.authUser.id;
 			const paramId = Number(req.params.id);
 
-			if (req.authUser.id !== paramId)
-				throw fastify.httpErrors.forbidden('You cannot modify another user');
+			if (userId === paramId)
+				throw fastify.httpErrors.forbidden('You cannot perform this operation on yourself');
 
 			if (req.friendship)
-				await db.run(`DELETE FROM friends WHERE user_id = ? AND friend_id = ?`, [req.orderedIds.user_id, req.orderedIds.friend_id]);
-			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)`, [req.authUser.id, req.targetId]);
+				await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
+			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)`, [userId, paramId]);
 			return { message: 'User blocked successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -105,12 +106,13 @@ export default async function userRoutes(fastify) {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.isBlocked],
 	}, async (req) => {
 		try {
+			const userId = req.authUser.id;
 			const paramId = Number(req.params.id);
 
-			if (req.authUser.id !== paramId)
-				throw fastify.httpErrors.forbidden('You cannot modify another user');
+			if (userId === paramId)
+				throw fastify.httpErrors.forbidden('You cannot perform this operation on yourself');
 
-			await db.run(`DELETE FROM blocked_users WHERE blocker_id = ? and blocked_id = ?`, [req.authUser.id, req.targetId]);
+			await db.run(`DELETE FROM blocked_users WHERE blocker_id = ? and blocked_id = ?`, [userId, paramId]);
 			return { message: 'User unblocked successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -150,6 +152,11 @@ export default async function userRoutes(fastify) {
 	fastify.put('/users/:id/avatar', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
+		const paramId = Number(req.params.id)
+
+		if (req.authUser.id !== paramId)
+			throw fastify.httpErrors.forbidden('You cannot modify another user');
+
 		const data = await req.file();
 
 		const row = await db.get('SELECT avatar FROM users WHERE id = ?', [req.authUser.id]);
@@ -282,8 +289,12 @@ export default async function userRoutes(fastify) {
 		if (req.friendship?.friendship_status !== 'pending')
 			throw fastify.httpErrors.badRequest('Friendship is not pending');
 
+		if (req.friendship.user_id != paramId || req.friendship.friend_id != userId)
+			throw fastify.httpErrors.forbidden('You cannot accept your own request');
+
 		try {
-			await db.run(`UPDATE friends SET friendship_status = 'accepted' WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
+			await db.run(`UPDATE friends SET friendship_status = 'accepted' WHERE user_id = ? 
+				AND friend_id = ? AND friendship_status = 'pending'`, [paramId, userId]);
 			return { message: 'Friend request accepted' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -303,8 +314,12 @@ export default async function userRoutes(fastify) {
 		if (req.friendship?.friendship_status !== 'pending')
 			throw fastify.httpErrors.badRequest('Friendship is not pending');
 
+		if (req.friendship.user_id != paramId || req.friendship.friend_id != userId)
+			throw fastify.httpErrors.forbidden('You cannot reject your own request');
+
 		try {
-			await db.run(`UPDATE friends SET friendship_status = 'rejected' WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
+			await db.run(`DELETE FROM friends WHERE friendship_status = 'pending' AND (user_id = ? 
+				AND friend_id = ?)`, [paramId, userId]);
 			return { message: 'Friend request rejected' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
