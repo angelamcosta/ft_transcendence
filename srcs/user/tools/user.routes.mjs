@@ -1,7 +1,9 @@
 import { db } from './utils.mjs'
 import { promises as fsp } from 'fs';
+import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { pipeline } from 'stream/promises';
 
 export default async function userRoutes(fastify) {
 	// ! users
@@ -151,19 +153,13 @@ export default async function userRoutes(fastify) {
 
 	fastify.put('/users/:id/avatar', {
 		preValidation: fastify.authenticateRequest,
-	}, async (req, res) => {
-		const paramId = Number(req.params.id)
+	}, async (req, reply) => {
+		const paramId = Number(req.params.id);
 
 		if (req.authUser.id !== paramId)
 			throw fastify.httpErrors.forbidden('You cannot modify another user');
 
 		const data = await req.file();
-
-		const row = await db.get('SELECT avatar FROM users WHERE id = ?', [req.authUser.id]);
-		if (row && row.avatar !== 'default.png') {
-			const filePath = path.join(process.env.UPLOAD_DIR, row.avatar);
-			await fsp.unlink(filePath);
-		}
 
 		if (!data)
 			throw fastify.httpErrors.badRequest('No file uploaded');
@@ -172,24 +168,32 @@ export default async function userRoutes(fastify) {
 		if (!allowedMimeTypes.includes(data.mimetype))
 			throw fastify.httpErrors.unsupportedMediaType('Only JPEG, JPG and PNG images are allowed');
 
+		const fileExt = path.extname(data.filename);
+		const uniqueName = crypto.randomUUID() + fileExt;
+		const uploadPath = path.join(process.env.UPLOAD_DIR, uniqueName);
 		try {
-			const fileExt = path.extname(data.filename);
-			const uniqueName = crypto.randomUUID() + fileExt;
-			const uploadPath = path.join(process.env.UPLOAD_DIR, uniqueName);
-
 			await fsp.mkdir(path.dirname(uploadPath), { recursive: true });
-			await fsp.writeFile(uploadPath, await data.toBuffer());
-			await db.run('UPDATE users SET avatar = ? WHERE id = ?', [uniqueName, req.authUser.id]);
-
-			return { message: 'Avatar uploaded successfully', avatar: uniqueName };
-		} catch (err) {
-			if (err.code == 'FST_REQ_FILE_TOO_LARGE')
-				res.status(413).send({ error: 'Image exceeds 2MB limit.' });
-			else {
-				fastify.log.error(`Database error: ${err.message}`);
-				throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+			await pipeline(data.file, fs.createWriteStream(uploadPath));
+			if (data.file.truncated) {
+				await fsp.unlink(uploadPath);
+				return reply.status(413).send({ error: 'Image exceeds 2MB limit.' });
+    		}
+			const row = await db.get('SELECT avatar FROM users WHERE id = ?', [paramId]);
+			if (row && row.avatar && row.avatar !== 'default.png') {
+				const oldPath = path.join(process.env.UPLOAD_DIR, row.avatar);
+			try {
+				await fsp.unlink(oldPath);
+			} catch (err) {
+				if (err.code !== 'ENOENT')
+					throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 			}
 		}
+			await db.run('UPDATE users SET avatar = ? WHERE id = ?', [uniqueName, req.authUser.id]);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+		return { message: 'Avatar uploaded successfully', avatar: uniqueName };
 	});
 
 
