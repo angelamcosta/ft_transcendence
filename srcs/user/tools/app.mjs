@@ -29,7 +29,8 @@ await app.register(fastifyCookie);
 
 app.register(fastifyMultipart, {
 	limits: {
-		fileSize: 2 * 1024 * 1024
+		fileSize: 2 * 1024 * 1024,
+		files: 1
 	}
 });
 

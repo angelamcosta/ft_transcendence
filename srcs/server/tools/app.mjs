@@ -473,6 +473,4 @@ app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
 
 // Stuff to fix:
 
-// Uploading an avatar exceeding 2mb limit size will throw error the first time, uploading again will successfully upload an avatar bigger than 2mb
-
-// Trying to upload an exceeding 2mb avatar will still delete the current avatar even if error is thrown
+// - Check how many files are sent to the avatar upload, only one should be possible
