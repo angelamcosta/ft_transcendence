@@ -12,7 +12,7 @@ const AUTH_URL = process.env.AUTH_URL;
 const USER_URL = process.env.USER_URL;
 
 const tlsAgent = new UndiciAgent({
-  connect: { rejectUnauthorized: false }
+	connect: { rejectUnauthorized: false }
 });
 
 const app = Fastify({
@@ -81,7 +81,7 @@ app.post('/login', async (req, reply) => {
 
 app.post('/logout', async (req, reply) => {
 	try {
-		const res = await fetch(`${AUTH_URL}/api/logout`, { 
+		const res = await fetch(`${AUTH_URL}/api/logout`, {
 			dispatcher: tlsAgent,
 			method: 'POST',
 			headers: {
@@ -281,15 +281,32 @@ app.get('/users/:id/avatar', async (req, reply) => {
 				cookie: req.headers.cookie,
 			},
 		});
+
+		if (!res.ok) {
+			let message = 'Error fetching avatar';
+			try {
+				const errData = await res.json();
+				message = errData?.error || message;
+			} catch (_) { }
+
+			return reply.code(res.status).send({ error: message });
+		}
+
 		const contentType = res.headers.get('Content-Type');
 		const buffer = Buffer.from(await res.arrayBuffer());
 
-		return reply.header('Content-Type', contentType).code(res.status).send(buffer);
+		return reply
+			.header('Content-Type', contentType)
+			.header('Cache-Control', 'no-cache')
+			.code(res.status)
+			.send(buffer);
+
 	} catch (e) {
 		console.error('Proxy /users/:id/avatar error', e);
-		return reply.code(500).send({ error: 'Error fetching avatar' });
+		return reply.code(500).send({ error: 'Unexpected server error while fetching avatar' });
 	}
-})
+});
+
 
 app.put('/users/:id/avatar', { body: false }, async (req, reply) => {
 	try {
