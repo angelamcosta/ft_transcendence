@@ -1,13 +1,5 @@
 import * as utils from './utils.js';
 
-function createMenuButton(text: string): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = text;
-    button.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
-    return button;
-}
-
 export function landingPage(workArea: HTMLDivElement | null) {
     utils.cleanDiv(workArea);
 
@@ -166,24 +158,21 @@ export function menu(workArea: HTMLDivElement | null) {
     logo.className = "text-xl font-bold text-white hover:text-blue-800 focus:outline-none";
     logo.textContent = "Our game hub";
 
-    const toggleButton = document.createElement("button");
-    toggleButton.id = "menu-button";
-    toggleButton.className = "md:hidden text-white text-2xl focus:outline-none";
-    toggleButton.textContent = "☰";
-
     const menu = document.createElement("div");
     menu.id = "menu";
     menu.className = "hidden md:flex space-x-4";
 
-    const mobileMenu = document.createElement("div");
-    mobileMenu.id = "mobile-menu";
-    mobileMenu.className = "md:hidden hidden px-4 pb-4";
-
-    const links = ["Friends"];
-    for (const text of links) {
-        menu.appendChild(createMenuButton(text));
-        mobileMenu.appendChild(createMenuButton(text));
-    }
+    const friendsButton = document.createElement("button");
+    friendsButton.type = "button";
+    friendsButton.title = "My friends";
+    friendsButton.innerHTML += '<svg vg class="fill-current w-8 h-8 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">\
+    <path d="M11 8.5C11 9.88071 9.88071 11 8.5 11C7.11929 11 6 9.88071 6 8.5C6 7.11929 7.11929 6 8.5 6C9.88071 6 11 7.11929 11 8.5Z"/>\
+    <path d="M18 5.5C18 6.88071 16.8807 8 15.5 8C14.1193 8 13 6.88071 13 5.5C13 4.11929 14.1193 3 15.5 3C16.8807 3 18 4.11929 18 5.5Z"/>\
+    <path d="M15.5 20C14.5 21 3.00002 20.5 2.00001 20C1 19.5 5.41016 15 9.00001 15C12.5899 15 16.076 19.424 15.5 20Z"/>\
+    <path d="M15.3522 16.2905C16.0024 16.991 16.5501 17.7108 16.9695 18.3146C17.4791 18.3176 18.1122 18.3174 18.7714 18.3075C19.5445 18.296 20.365 18.2711 21.0682 18.2214C21.4193 18.1965 21.7527 18.1647 22.0422 18.1231C22.3138 18.0841 22.6125 18.028 22.8585 17.9335C23.0969 17.8419 23.3323 17.6857 23.5095 17.4429C23.6862 17.2007 23.7604 16.9334 23.7757 16.6907C23.8039 16.2435 23.6381 15.8272 23.4749 15.5192C23.1328 14.8736 22.5127 14.1722 21.7887 13.5408C20.3574 12.2925 18.1471 11 16 11C14.8369 11 13.97 11.1477 13.192 11.5887C12.4902 11.9866 11.9357 12.5909 11.3341 13.2466L11.2634 13.3236L11.1127 13.4877C11.8057 13.6622 12.4547 13.9653 13.0499 14.337C13.5471 13.8034 13.845 13.5176 14.1784 13.3285C14.5278 13.1305 14.998 13 16 13C17.4427 13 19.196 13.9334 20.4741 15.048C20.9492 15.4624 21.3053 15.8565 21.5299 16.1724C21.3524 16.1926 21.15 16.2106 20.927 16.2263C20.2775 16.2723 19.4991 16.2964 18.7416 16.3077C17.9864 16.319 17.2635 16.3174 16.7285 16.3129C16.4612 16.3106 16.2416 16.3077 16.089 16.3053C16.0127 16.3041 15.9533 16.303 15.9131 16.3023L15.8676 16.3014L15.8562 16.3012L15.8535 16.3011L15.8529 16.3011L15.8528 16.3011L15.8528 16.3011L15.3522 16.2905Z"/>\
+    </svg>';
+    friendsButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+    menu.appendChild(friendsButton);
 
     const settingsButton = document.createElement("button");
     settingsButton.type = "button";
@@ -199,15 +188,10 @@ export function menu(workArea: HTMLDivElement | null) {
     logoutButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
     menu.appendChild(logoutButton);
     
-
-    inner.appendChild(toggleButton);
     inner.appendChild(logo);
     inner.appendChild(menu);
     container.appendChild(inner);
     nav.appendChild(container);
-    nav.appendChild(mobileMenu);
 
     workArea?.appendChild(nav);
 }
-
-//<svg class="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"/></svg>
