@@ -40,7 +40,20 @@ await app.register(cors, {
 	})
 );
 
-app.get('/', async () => ({ message: 'Success!' }));
+app.get('/', async (req, res) => {
+	try {
+		const filePath = '/app/static/index.html';
+		const fileContent = fs.readFileSync(filePath, 'utf-8');
+		return res.type('text/html').send(fileContent);
+	} catch (error) {
+		console.error('Error details:', {
+			error: error.message,
+			path: error.path,
+			stack: error.stack
+		});
+		return res.code(500).send('Internal Server Error - File not found');
+	}
+});
 
 app.post('/register', async (req, reply) => {
 	try {
@@ -487,7 +500,3 @@ app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
 	}
 	console.log(`Server running at ${address}`);
 });
-
-// Stuff to fix:
-
-// - Check how many files are sent to the avatar upload, only one should be possible
