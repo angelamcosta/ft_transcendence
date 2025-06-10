@@ -38,9 +38,8 @@ CREATE TABLE IF NOT EXISTS tournaments (
 
 CREATE TABLE players (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    alias TEXT UNIQUE NOT NULL,
-    tournament_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
+    tournament_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
     FOREIGN KEY(user_id) REFERENCES users(id)
@@ -49,9 +48,9 @@ CREATE TABLE players (
 CREATE TABLE matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tournament_id TEXT,
-    player1_id TEXT NOT NULL,
-    player2_id TEXT NOT NULL,
-    winner_id TEXT NULL,
+    player1_id INTEGER NOT NULL,
+    player2_id INTEGER NOT NULL,
+    winner_id INTEGER NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     score TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -62,7 +61,7 @@ CREATE TABLE matches (
 );
 
 CREATE TABLE matchmaking_queue (
-    player_id TEXT PRIMARY KEY,
+    player_id INTEGER PRIMARY KEY,
     joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(player_id) REFERENCES players(id)
 );

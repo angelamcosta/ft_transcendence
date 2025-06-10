@@ -10,7 +10,7 @@ export async function loginUser(db, {email, password}) {
 
 	const user = await db.get('SELECT * FROM users where email = ?', [email])
 	if (!user) {
-		const error = new Error('Invalid credentials')
+		const error = new Error('User does not exist')
 		error.statusCode = 401
 		throw error
 	}
