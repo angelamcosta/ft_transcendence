@@ -35,10 +35,10 @@ const gameCanvas: GameCanvas = {
 };
 
 class Ball {
-    x: number;
-    y: number;
+    x!: number;
+    y!: number;
     xSpeed: number;
-    ySpeed: number;
+    ySpeed!: number;
     angle?: number;
 
     constructor() {

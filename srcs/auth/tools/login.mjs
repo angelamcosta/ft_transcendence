@@ -10,7 +10,7 @@ export async function loginUser(db, {email, password}) {
 
 	const user = await db.get('SELECT * FROM users where email = ?', [email])
 	if (!user) {
-		const error = new Error('Invalid credentials')
+		const error = new Error('User does not exist')
 		error.statusCode = 401
 		throw error
 	}
@@ -36,5 +36,5 @@ export async function loginUser(db, {email, password}) {
 	}
 
 	const token = generateJWT({ userId: user.id, email: user.email })
-	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600`, twofa: 'disabled' })
+	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`, twofa: 'disabled' })
 }
