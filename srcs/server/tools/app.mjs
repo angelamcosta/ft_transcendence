@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
 import cors from '@fastify/cors';
 import authRoutes from './auth.routes.mjs';
 import userRoutes from './user.routes.mjs';
@@ -24,6 +25,11 @@ app.addContentTypeParser('multipart/form-data', (request, payload, done) => {
 	done(null);
 });
 
+await app.register(fastifyStatic, {
+	root: path.join(__dirname, 'public'),
+	prefix: '/',
+});
+
 await app.register(cors, {
 	origin: true,
 	credentials: true,
@@ -36,8 +42,19 @@ await app.register(cors, {
 	})
 );
 
-app.get('/', async function handler(request, reply) {
-	return reply.sendFile('index.html');
+app.get('/', async (req, res) => {
+	try {
+		const filePath = '/app/public/index.html';
+		const fileContent = fs.readFileSync(filePath, 'utf-8');
+		return res.type('text/html').send(fileContent);
+	} catch (error) {
+		console.error('Error details:', {
+			error: error.message,
+			path: error.path,
+			stack: error.stack
+		});
+		return res.code(500).send('Internal Server Error - File not found');
+	}
 });
 
 await app.register(authRoutes);
