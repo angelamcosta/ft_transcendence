@@ -54,6 +54,14 @@ export function signUp(workArea: HTMLDivElement | null) {
     emailInput.classList.add('m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
 
     // Create an email input
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.name = 'name';
+    nameInput.placeholder = 'Enter your display name';
+    nameInput.required = true;
+    nameInput.classList.add('m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+
+    // Create an email input
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
     passwordInput.name = 'password';
@@ -75,8 +83,9 @@ export function signUp(workArea: HTMLDivElement | null) {
     signInButton.classList.add('m-4','px-4','py-2','bg-blue-700','text-white','rounded','hover:bg-blue-900');
     
     // Append elements to form
-
     form.appendChild(emailInput);
+    form.appendChild(document.createElement('br'));
+    form.appendChild(nameInput);
     form.appendChild(document.createElement('br'));
     form.appendChild(passwordInput);
     form.appendChild(document.createElement('br'));
@@ -97,6 +106,7 @@ export function signUp(workArea: HTMLDivElement | null) {
         }
         const formData = new FormData(form);
         const email = formData.get('email');
+        const display_name = formData.get('name');
         const password = formData.get('password');
         emailInput.setCustomValidity('');
 
@@ -108,6 +118,7 @@ export function signUp(workArea: HTMLDivElement | null) {
                 },
                 body: JSON.stringify({
                 email,
+                display_name,
                 password
                 }),
             });
