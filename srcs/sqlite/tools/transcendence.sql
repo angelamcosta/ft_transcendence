@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'open',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    capacity INTEGER NOT NULL DEFAULT 0;
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 );
 
 CREATE TABLE players (
@@ -47,7 +48,7 @@ CREATE TABLE players (
 
 CREATE TABLE matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tournament_id TEXT,
+    tournament_id INTEGER,
     player1_id INTEGER NOT NULL,
     player2_id INTEGER NOT NULL,
     winner_id INTEGER NULL,
@@ -55,6 +56,7 @@ CREATE TABLE matches (
     score TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    round INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
     FOREIGN KEY(player1_id) REFERENCES players(id),
     FOREIGN KEY(player2_id) REFERENCES players(id)
