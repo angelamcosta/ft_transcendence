@@ -418,7 +418,7 @@ export default async function userRoutes(fastify) {
 	})
 
 	fastify.put('/users/invite/accept/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadMatchInvites],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadMatchInvites],
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
@@ -429,7 +429,7 @@ export default async function userRoutes(fastify) {
 		if (req.invite?.invite_status !== 'pending')
 			throw fastify.httpErrors.badRequest('No match invite pending from this user');
 
-		if (req.friendship.user_id != paramId || req.friendship.friend_id != userId)
+		if (req.invite.user_id != paramId || req.invite.friend_id != userId)
 			throw fastify.httpErrors.forbidden('You cannot accept your own invite');
 
 		try {
@@ -443,7 +443,7 @@ export default async function userRoutes(fastify) {
 	})
 
 	fastify.put('/users/invite/reject/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadMatchInvites],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadMatchInvites],
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
@@ -454,7 +454,7 @@ export default async function userRoutes(fastify) {
 		if (req.invite?.invite_status !== 'pending')
 			throw fastify.httpErrors.badRequest('No match invite pending from this user');
 
-		if (req.friendship.user_id != paramId || req.friendship.friend_id != userId)
+		if (req.invite.user_id != paramId || req.invite.friend_id != userId)
 			throw fastify.httpErrors.forbidden('You cannot reject your own invite');
 
 		try {
