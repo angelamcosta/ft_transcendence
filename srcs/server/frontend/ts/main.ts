@@ -19,8 +19,6 @@ displayPage.landingPage(workArea, menuArea);
 
 document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
 
-document.getElementById('signInButton')?.addEventListener("click", () => {
-    alert("Button clicked! Test com.");
-});
+document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea, menuArea));
 
 document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));

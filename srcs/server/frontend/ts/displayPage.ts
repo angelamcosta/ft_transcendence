@@ -18,6 +18,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 
     const form = document.createElement('form');
     form.id = 'newAccount';
+	form.classList.add('flex', 'flex-col', 'items-center');
 
     // Create an email input
     const emailInput = document.createElement('input');
@@ -36,16 +37,10 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     nameInput.name = 'name';
     nameInput.placeholder = 'Enter your display name';
     nameInput.required = true;
-    nameInput.classList.add('w-&0','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+    nameInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
 
-    // Create an div for password and toggle button
-    const passwordDiv = document.createElement('div');
-    passwordDiv.classList.add('flex','justify-center', 'items-center');
-
-    // Create an div for password and toggle button
-    const passwordDiv2 = document.createElement('div');
-    passwordDiv2.classList.add('relative', 'w-full', 'max-w-sm');
-    passwordDiv.appendChild(passwordDiv2);
+    const passwordContainer = document.createElement('div');
+    passwordContainer.classList.add('relative', 'w-60', 'm-4');
 
     // Create an email input
     const passwordInput = document.createElement('input');
@@ -55,20 +50,35 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     passwordInput.placeholder = 'Enter your pasword';
     passwordInput.minLength = 6;
     passwordInput.required = true;
-    passwordInput.classList.add('w-60','m-4', 'pr-1', 'border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
-    passwordDiv2.appendChild(passwordInput);
+    passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	
+	const eyeIcon = `
+		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M2.062 12.348a1 1 0 0 1 0-.696 
+             10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 
+             10.75 10.75 0 0 1-19.876 0"/>
+    	<circle cx="12" cy="12" r="3"/>
+  		</svg>`;
+
+	const eyeSlashIcon = `
+  		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M17.94 17.94A10.5 10.5 0 0 1 3 12c1.3-2.5 3.87-4.5 7-5"/>
+    	<path d="M1 1l22 22"/>
+  		</svg>`;
 
     // Create a toggle button
     const toggleButton = document.createElement('button');
     toggleButton.type = 'button';
     toggleButton.title = "Show password";
-    toggleButton.innerHTML += '<svg vg class="fill-blue-500 w-full h-full hover:bg-blue-700" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" \
-    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\
-    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>\
-    <circle cx="12" cy="12" r="3"/>\
-    </svg>';
+    toggleButton.innerHTML = eyeIcon;
     toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
-    passwordDiv2.appendChild(toggleButton);
+	toggleButton.style.background = 'transparent';
+    passwordContainer.appendChild(passwordInput);
+    passwordContainer.appendChild(toggleButton);
 
     // Create a submit button
     const submitButton = document.createElement('button');
@@ -81,36 +91,133 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     resetButton.id = 'resetButton';
     resetButton.type = 'button';
     resetButton.textContent = 'Reset';
-    resetButton.classList.add('w-26','m-4','px-1','py-2','bg-gray-500','text-white','rounded','hover:bg-gray-700');
+    resetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
 
     // Create a reset button button
     const cancelButton = document.createElement('button');
     cancelButton.id = 'cancelButton';
     cancelButton.type = 'button';
     cancelButton.textContent = 'Cancel';
-    cancelButton.classList.add('w-26','m-4','px-1','py-2','bg-gray-500','text-white','rounded','hover:bg-gray-700');
+    cancelButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'ml-auto');
+
+	const buttonContainer = document.createElement('div');
+    buttonContainer.classList.add('flex', 'w-60', 'm-4');
+	buttonContainer.appendChild(resetButton);
+	buttonContainer.appendChild(cancelButton);
 
     // Append elements to form
     form.appendChild(emailInput);
     form.appendChild(document.createElement('br'));
     form.appendChild(nameInput);
     form.appendChild(document.createElement('br'));
-    form.appendChild(passwordDiv);
+    form.appendChild(passwordContainer);
     form.appendChild(document.createElement('br'));
     form.appendChild(submitButton);
     form.appendChild(document.createElement('br'));
-    form.appendChild(resetButton);
-    form.appendChild(cancelButton);
+    form.appendChild(buttonContainer);
 
     // Append form and login button to the body
     workArea?.appendChild(form);
 
     // Handle form submission
     form.addEventListener('submit', formHandlers.signUp);
+	toggleButton.addEventListener('click', (e) => {
+		e.preventDefault();
+
+  		const isHidden = passwordInput.type === 'password';
+  		passwordInput.type = isHidden ? 'text' : 'password';
+  		toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
+	});
     resetButton.addEventListener("click", () => {
         form.reset();
     });
     cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
+}
+
+export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, successMessage?: string) {
+	utils.cleanDiv(workArea);
+
+	const form = document.createElement('form');
+    form.id = 'login';
+	form.classList.add('flex', 'flex-col', 'items-center');
+
+	const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.id = "emailInput"; 
+    emailInput.name = 'email';
+    emailInput.placeholder = 'Enter your email';
+    emailInput.willValidate;
+    emailInput.required = true;
+    emailInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+
+	const passwordContainer = document.createElement('div');
+    passwordContainer.classList.add('relative', 'w-60', 'm-4');
+
+	const passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.id = "passwordInput";
+    passwordInput.name = 'password';
+    passwordInput.placeholder = 'Enter your pasword';
+    passwordInput.minLength = 6;
+    passwordInput.required = true;
+    passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+
+	const eyeIcon = `
+		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M2.062 12.348a1 1 0 0 1 0-.696 
+             10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 
+             10.75 10.75 0 0 1-19.876 0"/>
+    	<circle cx="12" cy="12" r="3"/>
+  		</svg>`;
+
+	const eyeSlashIcon = `
+  		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M17.94 17.94A10.5 10.5 0 0 1 3 12c1.3-2.5 3.87-4.5 7-5"/>
+    	<path d="M1 1l22 22"/>
+  		</svg>`;
+
+    // Create a toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.type = 'button';
+    toggleButton.title = "Show password";
+    toggleButton.innerHTML = eyeIcon;
+    toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	toggleButton.style.background = 'transparent';
+    passwordContainer.appendChild(passwordInput);
+    passwordContainer.appendChild(toggleButton);
+
+	const submitButton = document.createElement('button');
+    submitButton.type = 'submit';
+    submitButton.textContent = 'Login';
+    submitButton.classList.add('w-60','m-4','px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+
+	form.appendChild(emailInput);
+    form.appendChild(document.createElement('br'));
+	form.appendChild(passwordContainer);
+	form.appendChild(document.createElement('br'));
+	form.appendChild(submitButton);
+
+	if (successMessage) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'text-green-600 mt-4 text-sm text-center';
+        msgDiv.textContent = successMessage;
+        form.appendChild(msgDiv);
+    }
+
+	workArea?.appendChild(form);
+
+	form.addEventListener('submit', formHandlers.signIn);
+	toggleButton.addEventListener('click', (e) => {
+		e.preventDefault();
+
+  		const isHidden = passwordInput.type === 'password';
+  		passwordInput.type = isHidden ? 'text' : 'password';
+  		toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
+	});
 }
 
 export function dashboard(workArea: HTMLDivElement | null) {

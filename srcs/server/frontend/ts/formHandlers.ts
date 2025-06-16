@@ -58,30 +58,63 @@ export async function signUp(e: Event) {
         const data = await response.json();
         console.log('API response:', data);
         if (!response.ok) {
-            if (response.status === 409) {
-                emailInput.setCustomValidity('This email is already in use.');
-                emailInput.reportValidity();
-            }
-            else {
-                alert('Login failed! with error: ' + response.status);
-            }
+            const message = data?.error || 'Register failed';
+    
+			// Create  a message container
+			let errorMessage = document.createElement('div');
+			errorMessage.id = 'registerError';
+			errorMessage.className = 'text-red-600 mt-2 text-sm';
+			form.append(errorMessage);
+			errorMessage.textContent = message;
+			return;
         }
-        else {
-            emailInput.setCustomValidity('');
-            displayPage.menu(menuArea);
-            displayPage.dashboard(workArea);
-            document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-            document.getElementById('signOutButton')?.addEventListener("click", () => {
-                const sessionId = utils.getCookie("session_id");
-                if (sessionId) {
-                    console.log("Session ID:", sessionId);
-                }
-                else {
-                    console.log("No session_id cookie found.");
-                }                   
-            });
-        }
+		const message = data?.success || 'Register success';
+		emailInput.setCustomValidity('');
+		displayPage.signIn(workArea, menuArea, message);
+    } catch (error) {
+        console.error('Error sending form data:', error);
+        alert('Register failed! Catched on Try');
+    }
+}
 
+export async function signIn(e: Event) {
+	e.preventDefault();
+
+    const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+    const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
+
+	const form = e.target as HTMLFormElement;
+	const formData = new FormData(form);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+	try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+            email,
+            password
+            }),
+        });
+
+        const data = await response.json();
+		if (!response.ok) {
+    		const message = data?.error || 'Login failed.';
+    
+			// Create  a message container
+			let messageDiv = document.createElement('div');
+			messageDiv.id = 'loginError';
+			messageDiv.className = 'text-red-600 mt-2 text-sm';
+			form.append(messageDiv);
+			messageDiv.textContent = message;
+			return;
+		}
+
+        displayPage.menu(menuArea);
+        displayPage.dashboard(workArea);
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Login failed! Catched on Try');
