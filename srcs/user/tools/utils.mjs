@@ -20,3 +20,18 @@ export async function fetchUserById(id) {
 		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 	}
 }
+
+export async function fetchInviteById(id) {
+	if (!id) throw new Error('fetchInviteById: missing id');
+
+	try {
+		const invite = await db.get('SELECT * FROM match_invites WHERE id = ?', id);
+
+		if (!invite)
+			throw fastify.httpErrors.badRequest('Failed to fetch invites');
+		return invite;
+	} catch (err) {
+		fastify.log.error(`Database error: ${err.message}`);
+		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
+	}
+}

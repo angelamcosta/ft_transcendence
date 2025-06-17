@@ -6,7 +6,7 @@ import sensible from '@fastify/sensible';
 import userRoutes from './user.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
-import { isBlocked, notBlocked, validateData, validateUsers, loadFriendship, authenticateRequest } from './middleware.mjs';
+import { isBlocked, notBlocked, validateData, validateUsers, loadFriendship, authenticateRequest, loadMatchInvites } from './middleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +47,7 @@ app.decorate('notBlocked', notBlocked(app));
 app.decorate('validateData', validateData(app));
 app.decorate('validateUsers', validateUsers(app));
 app.decorate('loadFriendship', loadFriendship(app));
+app.decorate('loadMatchInvites', loadMatchInvites(app));
 app.decorate('authenticateRequest', authenticateRequest(app));
 
 await app.register(userRoutes, { prefix: '/api' });

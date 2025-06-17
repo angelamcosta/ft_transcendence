@@ -98,6 +98,28 @@ export function loadFriendship(fastify) {
 	};
 }
 
+export function loadMatchInvites(fastify) {
+	return async (req) => {
+		const { userId, targetId } = req;
+
+		try {
+			const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) 
+				OR (blocker_id = ?AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
+
+			if (blocked)
+				throw fastify.httpErrors.forbidden('User cannot be invited to a match');
+
+			const invite = await db.get(`SELECT * FROM match_invites WHERE (user_id = ? AND friend_id = ?) 
+				OR (user_id = ? AND friend_id = ?)`, [userId, targetId, targetId, userId]);
+
+			req.invite = invite || null;
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	};
+}
+
 export function validateUsers(fastify) {
 	return async (req) => {
 		const target_id = Number(req.params.id);

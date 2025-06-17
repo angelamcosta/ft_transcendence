@@ -21,6 +21,15 @@ CREATE TABLE IF NOT EXISTS friends (
     FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS match_invites (
+    user_id INTEGER NOT NULL,
+    friend_id INTEGER NOT NULL,
+    invite_status TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (user_id, friend_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS blocked_users (
     blocker_id INTEGER NOT NULL,
     blocked_id INTEGER NOT NULL,
@@ -33,7 +42,8 @@ CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'open',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    capacity INTEGER NOT NULL DEFAULT 0;
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 );
 
 CREATE TABLE players (
@@ -47,7 +57,7 @@ CREATE TABLE players (
 
 CREATE TABLE matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tournament_id TEXT,
+    tournament_id INTEGER,
     player1_id INTEGER NOT NULL,
     player2_id INTEGER NOT NULL,
     winner_id INTEGER NULL,
@@ -55,6 +65,7 @@ CREATE TABLE matches (
     score TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    round INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
     FOREIGN KEY(player1_id) REFERENCES players(id),
     FOREIGN KEY(player2_id) REFERENCES players(id)

@@ -1,6 +1,7 @@
 import * as utils from './utils.js';
+import * as formHandlers from './formHandlers.js';
 
-export function landingPage(workArea: HTMLDivElement | null) {
+export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
     utils.cleanDiv(workArea);
 
     // Create <h1>
@@ -8,153 +9,231 @@ export function landingPage(workArea: HTMLDivElement | null) {
     heading.textContent = "Welcome to our Game Hub!";
     heading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
-    // Create "Sign Up" button
-    const signUpButton = document.createElement("button");
-    signUpButton.id = "signUp";
-    signUpButton.textContent = "Sign Up";
-    signUpButton.classList.add("m-4", "px-4", "py-2", "bg-blue-500", "text-white", "rounded", "hover:bg-blue-700");
-
-    // Create <p>
-    const paragraph = document.createElement("p");
-    paragraph.textContent = "Already registered?"; // fixed typo
-    paragraph.classList.add("text-center", "text-blue-600");
-
-    // Create "Sign In" button
-    const signInButton = document.createElement("button");
-    signInButton.id = "signIn";
-    signInButton.textContent = "Sign In";
-    signInButton.classList.add("m-4", "px-4", "py-2", "bg-blue-700", "text-white", "rounded", "hover:bg-blue-900");
-
     // Append to div
     workArea?.appendChild(heading);
-    workArea?.appendChild(signUpButton);
-    workArea?.appendChild(paragraph);
-    workArea?.appendChild(signInButton);
-
-    signUpButton.addEventListener("click", () => signUp(workArea));
-    
-    signInButton.addEventListener("click", () => {
-        alert("Button clicked! Test com.");
-    });
 }
 
-export function signUp(workArea: HTMLDivElement | null) {
+export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
     utils.cleanDiv(workArea);
 
     const form = document.createElement('form');
     form.id = 'newAccount';
+	form.classList.add('flex', 'flex-col', 'items-center');
 
     // Create an email input
     const emailInput = document.createElement('input');
     emailInput.type = 'email';
+    emailInput.id = "emailInput"; 
     emailInput.name = 'email';
     emailInput.placeholder = 'Enter your email';
     emailInput.willValidate;
     emailInput.required = true;
-    emailInput.classList.add('m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+    emailInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
 
     // Create an email input
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
+    nameInput.id = "nameInput";
     nameInput.name = 'name';
     nameInput.placeholder = 'Enter your display name';
     nameInput.required = true;
-    nameInput.classList.add('m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+    nameInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+
+    const passwordContainer = document.createElement('div');
+    passwordContainer.classList.add('relative', 'w-60', 'm-4');
 
     // Create an email input
     const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
+    passwordInput.id = "passwordInput";
     passwordInput.name = 'password';
     passwordInput.placeholder = 'Enter your pasword';
     passwordInput.minLength = 6;
     passwordInput.required = true;
-    passwordInput.classList.add('m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+    passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	
+	const eyeIcon = `
+		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M2.062 12.348a1 1 0 0 1 0-.696 
+             10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 
+             10.75 10.75 0 0 1-19.876 0"/>
+    	<circle cx="12" cy="12" r="3"/>
+  		</svg>`;
+
+	const eyeSlashIcon = `
+  		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M17.94 17.94A10.5 10.5 0 0 1 3 12c1.3-2.5 3.87-4.5 7-5"/>
+    	<path d="M1 1l22 22"/>
+  		</svg>`;
+
+    // Create a toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.type = 'button';
+    toggleButton.title = "Show password";
+    toggleButton.innerHTML = eyeIcon;
+    toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	toggleButton.style.background = 'transparent';
+    passwordContainer.appendChild(passwordInput);
+    passwordContainer.appendChild(toggleButton);
 
     // Create a submit button
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
     submitButton.textContent = 'Create account';
-    submitButton.classList.add('m-4','px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+    submitButton.classList.add('w-60','m-4','px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
 
-    // Create a login button
-    const signInButton = document.createElement('button');
-    signInButton.type = 'button';
-    signInButton.textContent = 'Sign In';
-    signInButton.classList.add('m-4','px-4','py-2','bg-blue-700','text-white','rounded','hover:bg-blue-900');
-    
+    // Create a reset button button
+    const resetButton = document.createElement('button');
+    resetButton.id = 'resetButton';
+    resetButton.type = 'button';
+    resetButton.textContent = 'Reset';
+    resetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
+
+    // Create a reset button button
+    const cancelButton = document.createElement('button');
+    cancelButton.id = 'cancelButton';
+    cancelButton.type = 'button';
+    cancelButton.textContent = 'Cancel';
+    cancelButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'ml-auto');
+
+	const buttonContainer = document.createElement('div');
+    buttonContainer.classList.add('flex', 'w-60', 'm-4');
+	buttonContainer.appendChild(resetButton);
+	buttonContainer.appendChild(cancelButton);
+
     // Append elements to form
     form.appendChild(emailInput);
     form.appendChild(document.createElement('br'));
     form.appendChild(nameInput);
     form.appendChild(document.createElement('br'));
-    form.appendChild(passwordInput);
+    form.appendChild(passwordContainer);
     form.appendChild(document.createElement('br'));
     form.appendChild(submitButton);
+    form.appendChild(document.createElement('br'));
+    form.appendChild(buttonContainer);
 
     // Append form and login button to the body
     workArea?.appendChild(form);
-    workArea?.appendChild(signInButton);
 
     // Handle form submission
-    form.addEventListener('submit', async (e: Event) => {
-        e.preventDefault(); // Prevent actual form submission
+    form.addEventListener('submit', formHandlers.signUp);
+	toggleButton.addEventListener('click', (e) => {
+		e.preventDefault();
 
-        // check password length
-        if (!passwordInput.checkValidity()) {
-        alert("Password must be at least 6 characters long.");
-        return;
-        }
-        const formData = new FormData(form);
-        const email = formData.get('email');
-        const display_name = formData.get('name');
-        const password = formData.get('password');
-        emailInput.setCustomValidity('');
+  		const isHidden = passwordInput.type === 'password';
+  		passwordInput.type = isHidden ? 'text' : 'password';
+  		toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
+	});
+    resetButton.addEventListener("click", () => {
+        form.reset();
+    });
+    cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
+}
 
-        try {
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                email,
-                display_name,
-                password
-                }),
-            });
-  
-            const data = await response.json();
-            console.log('API response:', data);
-            if (!response.ok) {
-                if (response.status === 409) {
-                    emailInput.setCustomValidity('This email is already in use.');
-                    emailInput.reportValidity();
-                }
-                else {
-                    alert('Login failed! with error: ' + response.status);
-                }
-            }
-            else {
-                dashboard(workArea);
-            }
+export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, successMessage?: string) {
+	utils.cleanDiv(workArea);
 
-        } catch (error) {
-            console.error('Error sending form data:', error);
-            alert('Login failed! Catched on Try');
-        }
-  });
-  signInButton.addEventListener("click", () => {
-    alert("Button clicked! Test com.");
-  });
+	const form = document.createElement('form');
+    form.id = 'login';
+	form.classList.add('flex', 'flex-col', 'items-center');
+
+	const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.id = "emailInput"; 
+    emailInput.name = 'email';
+    emailInput.placeholder = 'Enter your email';
+    emailInput.willValidate;
+    emailInput.required = true;
+    emailInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+
+	const passwordContainer = document.createElement('div');
+    passwordContainer.classList.add('relative', 'w-60', 'm-4');
+
+	const passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.id = "passwordInput";
+    passwordInput.name = 'password';
+    passwordInput.placeholder = 'Enter your pasword';
+    passwordInput.minLength = 6;
+    passwordInput.required = true;
+    passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+
+	const eyeIcon = `
+		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M2.062 12.348a1 1 0 0 1 0-.696 
+             10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 
+             10.75 10.75 0 0 1-19.876 0"/>
+    	<circle cx="12" cy="12" r="3"/>
+  		</svg>`;
+
+	const eyeSlashIcon = `
+  		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
+       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+       		stroke-linecap="round" stroke-linejoin="round">
+    	<path d="M17.94 17.94A10.5 10.5 0 0 1 3 12c1.3-2.5 3.87-4.5 7-5"/>
+    	<path d="M1 1l22 22"/>
+  		</svg>`;
+
+    // Create a toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.type = 'button';
+    toggleButton.title = "Show password";
+    toggleButton.innerHTML = eyeIcon;
+    toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	toggleButton.style.background = 'transparent';
+    passwordContainer.appendChild(passwordInput);
+    passwordContainer.appendChild(toggleButton);
+
+	const submitButton = document.createElement('button');
+    submitButton.type = 'submit';
+    submitButton.textContent = 'Login';
+    submitButton.classList.add('w-60','m-4','px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+
+	form.appendChild(emailInput);
+    form.appendChild(document.createElement('br'));
+	form.appendChild(passwordContainer);
+	form.appendChild(document.createElement('br'));
+	form.appendChild(submitButton);
+
+	if (successMessage) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'text-green-600 mt-4 text-sm text-center';
+        msgDiv.textContent = successMessage;
+        form.appendChild(msgDiv);
+    }
+
+	workArea?.appendChild(form);
+
+	form.addEventListener('submit', formHandlers.signIn);
+	toggleButton.addEventListener('click', (e) => {
+		e.preventDefault();
+
+  		const isHidden = passwordInput.type === 'password';
+  		passwordInput.type = isHidden ? 'text' : 'password';
+  		toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
+	});
 }
 
 export function dashboard(workArea: HTMLDivElement | null) {
     utils.cleanDiv(workArea);
 
-    menu(workArea);
+    // Create <h1>
+    const heading = document.createElement("h1");
+    heading.textContent = "Welcome to your dashboard!";
+    heading.classList.add("text-3xl", "font-bold", "text-blue-600");
+
+    workArea?.appendChild(heading);
 }
 
-export function menu(workArea: HTMLDivElement | null) {
+export function menu(menuArea: HTMLDivElement | null) {
+    utils.cleanDiv(menuArea);
+
     const nav = document.createElement("nav");
     nav.className = "bg-blue-500 shadow-md";
 
@@ -165,6 +244,7 @@ export function menu(workArea: HTMLDivElement | null) {
     inner.className = "flex items-center justify-between h-16";
 
     const logo = document.createElement("button");
+    logo.id = "dashboardButton";
     logo.type = "button";
     logo.className = "text-xl font-bold text-white hover:text-blue-800 focus:outline-none";
     logo.textContent = "Our game hub";
@@ -194,7 +274,8 @@ export function menu(workArea: HTMLDivElement | null) {
 
     const logoutButton = document.createElement("button");
     logoutButton.type = "button";
-    logoutButton.title = "Logout";
+    logoutButton.id = "signOutButton";
+    logoutButton.title = "Sign Out";
     logoutButton.innerHTML += '<svg vg class="fill-current w-8 h-8 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.6053 12.9474C17.6053 16.014 15.1193 18.5 12.0526 18.5C8.986 18.5 6.5 16.014 6.5 12.9474C6.5 11.1423 7.36133 9.53838 8.69541 8.52423C9.09037 8.22399 9.36842 7.77755 9.36842 7.28142V7.28142C9.36842 6.34022 8.43174 5.69142 7.64453 6.20732C5.4497 7.64569 4 10.1272 4 12.9474C4 17.3947 7.60529 21 12.0526 21C16.5 21 20.1053 17.3947 20.1053 12.9474C20.1053 10.1272 18.6556 7.64569 16.4607 6.20732C15.6735 5.69142 14.7368 6.34022 14.7368 7.28142V7.28142C14.7368 7.77755 15.0149 8.22399 15.4099 8.52423C16.7439 9.53838 17.6053 11.1423 17.6053 12.9474Z"/><rect x="10.75" y="4" width="2.5" height="9" rx="1.25"/></svg>';
     logoutButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
     menu.appendChild(logoutButton);
@@ -204,5 +285,51 @@ export function menu(workArea: HTMLDivElement | null) {
     container.appendChild(inner);
     nav.appendChild(container);
 
-    workArea?.appendChild(nav);
+    menuArea?.appendChild(nav);
+}
+
+export function header(headerArea: HTMLDivElement | null) {
+    utils.cleanDiv(headerArea);
+
+    const nav = document.createElement("nav");
+    nav.className = "bg-blue-500 shadow-md";
+
+    const container = document.createElement("div");
+    container.className = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8";
+
+    const inner = document.createElement("div");
+    inner.className = "flex items-center justify-between h-16";
+
+    const logo = document.createElement("button");
+    logo.id = "landButton";
+    logo.type = "button";
+    logo.className = "text-xl font-bold text-white hover:text-blue-800 focus:outline-none";
+    logo.textContent = "Our game hub";
+
+    const menu = document.createElement("div");
+    menu.id = "menu";
+    menu.className = "hidden md:flex space-x-4";
+
+    const signInButton = document.createElement("button");
+    signInButton.id = "signInButton";
+    signInButton.type = "button";
+    signInButton.title = "Sign In";
+    signInButton.textContent = "Sign In";
+    signInButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+    menu.appendChild(signInButton);
+
+    const signUpButton = document.createElement("button");
+    signUpButton.id = "signUpButton";
+    signUpButton.type = "button";
+    signUpButton.title = "Sign Up";
+    signUpButton.textContent = "Sign Up";
+    signUpButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+    menu.appendChild(signUpButton);
+
+    inner.appendChild(logo);
+    inner.appendChild(menu);
+    container.appendChild(inner);
+    nav.appendChild(container);
+
+    headerArea?.appendChild(nav);
 }

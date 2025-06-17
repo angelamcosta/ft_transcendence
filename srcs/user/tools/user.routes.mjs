@@ -352,12 +352,139 @@ export default async function userRoutes(fastify) {
 		}
 	});
 
+	fastify.get('/users/invite/received', { 
+		preValidation: fastify.authenticateRequest 
+	}, async (req, res) => {
+		try {
+			const received = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE friend_id = ? AND invite_status = 'pending'`, req.authUser.id);
+			return res.send(received);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	})
+
+	fastify.get('/users/invite/sent', { 
+		preValidation: fastify.authenticateRequest 
+	}, async (req, res) => {
+		try {
+			const sent = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE user_id = ? AND invite_status = 'pending'`, req.authUser.id);
+			return res.send(sent);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	})
+
+	fastify.put('/users/invite/cancel/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers]
+	}, async (req, res) => {
+		const userId = req.authUser.id;
+		const paramId = Number(req.params.id);
+
+		const pending = await db.get('SELECT user_id FROM match_invites WHERE user_id = ? AND friend_id = ?', [userId, paramId]);
+
+		if (!pending)
+			throw fastify.httpErrors.badRequest('There is no pending invite');
+
+		try {
+			await db.run('DELETE FROM match_invites WHERE user_id = ? AND friend_id = ?', [userId, paramId]);
+			return({ message: 'Invite canceled' })
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	})
+
+	fastify.post('/users/invite/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadMatchInvites],
+	}, async (req, res) => {
+		const userId = req.authUser.id;
+		const paramId = Number(req.params.id);
+
+		if (!req.friendship)
+			throw fastify.httpErrors.badRequest('Only friends can be invited directly to a match');
+
+		if (req.invite?.invite_status === 'pending')
+			throw fastify.httpErrors.badRequest('There is already a pending match invite');
+
+		try {
+			await db.run(`INSERT INTO match_invites (user_id, friend_id) VALUES (?, ?)`, [userId, paramId]);
+			return { message: 'Match invite sent' };
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	})
+
+	fastify.put('/users/invite/accept/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadMatchInvites],
+	}, async (req, res) => {
+		const userId = req.authUser.id;
+		const paramId = Number(req.params.id);
+
+		if (!req.invite)
+			throw fastify.httpErrors.badRequest('Match invite not found');
+
+		if (req.invite?.invite_status !== 'pending')
+			throw fastify.httpErrors.badRequest('No match invite pending from this user');
+
+		if (req.invite.user_id != paramId || req.invite.friend_id != userId)
+			throw fastify.httpErrors.forbidden('You cannot accept your own invite');
+
+		try {
+			await db.run('INSERT INTO matches (player1_id, player2_id) VALUES (?, ?)', [userId, paramId]);
+			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [userId, paramId, paramId, userId]);
+			return { message: 'Match invite accepted' };
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	})
+
+	fastify.put('/users/invite/reject/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadMatchInvites],
+	}, async (req, res) => {
+		const userId = req.authUser.id;
+		const paramId = Number(req.params.id);
+
+		if (!req.invite)
+			throw fastify.httpErrors.badRequest('Match invite not found');
+
+		if (req.invite?.invite_status !== 'pending')
+			throw fastify.httpErrors.badRequest('No match invite pending from this user');
+
+		if (req.invite.user_id != paramId || req.invite.friend_id != userId)
+			throw fastify.httpErrors.forbidden('You cannot reject your own invite');
+
+		try {
+			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?', [userId, paramId, paramId, userId]);
+			return { message: 'Match invite rejected' };
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	})
+
 	fastify.get('/users/friends/requests', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
 		try {
 			const requests = await db.all(`SELECT user_id, friend_id, friendship_status FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'pending'`, [req.authUser.id, req.authUser.id]);
 			return res.send(requests);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	});
+
+	// ! match history
+	fastify.get('/users/:id/history', {
+		preValidation: fastify.authenticateRequest,
+	}, async (req, res) => {
+		try {
+			const match_history = await db.all(`SELECT player1_id, player2_id, winner_id, score FROM matches WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'`, [req.authUser.id, req.authUser.id]);
+			return res.send(match_history);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
