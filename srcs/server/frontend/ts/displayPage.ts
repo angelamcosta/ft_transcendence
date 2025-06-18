@@ -134,7 +134,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
 }
 
-export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, successMessage?: string) {
+export function signIn(workArea: HTMLDivElement | null, successMessage?: string) {
 	utils.cleanDiv(workArea);
 
 	const form = document.createElement('form');

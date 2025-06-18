@@ -70,7 +70,7 @@ export async function signUp(e: Event) {
         }
 		const message = data?.success || 'Register success';
 		emailInput.setCustomValidity('');
-		displayPage.signIn(workArea, menuArea, message);
+		displayPage.signIn(workArea, message);
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Register failed! Catched on Try');
