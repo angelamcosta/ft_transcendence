@@ -13,6 +13,20 @@ volumes:
       type: none
 
 services:
+  chat:
+    build:
+      context: ./srcs/chat/
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    networks:
+      - transcendence
+    depends_on:
+      - auth 
+    volumes:
+      - sqlite:/db
   server:
     build:
       context: ./srcs/server/
