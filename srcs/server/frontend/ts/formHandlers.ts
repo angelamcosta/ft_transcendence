@@ -1,11 +1,11 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
+import * as buttonHandlers from './buttonHandlers.js';
 
 export async function signUp(e: Event) {
     e.preventDefault(); // Prevent actual form submission
 
     const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
-    const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 
     const form = e.target as HTMLFormElement;
     const emailInput = document.getElementById('emailInput') as HTMLInputElement;
@@ -70,7 +70,7 @@ export async function signUp(e: Event) {
         }
 		const message = data?.success || 'Register success';
 		emailInput.setCustomValidity('');
-		displayPage.signIn(workArea, menuArea, message);
+		displayPage.signIn(workArea, message);
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Register failed! Catched on Try');
@@ -115,6 +115,7 @@ export async function signIn(e: Event) {
 
         displayPage.menu(menuArea);
         displayPage.dashboard(workArea);
+        document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Login failed! Catched on Try');
