@@ -1,5 +1,6 @@
 import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
+import * as buttonHandlers from './buttonHandlers.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
     utils.cleanDiv(workArea);
