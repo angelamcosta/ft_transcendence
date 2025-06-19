@@ -8,6 +8,7 @@ async function isSignedIn() {
         headers: {
             'Accept': 'application/json',
         },
+        credentials: 'include'
     });
 
     const data = await response.json();
@@ -23,10 +24,11 @@ async function isSignedIn() {
       displayPage.menu(menuArea);
       displayPage.dashboard(workArea);
       document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
+      displayPage.chatPage();
     }
   } catch (error) {
     console.error('Error sending form data:', error);
-    alert('veryfy failed! Catched on Try');
+    alert('Verify failed! Catched on Try');
     displayPage.header(menuArea);
     displayPage.landingPage(workArea, menuArea);
     document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
