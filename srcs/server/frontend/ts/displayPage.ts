@@ -1,5 +1,7 @@
 import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
+import * as buttonHandlers from './buttonHandlers.js';
+import { initPong } from './pong.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
     utils.cleanDiv(workArea);
@@ -18,17 +20,17 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 
     const form = document.createElement('form');
     form.id = 'newAccount';
-	form.classList.add('flex', 'flex-col', 'items-center');
+    form.classList.add('flex', 'flex-col', 'items-center');
 
     // Create an email input
     const emailInput = document.createElement('input');
     emailInput.type = 'email';
-    emailInput.id = "emailInput"; 
+    emailInput.id = "emailInput";
     emailInput.name = 'email';
     emailInput.placeholder = 'Enter your email';
     emailInput.willValidate;
     emailInput.required = true;
-    emailInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+    emailInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 
     // Create an email input
     const nameInput = document.createElement('input');
@@ -37,7 +39,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     nameInput.name = 'name';
     nameInput.placeholder = 'Enter your display name';
     nameInput.required = true;
-    nameInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+    nameInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 
     const passwordContainer = document.createElement('div');
     passwordContainer.classList.add('relative', 'w-60', 'm-4');
@@ -51,8 +53,8 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     passwordInput.minLength = 6;
     passwordInput.required = true;
     passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-	
-	const eyeIcon = `
+
+    const eyeIcon = `
 		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
        		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
        		stroke-linecap="round" stroke-linejoin="round">
@@ -62,7 +64,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     	<circle cx="12" cy="12" r="3"/>
   		</svg>`;
 
-	const eyeSlashIcon = `
+    const eyeSlashIcon = `
   		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
        		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
        		stroke-linecap="round" stroke-linejoin="round">
@@ -76,7 +78,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     toggleButton.title = "Show password";
     toggleButton.innerHTML = eyeIcon;
     toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
-	toggleButton.style.background = 'transparent';
+    toggleButton.style.background = 'transparent';
     passwordContainer.appendChild(passwordInput);
     passwordContainer.appendChild(toggleButton);
 
@@ -84,7 +86,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
     submitButton.textContent = 'Create account';
-    submitButton.classList.add('w-60','m-4','px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+    submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
     // Create a reset button button
     const resetButton = document.createElement('button');
@@ -100,10 +102,10 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     cancelButton.textContent = 'Cancel';
     cancelButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'ml-auto');
 
-	const buttonContainer = document.createElement('div');
+    const buttonContainer = document.createElement('div');
     buttonContainer.classList.add('flex', 'w-60', 'm-4');
-	buttonContainer.appendChild(resetButton);
-	buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(resetButton);
+    buttonContainer.appendChild(cancelButton);
 
     // Append elements to form
     form.appendChild(emailInput);
@@ -121,39 +123,39 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 
     // Handle form submission
     form.addEventListener('submit', formHandlers.signUp);
-	toggleButton.addEventListener('click', (e) => {
-		e.preventDefault();
+    toggleButton.addEventListener('click', (e) => {
+        e.preventDefault();
 
-  		const isHidden = passwordInput.type === 'password';
-  		passwordInput.type = isHidden ? 'text' : 'password';
-  		toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
-	});
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
+    });
     resetButton.addEventListener("click", () => {
         form.reset();
     });
     cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
 }
 
-export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, successMessage?: string) {
-	utils.cleanDiv(workArea);
+export function signIn(workArea: HTMLDivElement | null, successMessage?: string) {
+    utils.cleanDiv(workArea);
 
-	const form = document.createElement('form');
+    const form = document.createElement('form');
     form.id = 'login';
-	form.classList.add('flex', 'flex-col', 'items-center');
+    form.classList.add('flex', 'flex-col', 'items-center');
 
-	const emailInput = document.createElement('input');
+    const emailInput = document.createElement('input');
     emailInput.type = 'email';
-    emailInput.id = "emailInput"; 
+    emailInput.id = "emailInput";
     emailInput.name = 'email';
     emailInput.placeholder = 'Enter your email';
     emailInput.willValidate;
     emailInput.required = true;
-    emailInput.classList.add('w-60','m-4','border','border-blue-500','text-blue-700','rounded','focus:outline-none','focus:ring-2','focus:ring-blue-500');
+    emailInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 
-	const passwordContainer = document.createElement('div');
+    const passwordContainer = document.createElement('div');
     passwordContainer.classList.add('relative', 'w-60', 'm-4');
 
-	const passwordInput = document.createElement('input');
+    const passwordInput = document.createElement('input');
     passwordInput.type = 'password';
     passwordInput.id = "passwordInput";
     passwordInput.name = 'password';
@@ -162,7 +164,7 @@ export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     passwordInput.required = true;
     passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 
-	const eyeIcon = `
+    const eyeIcon = `
 		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
        		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
        		stroke-linecap="round" stroke-linejoin="round">
@@ -172,7 +174,7 @@ export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     	<circle cx="12" cy="12" r="3"/>
   		</svg>`;
 
-	const eyeSlashIcon = `
+    const eyeSlashIcon = `
   		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
        		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
        		stroke-linecap="round" stroke-linejoin="round">
@@ -186,38 +188,38 @@ export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     toggleButton.title = "Show password";
     toggleButton.innerHTML = eyeIcon;
     toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
-	toggleButton.style.background = 'transparent';
+    toggleButton.style.background = 'transparent';
     passwordContainer.appendChild(passwordInput);
     passwordContainer.appendChild(toggleButton);
 
-	const submitButton = document.createElement('button');
+    const submitButton = document.createElement('button');
     submitButton.type = 'submit';
     submitButton.textContent = 'Login';
-    submitButton.classList.add('w-60','m-4','px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+    submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
-	form.appendChild(emailInput);
+    form.appendChild(emailInput);
     form.appendChild(document.createElement('br'));
-	form.appendChild(passwordContainer);
-	form.appendChild(document.createElement('br'));
-	form.appendChild(submitButton);
+    form.appendChild(passwordContainer);
+    form.appendChild(document.createElement('br'));
+    form.appendChild(submitButton);
 
-	if (successMessage) {
+    if (successMessage) {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'text-green-600 mt-4 text-sm text-center';
         msgDiv.textContent = successMessage;
         form.appendChild(msgDiv);
     }
 
-	workArea?.appendChild(form);
+    workArea?.appendChild(form);
 
-	form.addEventListener('submit', formHandlers.signIn);
-	toggleButton.addEventListener('click', (e) => {
-		e.preventDefault();
+    form.addEventListener('submit', formHandlers.signIn);
+    toggleButton.addEventListener('click', (e) => {
+        e.preventDefault();
 
-  		const isHidden = passwordInput.type === 'password';
-  		passwordInput.type = isHidden ? 'text' : 'password';
-  		toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
-	});
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
+    });
 }
 
 export function dashboard(workArea: HTMLDivElement | null) {
@@ -278,8 +280,23 @@ export function menu(menuArea: HTMLDivElement | null) {
     logoutButton.title = "Sign Out";
     logoutButton.innerHTML += '<svg vg class="fill-current w-8 h-8 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.6053 12.9474C17.6053 16.014 15.1193 18.5 12.0526 18.5C8.986 18.5 6.5 16.014 6.5 12.9474C6.5 11.1423 7.36133 9.53838 8.69541 8.52423C9.09037 8.22399 9.36842 7.77755 9.36842 7.28142V7.28142C9.36842 6.34022 8.43174 5.69142 7.64453 6.20732C5.4497 7.64569 4 10.1272 4 12.9474C4 17.3947 7.60529 21 12.0526 21C16.5 21 20.1053 17.3947 20.1053 12.9474C20.1053 10.1272 18.6556 7.64569 16.4607 6.20732C15.6735 5.69142 14.7368 6.34022 14.7368 7.28142V7.28142C14.7368 7.77755 15.0149 8.22399 15.4099 8.52423C16.7439 9.53838 17.6053 11.1423 17.6053 12.9474Z"/><rect x="10.75" y="4" width="2.5" height="9" rx="1.25"/></svg>';
     logoutButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+
+    const playBtn = document.createElement('button');
+    playBtn.type = "button";
+    playBtn.id = "playButton";
+    playBtn.title = "New Game";
+    playBtn.innerHTML = '<svg class="w-6 h-6 mr-2 fill-current" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M45.563,29.174l-22-15c-0.307-0.208-0.703-0.231-1.031-0.058C22.205,14.289,22,14.629,22,15v30 c0,0.371,0.205,0.711,0.533,0.884C22.679,45.962,22.84,46,23,46c0.197,0,0.394-0.059,0.563-0.174l22-15 C45.836,30.64,46,30.331,46,30S45.836,29.36,45.563,29.174z M24,43.107V16.893L43.225,30L24,43.107z"/></svg>Play';
+
+    playBtn.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+
+    // **listener** que chama a page do jogo
+    playBtn.addEventListener('click', () => {
+        gamePage(document.getElementById('appArea') as HTMLDivElement);
+    });
+
+    menu.appendChild(playBtn);
     menu.appendChild(logoutButton);
-    
+
     inner.appendChild(logo);
     inner.appendChild(menu);
     container.appendChild(inner);
@@ -332,4 +349,96 @@ export function header(headerArea: HTMLDivElement | null) {
     nav.appendChild(container);
 
     headerArea?.appendChild(nav);
+}
+
+export function chatPage() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+        console.error('User ID não encontrado em localStorage.');
+        return;
+    }
+    // Contêineres já renderizados pela menu/dashboard
+    const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
+    const appArea = document.getElementById('appArea')! as HTMLDivElement;
+
+    // Limpa as áreas para montar o chat
+    headerArea.innerHTML = '';
+    appArea.innerHTML = '';
+
+    // Container de mensagens
+    const chatContainer = document.createElement('div');
+    chatContainer.id = 'chatContainer';
+    Object.assign(chatContainer.style, {
+        border: '1px solid #ccc',
+        height: '300px',
+        overflowY: 'auto',
+        margin: '16px 0',
+        padding: '8px',
+        backgroundColor: '#fff'
+    });
+    appArea.appendChild(chatContainer);
+
+    // Input e botão de envio
+    const inputWrapper = document.createElement('div');
+    inputWrapper.style.display = 'flex';
+    inputWrapper.style.gap = '8px';
+
+    const messageInput = document.createElement('input');
+    messageInput.id = 'chatInput';
+    messageInput.placeholder = 'Escreva sua mensagem…';
+    messageInput.style.flex = '1';
+    inputWrapper.appendChild(messageInput);
+
+    const sendBtn = document.createElement('button');
+    sendBtn.id = 'chatSendBtn';
+    sendBtn.textContent = 'Enviar';
+    inputWrapper.appendChild(sendBtn);
+
+    appArea.appendChild(inputWrapper);
+
+    // Conecta imediatamente
+    const wsUrl = `wss://${window.location.hostname}:8002/api/chat`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'identify', userId }));
+    };
+    ws.onmessage = (evt) => {
+        const msg = JSON.parse(evt.data);
+        appendMessage(msg);
+    };
+    ws.onerror = (err) => console.error('WebSocket error:', err);
+
+    sendBtn.addEventListener('click', () => {
+        const content = messageInput.value.trim();
+        if (!content) return;
+        ws.send(JSON.stringify({ type: 'message', content }));
+        appendMessage({ userId, content, timestamp: Date.now() });
+        messageInput.value = '';
+    });
+
+    function appendMessage(msg: { userId?: string; from?: string; content: string; timestamp: number }) {
+        const line = document.createElement('div');
+        const sender = msg.userId ?? msg.from ?? 'unknown';
+        line.style.textAlign = sender === userId ? 'right' : 'left';
+        line.textContent = `${sender}: ${msg.content}`;
+        chatContainer.appendChild(line);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+}
+
+// TODO : - game won't present errors, but won't start
+export function gamePage(workArea: HTMLDivElement | null) {
+    utils.cleanDiv(workArea);
+
+    const canvas = document.createElement('canvas');
+    const appArea = document.getElementById('appArea')! as HTMLDivElement;
+
+    canvas.id = 'pong';
+    canvas.width = 600;
+    canvas.height = 600;
+
+    appArea.appendChild(canvas);
+
+    initPong(canvas);
 }

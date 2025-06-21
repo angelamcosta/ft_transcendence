@@ -20,6 +20,7 @@ RUN npm cache clean --force && \
 	npm install @fastify/cors && \
 	npm install undici && \
     npm install @fastify/static && \
+    npm install @fastify/websocket && \
     npm install typescript
 
 # Build TailwindCSS and TypeScript

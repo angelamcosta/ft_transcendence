@@ -3,9 +3,11 @@ import path from 'path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import cors from '@fastify/cors';
+import fastifyWebsocket from '@fastify/websocket';
 import authRoutes from './auth.routes.mjs';
 import userRoutes from './user.routes.mjs';
 import matchRoutes from './match.routes.mjs';
+import gameRoutes from './game.routes.mjs';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 const KEY_PATH = process.env.SERVER_KEY || 'key.pem';
@@ -35,6 +37,8 @@ await app.register(cors, {
 	credentials: true,
 });
 
+await app.register(fastifyWebsocket);
+
 ['SIGINT', 'SIGTERM'].forEach(sig =>
 	process.on(sig, async () => {
 		await app.close();
@@ -58,8 +62,9 @@ app.get('/', async (req, res) => {
 });
 
 await app.register(authRoutes);
-await app.register(userRoutes);
+await app.register(gameRoutes);
 await app.register(matchRoutes);
+await app.register(userRoutes);
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
 		if (err) {

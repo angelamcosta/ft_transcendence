@@ -77,7 +77,7 @@ The project must comply with the following rules:
 - [ ] Major module: Multiplayers (more than 2 in the same game).
 - [ ] Major module: Add Another Game with User History and Matchmaking.
 - [ ] Minor module: Game Customization Options.
-- [ ] Major module: Live chat.
+- [x] Major module: Live chat.
 
 ### AI-Algo
 - [ ] Major module: Introduce an AI Opponent.
@@ -104,7 +104,7 @@ The project must comply with the following rules:
 - [ ] Minor module: Server-Side Rendering (SSR) Integration.
 
 ### Server-Side Pong
-- [ ] Major module: Replacing Basic Pong with Server-Side Pong and Implementing an API.
+- [x] Major module: Replacing Basic Pong with Server-Side Pong and Implementing an API.
 - [ ] Major module: Enabling Pong Gameplay via CLI against Web Users with API Integration.
 
 ## References

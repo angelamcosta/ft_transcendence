@@ -60,3 +60,85 @@ export async function autoPairPlayers(fastify) {
 		throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 	}
 }
+
+export async function generateSixPlayerBracket(tournamentId) {
+  try {
+    const players = await db.all(
+      'SELECT p.id AS player_id FROM   players p WHERE  (p.tournament_id = ?) AND (p.status = `accepted`) ORDER  BY p.id LIMIT  6;',
+      tournamentId
+    );
+
+    if (players.length !== 6) {
+      throw new Error(
+        `Bracket expects exactly 6 accepted players, found ${players.length}`
+      );
+    }
+
+    const [seed1, seed2, seed3, seed4, seed5, seed6] = players.map(
+      (p) => p.player_id
+    );
+
+    const now = Date.now();
+    const matches = [
+      // ---------- Round 1 -------------
+      {
+        round: 1,
+        player1_id: seed3,
+        player2_id: seed6
+      },
+      {
+        round: 1,
+        player1_id: seed4,
+        player2_id: seed5
+      },
+      // ---------- Round 2 -------------
+      {
+        round: 2,
+        player1_id: null,
+        player2_id: seed1
+      },
+      {
+        round: 2,
+        player1_id: null,
+        player2_id: seed2
+      },
+      // ---------- Round 3 -------------
+      {
+        round: 3,
+        player1_id: null,
+        player2_id: null
+      }
+    ];
+
+    const stmt = await db.prepare(`
+      INSERT INTO matches
+        (tournament_id,
+         player1_id,
+         player2_id,
+         winner_id,
+         status,
+         score,
+         round,
+         created_at,
+         updated_at)
+      VALUES
+        (?, ?, ?, NULL, 'pending', NULL, ?, ?, ?)
+    `);
+
+    for (const m of matches) {
+      await stmt.run(
+        tournamentId,
+        m.player1_id,
+        m.player2_id,
+        m.round,
+        now,
+        now
+      );
+    }
+
+    await stmt.finalize();
+    console.log("Bracket generated and stored!");
+  } finally {
+    await db.close();
+  }
+}
