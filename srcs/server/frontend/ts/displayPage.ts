@@ -1,6 +1,7 @@
 import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
+import { initPong } from './pong.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
     utils.cleanDiv(workArea);
@@ -279,6 +280,21 @@ export function menu(menuArea: HTMLDivElement | null) {
     logoutButton.title = "Sign Out";
     logoutButton.innerHTML += '<svg vg class="fill-current w-8 h-8 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.6053 12.9474C17.6053 16.014 15.1193 18.5 12.0526 18.5C8.986 18.5 6.5 16.014 6.5 12.9474C6.5 11.1423 7.36133 9.53838 8.69541 8.52423C9.09037 8.22399 9.36842 7.77755 9.36842 7.28142V7.28142C9.36842 6.34022 8.43174 5.69142 7.64453 6.20732C5.4497 7.64569 4 10.1272 4 12.9474C4 17.3947 7.60529 21 12.0526 21C16.5 21 20.1053 17.3947 20.1053 12.9474C20.1053 10.1272 18.6556 7.64569 16.4607 6.20732C15.6735 5.69142 14.7368 6.34022 14.7368 7.28142V7.28142C14.7368 7.77755 15.0149 8.22399 15.4099 8.52423C16.7439 9.53838 17.6053 11.1423 17.6053 12.9474Z"/><rect x="10.75" y="4" width="2.5" height="9" rx="1.25"/></svg>';
     logoutButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+
+    const playBtn = document.createElement('button');
+    playBtn.type = "button";
+    playBtn.id = "playButton";
+    playBtn.title = "New Game";
+    playBtn.innerHTML = '<svg class="w-6 h-6 mr-2 fill-current" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M45.563,29.174l-22-15c-0.307-0.208-0.703-0.231-1.031-0.058C22.205,14.289,22,14.629,22,15v30 c0,0.371,0.205,0.711,0.533,0.884C22.679,45.962,22.84,46,23,46c0.197,0,0.394-0.059,0.563-0.174l22-15 C45.836,30.64,46,30.331,46,30S45.836,29.36,45.563,29.174z M24,43.107V16.893L43.225,30L24,43.107z"/></svg>Play';
+
+    playBtn.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+
+    // **listener** que chama a page do jogo
+    playBtn.addEventListener('click', () => {
+        gamePage(document.getElementById('appArea') as HTMLDivElement);
+    });
+
+    menu.appendChild(playBtn);
     menu.appendChild(logoutButton);
 
     inner.appendChild(logo);
@@ -409,4 +425,20 @@ export function chatPage() {
         chatContainer.appendChild(line);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+}
+
+// TODO : - game won't present errors, but won't start
+export function gamePage(workArea: HTMLDivElement | null) {
+    utils.cleanDiv(workArea);
+
+    const canvas = document.createElement('canvas');
+    const appArea = document.getElementById('appArea')! as HTMLDivElement;
+
+    canvas.id = 'pong';
+    canvas.width = 600;
+    canvas.height = 600;
+
+    appArea.appendChild(canvas);
+
+    initPong(canvas);
 }

@@ -72,6 +72,19 @@ services:
       - transcendence
     depends_on:
       - sqlite
+  
+  game:
+    build:
+      context: ./srcs/game/
+      dockerfile: Dockerfile
+    ports:
+      - "9002:9002"
+    env_file:
+      - .env
+    networks:
+      - transcendence
+    depends_on:
+      - sqlite
 
   sqlite:
     build:
