@@ -53,30 +53,12 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
     passwordInput.minLength = 6;
     passwordInput.required = true;
     passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-    const eyeIcon = `
-		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
-       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-       		stroke-linecap="round" stroke-linejoin="round">
-    	<path d="M2.062 12.348a1 1 0 0 1 0-.696 
-             10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 
-             10.75 10.75 0 0 1-19.876 0"/>
-    	<circle cx="12" cy="12" r="3"/>
-  		</svg>`;
-
-    const eyeSlashIcon = `
-  		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
-       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-       		stroke-linecap="round" stroke-linejoin="round">
-    	<path d="M17.94 17.94A10.5 10.5 0 0 1 3 12c1.3-2.5 3.87-4.5 7-5"/>
-    	<path d="M1 1l22 22"/>
-  		</svg>`;
-
+	
     // Create a toggle button
     const toggleButton = document.createElement('button');
     toggleButton.type = 'button';
     toggleButton.title = "Show password";
-    toggleButton.innerHTML = eyeIcon;
+    toggleButton.innerHTML = utils.eyeIcon;
     toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
     toggleButton.style.background = 'transparent';
     passwordContainer.appendChild(passwordInput);
@@ -123,13 +105,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 
     // Handle form submission
     form.addEventListener('submit', formHandlers.signUp);
-    toggleButton.addEventListener('click', (e) => {
-        e.preventDefault();
-
-        const isHidden = passwordInput.type === 'password';
-        passwordInput.type = isHidden ? 'text' : 'password';
-        toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
-    });
+	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
     resetButton.addEventListener("click", () => {
         form.reset();
     });
@@ -164,29 +140,11 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
     passwordInput.required = true;
     passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 
-    const eyeIcon = `
-		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
-       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-       		stroke-linecap="round" stroke-linejoin="round">
-    	<path d="M2.062 12.348a1 1 0 0 1 0-.696 
-             10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 
-             10.75 10.75 0 0 1-19.876 0"/>
-    	<circle cx="12" cy="12" r="3"/>
-  		</svg>`;
-
-    const eyeSlashIcon = `
-  		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
-       		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
-       		stroke-linecap="round" stroke-linejoin="round">
-    	<path d="M17.94 17.94A10.5 10.5 0 0 1 3 12c1.3-2.5 3.87-4.5 7-5"/>
-    	<path d="M1 1l22 22"/>
-  		</svg>`;
-
     // Create a toggle button
     const toggleButton = document.createElement('button');
     toggleButton.type = 'button';
     toggleButton.title = "Show password";
-    toggleButton.innerHTML = eyeIcon;
+    toggleButton.innerHTML = utils.eyeIcon;
     toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
     toggleButton.style.background = 'transparent';
     passwordContainer.appendChild(passwordInput);
@@ -212,14 +170,8 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 
     workArea?.appendChild(form);
 
-    form.addEventListener('submit', formHandlers.signIn);
-    toggleButton.addEventListener('click', (e) => {
-        e.preventDefault();
-
-        const isHidden = passwordInput.type === 'password';
-        passwordInput.type = isHidden ? 'text' : 'password';
-        toggleButton.innerHTML = isHidden ? eyeSlashIcon : eyeIcon;
-    });
+	form.addEventListener('submit', formHandlers.signIn);
+	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
 }
 
 export function dashboard(workArea: HTMLDivElement | null) {
@@ -231,6 +183,122 @@ export function dashboard(workArea: HTMLDivElement | null) {
     heading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
     workArea?.appendChild(heading);
+}
+
+export function accountSettings(workArea: HTMLDivElement | null) {
+    utils.cleanDiv(workArea);
+
+    const passwordForm = document.createElement('form');
+    passwordForm.id = 'changePassword';
+	passwordForm.classList.add('flex', 'flex-col', 'items-center');
+
+    const oldPasswordContainer = document.createElement('div');
+    oldPasswordContainer.classList.add('relative', 'w-60', 'm-4');
+
+    // Create an password input
+    const oldPasswordInput = document.createElement('input');
+    oldPasswordInput.type = 'password';
+    oldPasswordInput.id = "oldPasswordInput";
+    oldPasswordInput.name = 'oldPassword';
+    oldPasswordInput.placeholder = 'Enter your current pasword';
+    oldPasswordInput.minLength = 6;
+    oldPasswordInput.required = true;
+    oldPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	
+    // Create a toggle button
+    const oldToggleButton = document.createElement('button');
+    oldToggleButton.type = 'button';
+    oldToggleButton.id = 'oldToggleButton';
+    oldToggleButton.title = "Show password";
+    oldToggleButton.innerHTML = utils.eyeIcon;
+    oldToggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	oldToggleButton.style.background = 'transparent';
+    oldPasswordContainer.appendChild(oldPasswordInput);
+    oldPasswordContainer.appendChild(oldToggleButton);
+
+    const newPasswordContainer = document.createElement('div');
+    newPasswordContainer.classList.add('relative', 'w-60', 'm-4');
+
+    // Create an password input
+    const newPasswordInput = document.createElement('input');
+    newPasswordInput.type = 'password';
+    newPasswordInput.id = "newPasswordInput";
+    newPasswordInput.name = 'newPassword';
+    newPasswordInput.placeholder = 'Enter new pasword';
+    newPasswordInput.minLength = 6;
+    newPasswordInput.required = true;
+    newPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	
+    // Create a toggle button
+    const newToggleButton = document.createElement('button');
+    newToggleButton.type = 'button';
+    newToggleButton.id = 'newToggleButton';
+    newToggleButton.title = "Show password";
+    newToggleButton.innerHTML = utils.eyeIcon;
+    newToggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	newToggleButton.style.background = 'transparent';
+    newPasswordContainer.appendChild(newPasswordInput);
+    newPasswordContainer.appendChild(newToggleButton);
+
+    const confirmPasswordContainer = document.createElement('div');
+    confirmPasswordContainer.classList.add('relative', 'w-60', 'm-4');
+
+    // Create an password input
+    const confirmPasswordInput = document.createElement('input');
+    confirmPasswordInput.type = 'password';
+    confirmPasswordInput.id = "confirmPasswordInput";
+    confirmPasswordInput.name = 'confirmPassword';
+    confirmPasswordInput.placeholder = 'Confirm new pasword';
+    confirmPasswordInput.minLength = 6;
+    confirmPasswordInput.required = true;
+    confirmPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	
+    // Create a toggle button
+    const confirmToggleButton = document.createElement('button');
+    confirmToggleButton.type = 'button';
+    confirmToggleButton.id = 'confirmToggleButton';
+    confirmToggleButton.title = "Show password";
+    confirmToggleButton.innerHTML = utils.eyeIcon;
+    confirmToggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	confirmToggleButton.style.background = 'transparent';
+    confirmPasswordContainer.appendChild(confirmPasswordInput);
+    confirmPasswordContainer.appendChild(confirmToggleButton);
+
+    // Create a submit button
+    const passwordSubmitButton = document.createElement('button');
+    passwordSubmitButton.type = 'submit';
+    passwordSubmitButton.textContent = 'Change password';
+    passwordSubmitButton.classList.add('px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+
+    // Create a reset button button
+    const passwordResetButton = document.createElement('button');
+    passwordResetButton.id = 'passwordResetButton';
+    passwordResetButton.type = 'button';
+    passwordResetButton.textContent = 'Reset';
+    passwordResetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
+
+    const passwordButtonContainer = document.createElement('div');
+    passwordButtonContainer.classList.add('flex', 'w-60', 'm-4');
+	passwordButtonContainer.appendChild(passwordSubmitButton);
+	passwordButtonContainer.appendChild(passwordResetButton);
+
+	passwordForm.appendChild(oldPasswordContainer);
+	passwordForm.appendChild(document.createElement('br'));
+    passwordForm.appendChild(newPasswordContainer);
+	passwordForm.appendChild(document.createElement('br'));
+    passwordForm.appendChild(confirmPasswordContainer);
+	passwordForm.appendChild(document.createElement('br'));
+	passwordForm.appendChild(passwordButtonContainer);
+
+    // Append passwordForm and login button to the body
+    workArea?.appendChild(passwordForm);
+
+    oldToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, oldPasswordInput, oldToggleButton));
+    newToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, newPasswordInput, newToggleButton));
+    confirmToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, confirmPasswordInput, confirmToggleButton));
+    passwordResetButton.addEventListener("click", () => {
+        passwordForm.reset();
+    });
 }
 
 export function menu(menuArea: HTMLDivElement | null) {
@@ -269,6 +337,7 @@ export function menu(menuArea: HTMLDivElement | null) {
 
     const settingsButton = document.createElement("button");
     settingsButton.type = "button";
+    settingsButton.id = "accountSettingsButton";
     settingsButton.title = "Account settings";
     settingsButton.innerHTML += '<svg vg class="fill-current w-8 h-8 mr-2" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M772.672 575.808V448.192l70.848-70.848a370.688 370.688 0 0 0-56.512-97.664l-96.64 25.92-110.528-63.808-25.92-96.768a374.72 374.72 0 0 0-112.832 0l-25.92 96.768-110.528 63.808-96.64-25.92c-23.68 29.44-42.816 62.4-56.576 97.664l70.848 70.848v127.616l-70.848 70.848c13.76 35.264 32.832 68.16 56.576 97.664l96.64-25.92 110.528 63.808 25.92 96.768a374.72 374.72 0 0 0 112.832 0l25.92-96.768 110.528-63.808 96.64 25.92c23.68-29.44 42.816-62.4 56.512-97.664l-70.848-70.848z m39.744 254.848l-111.232-29.824-55.424 32-29.824 111.36c-37.76 10.24-77.44 15.808-118.4 15.808-41.024 0-80.768-5.504-118.464-15.808l-29.888-111.36-55.424-32-111.168 29.824A447.552 447.552 0 0 1 64 625.472L145.472 544v-64L64 398.528A447.552 447.552 0 0 1 182.592 193.28l111.168 29.824 55.424-32 29.888-111.36A448.512 448.512 0 0 1 497.472 64c41.024 0 80.768 5.504 118.464 15.808l29.824 111.36 55.424 32 111.232-29.824c56.32 55.68 97.92 126.144 118.592 205.184L849.472 480v64l81.536 81.472a447.552 447.552 0 0 1-118.592 205.184zM497.536 627.2a115.2 115.2 0 1 0 0-230.4 115.2 115.2 0 0 0 0 230.4z m0 76.8a192 192 0 1 1 0-384 192 192 0 0 1 0 384z"/></svg>';
     settingsButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";

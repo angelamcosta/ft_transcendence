@@ -32,3 +32,18 @@ export async function signOut(workArea: HTMLDivElement | null) {
         alert('Logout failed! Catched on Try');
     }
 }
+
+export async function accountSettings(workArea: HTMLDivElement | null) {
+    displayPage.accountSettings(workArea);
+}
+
+export function showPassword(e: Event,  passwordInput: HTMLInputElement | null, toggleButton: HTMLButtonElement | null) {
+    if (!passwordInput || !toggleButton) {
+        return;
+    }
+    e.preventDefault();
+    
+    const isHidden = passwordInput.type === 'password';
+    passwordInput.type = isHidden ? 'text' : 'password';
+    toggleButton.innerHTML = isHidden ? utils.eyeSlashIcon : utils.eyeIcon;
+}

@@ -120,6 +120,7 @@ export async function signIn(e: Event) {
         displayPage.menu(menuArea);
         displayPage.dashboard(workArea);
         document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
+        document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Login failed! Catched on Try');
