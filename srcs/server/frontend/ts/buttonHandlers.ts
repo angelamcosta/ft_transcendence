@@ -37,6 +37,14 @@ export async function accountSettings(workArea: HTMLDivElement | null) {
     displayPage.accountSettings(workArea);
 }
 
+export async function gamePage(workArea: HTMLDivElement | null) {
+    displayPage.gamePage(workArea);
+}
+
+export async function chatPage(workArea: HTMLDivElement | null) {
+    displayPage.chatPage(workArea);
+}
+
 export function showPassword(e: Event,  passwordInput: HTMLInputElement | null, toggleButton: HTMLButtonElement | null) {
     if (!passwordInput || !toggleButton) {
         return;

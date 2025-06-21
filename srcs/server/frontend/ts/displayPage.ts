@@ -190,7 +190,7 @@ export function accountSettings(workArea: HTMLDivElement | null) {
 
     const passwordForm = document.createElement('form');
     passwordForm.id = 'changePassword';
-	passwordForm.classList.add('flex', 'flex-col', 'items-center');
+	passwordForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-blue-500', 'rounded');
 
     const oldPasswordContainer = document.createElement('div');
     oldPasswordContainer.classList.add('relative', 'w-60', 'm-4');
@@ -282,6 +282,12 @@ export function accountSettings(workArea: HTMLDivElement | null) {
 	passwordButtonContainer.appendChild(passwordSubmitButton);
 	passwordButtonContainer.appendChild(passwordResetButton);
 
+    // Creates a heading
+    const passwordHeading = document.createElement("h1");
+    passwordHeading.textContent = "Change password";
+    passwordHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
+
+    passwordForm.appendChild(passwordHeading);
 	passwordForm.appendChild(oldPasswordContainer);
 	passwordForm.appendChild(document.createElement('br'));
     passwordForm.appendChild(newPasswordContainer);
@@ -323,6 +329,26 @@ export function menu(menuArea: HTMLDivElement | null) {
     menu.id = "menu";
     menu.className = "hidden md:flex space-x-4";
 
+    const playButton = document.createElement('button');
+    playButton.type = "button";
+    playButton.id = "playButton";
+    playButton.title = "New Game";
+    playButton.innerHTML = '<svg class="w-6 h-6 mr-2 fill-current" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M45.563,29.174l-22-15c-0.307-0.208-0.703-0.231-1.031-0.058C22.205,14.289,22,14.629,22,15v30 c0,0.371,0.205,0.711,0.533,0.884C22.679,45.962,22.84,46,23,46c0.197,0,0.394-0.059,0.563-0.174l22-15 C45.836,30.64,46,30.331,46,30S45.836,29.36,45.563,29.174z M24,43.107V16.893L43.225,30L24,43.107z"/></svg>Play';
+    playButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+    menu.appendChild(playButton);
+
+    const chatButton = document.createElement("button");
+    chatButton.type = "button";
+    chatButton.id = "chatButton";
+    chatButton.title = "Chat room";
+    chatButton.innerHTML += '<svg vg class="fill-none stroke-current w-8 h-8 mr-2" viewBox="0 0 024 024" xmlns="http://www.w3.org/2000/svg">\
+    <path d="M8 10.5H16"/>\
+    <path d="M8 14H13.5"/>\
+    <path d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"/>\
+    </svg>';
+    chatButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+    menu.appendChild(chatButton);
+
     const friendsButton = document.createElement("button");
     friendsButton.type = "button";
     friendsButton.title = "My friends";
@@ -349,21 +375,6 @@ export function menu(menuArea: HTMLDivElement | null) {
     logoutButton.title = "Sign Out";
     logoutButton.innerHTML += '<svg vg class="fill-current w-8 h-8 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.6053 12.9474C17.6053 16.014 15.1193 18.5 12.0526 18.5C8.986 18.5 6.5 16.014 6.5 12.9474C6.5 11.1423 7.36133 9.53838 8.69541 8.52423C9.09037 8.22399 9.36842 7.77755 9.36842 7.28142V7.28142C9.36842 6.34022 8.43174 5.69142 7.64453 6.20732C5.4497 7.64569 4 10.1272 4 12.9474C4 17.3947 7.60529 21 12.0526 21C16.5 21 20.1053 17.3947 20.1053 12.9474C20.1053 10.1272 18.6556 7.64569 16.4607 6.20732C15.6735 5.69142 14.7368 6.34022 14.7368 7.28142V7.28142C14.7368 7.77755 15.0149 8.22399 15.4099 8.52423C16.7439 9.53838 17.6053 11.1423 17.6053 12.9474Z"/><rect x="10.75" y="4" width="2.5" height="9" rx="1.25"/></svg>';
     logoutButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
-
-    const playBtn = document.createElement('button');
-    playBtn.type = "button";
-    playBtn.id = "playButton";
-    playBtn.title = "New Game";
-    playBtn.innerHTML = '<svg class="w-6 h-6 mr-2 fill-current" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M45.563,29.174l-22-15c-0.307-0.208-0.703-0.231-1.031-0.058C22.205,14.289,22,14.629,22,15v30 c0,0.371,0.205,0.711,0.533,0.884C22.679,45.962,22.84,46,23,46c0.197,0,0.394-0.059,0.563-0.174l22-15 C45.836,30.64,46,30.331,46,30S45.836,29.36,45.563,29.174z M24,43.107V16.893L43.225,30L24,43.107z"/></svg>Play';
-
-    playBtn.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
-
-    // **listener** que chama a page do jogo
-    playBtn.addEventListener('click', () => {
-        gamePage(document.getElementById('appArea') as HTMLDivElement);
-    });
-
-    menu.appendChild(playBtn);
     menu.appendChild(logoutButton);
 
     inner.appendChild(logo);
@@ -420,19 +431,17 @@ export function header(headerArea: HTMLDivElement | null) {
     headerArea?.appendChild(nav);
 }
 
-export function chatPage() {
+export function chatPage(workArea: HTMLDivElement | null) {
+    if (!workArea) {
+        return;
+    }
+    utils.cleanDiv(workArea);
+
     const userId = localStorage.getItem('userId');
     if (!userId) {
         console.error('User ID não encontrado em localStorage.');
         return;
     }
-    // Contêineres já renderizados pela menu/dashboard
-    const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
-    const appArea = document.getElementById('appArea')! as HTMLDivElement;
-
-    // Limpa as áreas para montar o chat
-    headerArea.innerHTML = '';
-    appArea.innerHTML = '';
 
     // Container de mensagens
     const chatContainer = document.createElement('div');
@@ -445,7 +454,7 @@ export function chatPage() {
         padding: '8px',
         backgroundColor: '#fff'
     });
-    appArea.appendChild(chatContainer);
+    workArea.appendChild(chatContainer);
 
     // Input e botão de envio
     const inputWrapper = document.createElement('div');
@@ -463,7 +472,7 @@ export function chatPage() {
     sendBtn.textContent = 'Enviar';
     inputWrapper.appendChild(sendBtn);
 
-    appArea.appendChild(inputWrapper);
+    workArea.appendChild(inputWrapper);
 
     // Conecta imediatamente
     const wsUrl = `wss://${window.location.hostname}:8002/api/chat`;
@@ -498,16 +507,18 @@ export function chatPage() {
 
 // TODO : - game won't present errors, but won't start
 export function gamePage(workArea: HTMLDivElement | null) {
+    if (!workArea) {
+        return;
+    }
     utils.cleanDiv(workArea);
 
     const canvas = document.createElement('canvas');
-    const appArea = document.getElementById('appArea')! as HTMLDivElement;
 
     canvas.id = 'pong';
     canvas.width = 600;
     canvas.height = 600;
 
-    appArea.appendChild(canvas);
+    workArea.appendChild(canvas);
 
     initPong(canvas);
 }
