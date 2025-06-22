@@ -21,10 +21,11 @@ async function isSignedIn() {
       document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
     }
     else {
+	  const userId = localStorage.getItem('userId')!;
       displayPage.menu(menuArea);
       displayPage.dashboard(workArea);
+      displayPage.chatPage(userId);
       document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-      displayPage.chatPage();
     }
   } catch (error) {
     console.error('Error sending form data:', error);
@@ -51,4 +52,3 @@ if (!menuArea) {
 }
 
 isSignedIn();
-

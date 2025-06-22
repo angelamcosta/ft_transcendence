@@ -36,5 +36,9 @@ export async function loginUser(db, {email, password}) {
 	}
 
 	const token = generateJWT({ userId: user.id, email: user.email })
-	return ({ cookie: `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`, twofa: 'disabled', user: {id: user.id} })
+	return ({ 
+		cookie: `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`, 
+		twofa: 'disabled', 
+		user: {id: user.id}
+	})
 }

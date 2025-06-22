@@ -105,7 +105,6 @@ export async function signIn(e: Event) {
         if (!response.ok) {
             const message = data?.error || 'Login failed.';
 
-            // Create  a message container
             let messageDiv = document.createElement('div');
             messageDiv.id = 'loginError';
             messageDiv.className = 'text-red-600 mt-2 text-sm';
@@ -114,11 +113,10 @@ export async function signIn(e: Event) {
             return;
         }
 
-        const userId = data.user.id;
-        localStorage.setItem('userId', userId);
-
+		localStorage.setItem('userId', data.user.id);
         displayPage.menu(menuArea);
         displayPage.dashboard(workArea);
+		displayPage.chatPage(data.user.id);
         document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
     } catch (error) {
         console.error('Error sending form data:', error);
