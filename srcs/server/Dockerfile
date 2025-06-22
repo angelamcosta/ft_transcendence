@@ -18,10 +18,14 @@ RUN npm cache clean --force && \
     npm install fastify && \
     npm install tailwindcss @tailwindcss/cli && \
 	npm install @fastify/cors && \
+	npm install ws && \
 	npm install undici && \
     npm install @fastify/static && \
     npm install @fastify/websocket && \
-    npm install typescript
+	npm install @fastify/cookie && \
+    npm install typescript && \
+	npm install sqlite && \
+	npm install sqlite3
 
 # Build TailwindCSS and TypeScript
 RUN npx @tailwindcss/cli -i ./style.css -o ./public/style.css --minify && \

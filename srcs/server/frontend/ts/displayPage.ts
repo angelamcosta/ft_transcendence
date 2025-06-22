@@ -44,25 +44,25 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	const passwordContainer = document.createElement('div');
 	passwordContainer.classList.add('relative', 'w-60', 'm-4');
 
-    // Create an email input
-    const passwordInput = document.createElement('input');
-    passwordInput.type = 'password';
-    passwordInput.id = "passwordInput";
-    passwordInput.name = 'password';
-    passwordInput.placeholder = 'Enter your pasword';
-    passwordInput.minLength = 6;
-    passwordInput.required = true;
-    passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	// Create an email input
+	const passwordInput = document.createElement('input');
+	passwordInput.type = 'password';
+	passwordInput.id = "passwordInput";
+	passwordInput.name = 'password';
+	passwordInput.placeholder = 'Enter your pasword';
+	passwordInput.minLength = 6;
+	passwordInput.required = true;
+	passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 
-    // Create a toggle button
-    const toggleButton = document.createElement('button');
-    toggleButton.type = 'button';
-    toggleButton.title = "Show password";
-    toggleButton.innerHTML = utils.eyeIcon;
-    toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
-    toggleButton.style.background = 'transparent';
-    passwordContainer.appendChild(passwordInput);
-    passwordContainer.appendChild(toggleButton);
+	// Create a toggle button
+	const toggleButton = document.createElement('button');
+	toggleButton.type = 'button';
+	toggleButton.title = "Show password";
+	toggleButton.innerHTML = utils.eyeIcon;
+	toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	toggleButton.style.background = 'transparent';
+	passwordContainer.appendChild(passwordInput);
+	passwordContainer.appendChild(toggleButton);
 
 	// Create a submit button
 	const submitButton = document.createElement('button');
@@ -103,13 +103,13 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	// Append form and login button to the body
 	workArea?.appendChild(form);
 
-    // Handle form submission
-    form.addEventListener('submit', formHandlers.signUp);
+	// Handle form submission
+	form.addEventListener('submit', formHandlers.signUp);
 	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
-    resetButton.addEventListener("click", () => {
-        form.reset();
-    });
-    cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
+	resetButton.addEventListener("click", () => {
+		form.reset();
+	});
+	cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
 }
 
 export function signIn(workArea: HTMLDivElement | null, successMessage?: string) {
@@ -140,15 +140,15 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 	passwordInput.required = true;
 	passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 
-    // Create a toggle button
-    const toggleButton = document.createElement('button');
-    toggleButton.type = 'button';
-    toggleButton.title = "Show password";
-    toggleButton.innerHTML = utils.eyeIcon;
-    toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
-    toggleButton.style.background = 'transparent';
-    passwordContainer.appendChild(passwordInput);
-    passwordContainer.appendChild(toggleButton);
+	// Create a toggle button
+	const toggleButton = document.createElement('button');
+	toggleButton.type = 'button';
+	toggleButton.title = "Show password";
+	toggleButton.innerHTML = utils.eyeIcon;
+	toggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	toggleButton.style.background = 'transparent';
+	passwordContainer.appendChild(passwordInput);
+	passwordContainer.appendChild(toggleButton);
 
 	const submitButton = document.createElement('button');
 	submitButton.type = 'submit';
@@ -431,7 +431,7 @@ export function header(headerArea: HTMLDivElement | null) {
 	headerArea?.appendChild(nav);
 }
 
-export function chatPage(workArea: HTMLDivElement | null,  userId: string) {
+export function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
 	if (!workArea || !headerArea) {
@@ -450,7 +450,7 @@ export function chatPage(workArea: HTMLDivElement | null,  userId: string) {
 		display: 'flex',
 		justifyContent: 'center',
 		alignItems: 'center',
-		height:   `calc(100vh - ${headerArea.offsetHeight}px)`
+		height: `calc(85vh - ${headerArea.offsetHeight}px)`
 	});
 
 	const chatCard = document.createElement('div');
@@ -512,30 +512,65 @@ export function chatPage(workArea: HTMLDivElement | null,  userId: string) {
 
 	const wsUrl = `wss://localhost:9000/chat`;
 	const ws = new WebSocket(wsUrl);
+	ws.binaryType = 'arraybuffer';
 
 	ws.onopen = () => {
 		ws.send(JSON.stringify({ type: 'identify', userId }));
 	};
-	ws.onmessage = (evt) => {
-		console.log('RAW WSDATA>', evt.data)
-		const msg = JSON.parse(evt.data);
-		appendMessage(msg);
+	ws.onmessage = async (evt) => {
+		let dataStr: string;
+		if (typeof evt.data === 'string')
+			dataStr = evt.data;
+		else if (evt.data instanceof Blob)
+			dataStr = await evt.data.text();
+		else
+			dataStr = new TextDecoder().decode(evt.data);
+
+		const msg = JSON.parse(dataStr);
+
+		switch (msg.type) {
+			case 'join':
+				appendSystemMessage(`${msg.display_name} joined the chat`);
+				break;
+			case 'message':
+				appendMessage({
+					display_name: msg.display_name,
+					content: msg.content,
+					timestamp: msg.timestamp,
+				});
+				break;
+		}
 	};
 	ws.onerror = (err) => console.error('WebSocket error:', err);
 
 	sendBtn.addEventListener('click', () => {
 		const content = messageInput.value.trim();
-		if (!content) return;
-		ws.send(JSON.stringify({ type: 'message', content }));
-		appendMessage({ userId, content, timestamp: Date.now() });
+		if (!content)
+			return;
+
+		const payload = JSON.stringify({ type: 'message', content });
+		ws.send(payload);
+		appendMessage({ display_name, content, timestamp: Date.now() });
 		messageInput.value = '';
 	});
 
-	function appendMessage(msg: { userId?: string; from?: string; content: string; timestamp: number }) {
+	function appendMessage(msg: {
+		display_name: string;
+		content: string;
+		timestamp: number;
+	}) {
 		const line = document.createElement('div');
-		const sender = msg.userId ?? msg.from ?? 'unknown';
-		line.style.textAlign = sender === userId ? 'right' : 'left';
-		line.textContent = `${sender}: ${msg.content}`;
+		line.style.textAlign = msg.display_name === display_name ? 'right' : 'left';
+		line.textContent = `${msg.display_name}: ${msg.content}`;
+		chatContainer.appendChild(line);
+		chatContainer.scrollTop = chatContainer.scrollHeight;
+	}
+
+	function appendSystemMessage(text: string) {
+		const line = document.createElement('div');
+		line.style.textAlign = 'center';
+		line.style.fontStyle = 'italic';
+		line.textContent = text;
 		chatContainer.appendChild(line);
 		chatContainer.scrollTop = chatContainer.scrollHeight;
 	}

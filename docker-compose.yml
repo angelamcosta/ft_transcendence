@@ -19,6 +19,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
+    volumes:
+      - sqlite:/db
     env_file:
       - .env
     networks:
