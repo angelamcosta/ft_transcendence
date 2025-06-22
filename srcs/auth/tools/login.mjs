@@ -1,4 +1,4 @@
-import { hashPassword, generateJWT } from "./utils.mjs"
+import { generateJWT, verifyPassword } from "./utils.mjs"
 import { sendEmail } from "./emailService.mjs"
 
 export async function loginUser(db, {email, password}) {
@@ -15,8 +15,8 @@ export async function loginUser(db, {email, password}) {
 		throw error
 	}
 	
-	const { hash } = hashPassword(password, user.salt)
-	if (hash !== user.passwordHash) {
+	const validPassword = await verifyPassword(password, user.password);
+	if (!validPassword) {
 		const error = new Error('Invalid credentials')
 		error.statusCode = 401
 		throw error

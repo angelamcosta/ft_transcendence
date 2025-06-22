@@ -34,9 +34,16 @@ export async function registerUser(db, {email, password, display_name}) {
 		throw error
 	}
 
-	const { salt , hash } = hashPassword(password)
+	const displayNameExists = await db.get('SELECT id FROM users where display_name = ?', [display_name])
+	if (displayNameExists) {
+		const error = new Error('Display name already in use')
+		error.statusCode = 409
+		throw error
+	}
+
+	const { hash } = await hashPassword(password)
 	try {
-		await db.run(`INSERT INTO users (email, passwordHash, salt, twofa_status, display_name) VALUES (?, ?, ?, 'disabled', ?)`, [email, hash, salt, display_name])
+		await db.run(`INSERT INTO users (email, password, twofa_status, display_name) VALUES (?, ?, 'disabled', ?)`, [email, hash, display_name])
 		return { message: 'Registration successful' }
 	} catch (dbError) {
 		console.log('Database error details:', dbError)
