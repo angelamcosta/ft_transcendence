@@ -102,6 +102,7 @@ export async function signIn(e: Event) {
         });
 
         const data = await response.json();
+        console.log('API response:', data);
         if (!response.ok) {
             const message = data?.error || 'Login failed.';
 
@@ -113,11 +114,18 @@ export async function signIn(e: Event) {
             return;
         }
 
-		localStorage.setItem('userId', data.user.id);
+        if (data.user && data.user.id) {
+            const userId = data.user.id;
+            localStorage.setItem('userId', userId);
+        }
+
         displayPage.menu(menuArea);
         displayPage.dashboard(workArea);
-		displayPage.chatPage(data.user.id);
         document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
+        document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
+        document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
+        document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
+		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!));
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Login failed! Catched on Try');

@@ -24,8 +24,11 @@ async function isSignedIn() {
 	  const userId = localStorage.getItem('userId')!;
       displayPage.menu(menuArea);
       displayPage.dashboard(workArea);
-      displayPage.chatPage(userId);
-      document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
+      document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea)); 
+      document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
+      document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
+      document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
+      document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, userId));
     }
   } catch (error) {
     console.error('Error sending form data:', error);
