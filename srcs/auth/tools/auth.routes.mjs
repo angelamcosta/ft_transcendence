@@ -33,9 +33,9 @@ export default async function authRoutes(fastify) {
 			if (result.twofa === 'failed')
 				return reply.code(500).send({ error: result.message })
 			else if (result.twofa === 'disabled')
-				return reply.header('set-cookie', result.cookie).code(200).send({ success: "Login successful" , user: result.user})
+				return reply.header('set-cookie', result.cookie).code(200).send({ success: "Login successful", user: result.user })
 			else if (result.twofa === 'enabled')
-				return reply.code(200).send({ success: result.message })
+				return reply.code(200).send({ success: result.message, user: result.user  })
 		} catch (error) {
 			return reply.code(error.statusCode).send({ error: error.message })
 		}

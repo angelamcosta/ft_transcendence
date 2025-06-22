@@ -1,6 +1,7 @@
+import argon2 from 'argon2';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { createHash, randomBytes, createHmac } from 'crypto';
+import { createHmac } from 'crypto';
 
 export const db = await open({
 	filename: process.env.DB_PATH,
@@ -46,9 +47,11 @@ export function verifyJWT(token) {
 	return decoded
 }
 
-export function hashPassword(password, salt = randomBytes(32).toString('hex')) {
-	const hash = createHash('sha256')
-		.update(password + salt)
-		.digest('hex')
-	return { salt, hash }
+export async function hashPassword(password) {
+	const hash = await argon2.hash(password);
+	return { hash }
+}
+
+export async function verifyPassword(password, hash) {
+  return argon2.verify(hash, password);
 }

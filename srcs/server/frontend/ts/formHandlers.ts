@@ -106,7 +106,6 @@ export async function signIn(e: Event) {
         if (!response.ok) {
             const message = data?.error || 'Login failed.';
 
-            // Create  a message container
             let messageDiv = document.createElement('div');
             messageDiv.id = 'loginError';
             messageDiv.className = 'text-red-600 mt-2 text-sm';
@@ -126,7 +125,7 @@ export async function signIn(e: Event) {
         document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
         document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
         document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
-        document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea));
+		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!));
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Login failed! Catched on Try');

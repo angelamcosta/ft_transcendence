@@ -3,7 +3,7 @@ import path from 'path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import cors from '@fastify/cors';
-import fastifyWebsocket from '@fastify/websocket';
+import websocket from '@fastify/websocket'
 import authRoutes from './auth.routes.mjs';
 import userRoutes from './user.routes.mjs';
 import matchRoutes from './match.routes.mjs';
@@ -27,6 +27,17 @@ app.addContentTypeParser('multipart/form-data', (request, payload, done) => {
 	done(null);
 });
 
+await app.register(websocket);
+
+app.get('/chat', { websocket: true }, (socket, req) => {
+	socket.onopen = () => {
+        socket.send(JSON.stringify({ type: 'identify', userId }));
+    };
+	socket.on('message', raw => {
+		socket.send(raw)
+	})
+})
+
 await app.register(fastifyStatic, {
 	root: path.join(__dirname, 'public'),
 	prefix: '/',
@@ -36,8 +47,6 @@ await app.register(cors, {
 	origin: true,
 	credentials: true,
 });
-
-await app.register(fastifyWebsocket);
 
 ['SIGINT', 'SIGTERM'].forEach(sig =>
 	process.on(sig, async () => {
@@ -67,9 +76,9 @@ await app.register(matchRoutes);
 await app.register(userRoutes);
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
-		if (err) {
-			console.error(err);
-			process.exit(1);
-		}
-		console.log(`Server running at ${address}`);
+	if (err) {
+		console.error(err);
+		process.exit(1);
+	}
+	console.log(`Server running at ${address}`);
 });

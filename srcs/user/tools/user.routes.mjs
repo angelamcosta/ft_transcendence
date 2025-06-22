@@ -2,6 +2,7 @@ import { db } from './utils.mjs'
 import { promises as fsp } from 'fs';
 import fs from 'fs';
 import path from 'path';
+import argon2 from 'argon2';
 import crypto from 'crypto';
 import { pipeline } from 'stream/promises';
 
@@ -41,13 +42,14 @@ export default async function userRoutes(fastify) {
 		if (req.authUser.id !== paramId)
 			throw fastify.httpErrors.forbidden('You cannot modify another user');
 
-		const { email, display_name } = req.body;
+		const { password, display_name } = req.body;
 		const updates = [];
 		const params = [];
 
-		if (email !== undefined) {
-			updates.push('email = ?');
-			params.push(email);
+		if (password !== undefined) { 
+			const hashedPassword = await argon2.hash(password);
+			updates.push('password = ?');
+			params.push(hashedPassword);
 		}
 
 		if (display_name !== undefined) {

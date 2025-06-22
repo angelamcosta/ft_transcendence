@@ -1,8 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
-    passwordHash TEXT NOT NULL,
-	salt TEXT NOT NULL,
+    password TEXT NOT NULL,
 	twofa_status NOT NULL DEFAULT 'pending',
 	otp INTEGER,
 	expire INTEGER,

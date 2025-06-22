@@ -14,6 +14,6 @@ RUN openssl req -x509 -newkey rsa:4096 -subj "/CN=localhost" -keyout /auth/key.p
 
 RUN npm cache clean --force && \
     npm init -y && \
-    npm install fastify sqlite sqlite3 nodemailer
+    npm install fastify sqlite sqlite3 nodemailer argon2
 
 CMD [ "node", "app.mjs" ]
