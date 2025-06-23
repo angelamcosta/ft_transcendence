@@ -44,9 +44,9 @@ await app.register(websocket);
 
 const clients = new Set();
 const nameBySock = new Map();
+const dmRooms = new Map();
 
-app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (connection, req) => {
-	const socket = connection;
+app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (socket, req) => {
 	const userId = req.authUser.id;
 	const row = await db.get('SELECT display_name FROM users WHERE id = ?', userId);
 
@@ -97,6 +97,68 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 		}
 	});
 });
+
+app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
+	async (socket, req) => {
+		const userId = req.authUser.id;
+		const meRow = await db.get('SELECT display_name FROM users WHERE id = ?',[userId]);
+
+		let displayName = 'unknown';
+		if (meRow && meRow.display_name)
+			displayName = meRow.display_name;
+
+		let roomKey;
+		let clients;
+
+		socket.on('message', async raw => {
+			let msg;
+			try {
+				msg = JSON.parse(raw.toString());
+			} catch {
+				return console.error('Invalid JSON from client', err);
+			}
+
+			if (msg.type === 'direct-join') {
+				const row = await db.get(
+					'SELECT id, display_name FROM users WHERE display_name = ?',
+					[msg.targetName]
+				);
+				if (!row)
+					return socket.close(1008, 'User not found');
+				const targetId = row.id;
+
+				roomKey = [userId, targetId].sort().join(':');
+				clients = dmRooms.get(roomKey);
+				if (!clients) {
+					clients = new Set();
+					dmRooms.set(roomKey, clients);
+				}
+
+				clients.add(socket);
+
+				socket.on('close', () => {
+					clients.delete(socket);
+					if (clients.size === 0)
+						dmRooms.delete(roomKey);
+				});
+
+			} else if (msg.type === 'message') {
+				if (!clients)
+					return;
+				const broadcast = JSON.stringify({
+					type: 'message',
+					display_name: displayName,
+					content: msg.content,
+					timestamp: Date.now()
+				});
+				for (const client of clients) {
+					if (client.readyState === ws.OPEN)
+						client.send(broadcast);
+				}
+			}
+		});
+	}
+);
 
 await app.register(fastifyStatic, {
 	root: path.join(__dirname, 'public'),
