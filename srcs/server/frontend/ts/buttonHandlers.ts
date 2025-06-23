@@ -24,6 +24,7 @@ export async function signOut(workArea: HTMLDivElement | null) {
         displayPage.header(menuArea);
         displayPage.landingPage(workArea, menuArea);
         localStorage.removeItem('userId');
+		localStorage.removeItem('displayName');
         document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
         document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
         document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
@@ -41,8 +42,8 @@ export async function gamePage(workArea: HTMLDivElement | null) {
     displayPage.gamePage(workArea);
 }
 
-export async function chatPage(workArea: HTMLDivElement | null, userId: string) {
-    displayPage.chatPage(workArea, userId);
+export async function chatPage(workArea: HTMLDivElement | null, userId: string, displayName: string) {
+    displayPage.chatPage(workArea, userId, displayName);
 }
 
 export function showPassword(e: Event,  passwordInput: HTMLInputElement | null, toggleButton: HTMLButtonElement | null) {

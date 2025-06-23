@@ -39,6 +39,6 @@ export async function loginUser(db, {email, password}) {
 	return ({ 
 		cookie: `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`, 
 		twofa: 'disabled', 
-		user: {id: user.id}
+		user: {id: user.id, displayName: user.display_name}
 	})
 }

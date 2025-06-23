@@ -22,13 +22,14 @@ async function isSignedIn() {
     }
     else {
 	  const userId = localStorage.getItem('userId')!;
+	  const displayName = localStorage.getItem('displayName')!;
       displayPage.menu(menuArea);
       displayPage.dashboard(workArea);
       document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea)); 
       document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
       document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
       document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
-      document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, userId));
+      document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, userId, displayName));
     }
   } catch (error) {
     console.error('Error sending form data:', error);
