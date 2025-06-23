@@ -43,6 +43,7 @@ await app.register(fastifyCookie);
 await app.register(websocket);
 
 const clients = new Set();
+const nameBySock = new Map();
 
 app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (connection, req) => {
 	const socket = connection;
@@ -53,15 +54,27 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 	if (row && row.display_name)
 		displayName = row.display_name;
 
+	const current = Array.from(nameBySock.values());
+	socket.send(JSON.stringify({ type: 'list', users: current }));
+	socket.send(JSON.stringify({ type: 'identify', displayName }));
+
 	const joinMsg = JSON.stringify({ type: 'join', display_name: displayName });
 	for (const client of clients) {
 		if (client.readyState === ws.OPEN && client !== socket)
 			client.send(joinMsg);
 	}
-	clients.add(socket);
-	socket.on('close', () => clients.delete(socket));
 
-	socket.send(JSON.stringify({ type: 'identify', userId }));
+	clients.add(socket);
+	nameBySock.set(socket, displayName);
+	socket.on('close', () => {
+		for (const client of clients) {
+			if (client !== socket && client.readyState === ws.OPEN) {
+				client.send(JSON.stringify({ type: 'leave', display_name: displayName }));
+			}
+		}
+		clients.delete(socket);
+		nameBySock.delete(socket);
+	});
 
 	socket.on('message', raw => {
 		let incoming;
@@ -78,7 +91,7 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 				timestamp: Date.now()
 			});
 			for (const client of clients) {
-				if (client.readyState === ws.OPEN &&client !== socket)
+				if (client.readyState === ws.OPEN && client !== socket)
 					client.send(broadcast);
 			}
 		}

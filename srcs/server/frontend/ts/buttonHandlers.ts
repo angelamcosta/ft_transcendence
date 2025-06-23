@@ -24,6 +24,7 @@ export async function signOut(workArea: HTMLDivElement | null) {
         displayPage.header(menuArea);
         displayPage.landingPage(workArea, menuArea);
         localStorage.removeItem('userId');
+		localStorage.removeItem('displayName');
         document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
         document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
         document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));

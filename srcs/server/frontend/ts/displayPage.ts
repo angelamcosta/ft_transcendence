@@ -3,8 +3,16 @@ import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
 
+function cleanUpChatSocket() {
+	if (chatSocket) {
+		chatSocket.close();
+		chatSocket = null;
+	}
+}
+
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
+	cleanUpChatSocket();
 
 	// Create <h1>
 	const heading = document.createElement("h1");
@@ -176,6 +184,7 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 
 export function dashboard(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
+	cleanUpChatSocket();
 
 	// Create <h1>
 	const heading = document.createElement("h1");
@@ -187,6 +196,7 @@ export function dashboard(workArea: HTMLDivElement | null) {
 
 export function accountSettings(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
+	cleanUpChatSocket();
 
 	const passwordForm = document.createElement('form');
 	passwordForm.id = 'changePassword';
@@ -431,6 +441,8 @@ export function header(headerArea: HTMLDivElement | null) {
 	headerArea?.appendChild(nav);
 }
 
+let chatSocket: WebSocket | null = null;
+
 export function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
@@ -452,6 +464,8 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		alignItems: 'center',
 		height: `calc(85vh - ${headerArea.offsetHeight}px)`
 	});
+
+	// ── Chat Card ─────────────────────────────────────────────────────────────
 
 	const chatCard = document.createElement('div');
 	Object.assign(chatCard.style, {
@@ -481,7 +495,6 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		borderTop: '1px solid #eee',
 		padding: '8px',
 	});
-
 	const messageInput = document.createElement('input');
 	messageInput.placeholder = 'Type a message…';
 	Object.assign(messageInput.style, {
@@ -490,7 +503,6 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		border: '1px solid #ccc',
 		borderRadius: '4px',
 	});
-
 	const sendBtn = document.createElement('button');
 	sendBtn.textContent = 'Send';
 	Object.assign(sendBtn.style, {
@@ -502,17 +514,63 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		borderRadius: '4px',
 		cursor: 'pointer',
 	});
-
 	inputWrapper.append(messageInput, sendBtn);
 	chatCard.appendChild(inputWrapper);
 
-	wrapper.appendChild(chatCard);
+	// ── Online Users Panel ───────────────────────────────────────────────────
+
+	const userListCard = document.createElement('div');
+	Object.assign(userListCard.style, {
+		width: '200px',
+		height: '500px',
+		background: '#fafafa',
+		border: '1px solid #ccc',
+		borderRadius: '8px',
+		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+		display: 'flex',
+		flexDirection: 'column',
+		overflow: 'hidden',
+		marginLeft: '16px',
+	});
+
+	const userListHeader = document.createElement('div');
+	userListHeader.textContent = 'Online';
+	Object.assign(userListHeader.style, {
+		padding: '8px',
+		borderBottom: '1px solid #eee',
+		fontWeight: 'bold',
+		textAlign: 'center',
+	});
+
+	const userListContainer = document.createElement('div');
+	Object.assign(userListContainer.style, {
+		flex: '1 1 auto',
+		padding: '8px',
+		overflowY: 'auto',
+	});
+
+	userListCard.append(userListHeader, userListContainer);
+
+	// ── Assemble ─────────────────────────────────────────────────────────────
+
+	wrapper.append(chatCard, userListCard);
 	workArea.appendChild(wrapper);
 
-
+	cleanUpChatSocket();
 	const wsUrl = `wss://localhost:9000/chat`;
 	const ws = new WebSocket(wsUrl);
+	const onlineUsers = new Set<string>();
 	ws.binaryType = 'arraybuffer';
+	chatSocket = ws;
+
+	function renderUserList() {
+		userListContainer.innerHTML = '';
+		onlineUsers.forEach(name => {
+			const el = document.createElement('div');
+			el.textContent = name;
+			userListContainer.appendChild(el);
+		});
+	}
 
 	ws.onopen = () => {
 		ws.send(JSON.stringify({ type: 'identify', userId }));
@@ -529,8 +587,24 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		const msg = JSON.parse(dataStr);
 
 		switch (msg.type) {
+			case 'list':
+				onlineUsers.clear();
+				msg.users.forEach((n: string) => onlineUsers.add(n));
+				renderUserList();
+				break;
+			case 'identify':
+				onlineUsers.add(display_name);
+				renderUserList();
+				break;
 			case 'join':
+				onlineUsers.add(msg.display_name);
+				renderUserList();
 				appendSystemMessage(`${msg.display_name} joined the chat`);
+				break;
+			case 'leave':
+				onlineUsers.delete(msg.display_name);
+				renderUserList();
+				appendSystemMessage(`${msg.display_name} left the chat`);
 				break;
 			case 'message':
 				appendMessage({
@@ -543,7 +617,7 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	};
 	ws.onerror = (err) => console.error('WebSocket error:', err);
 
-	sendBtn.addEventListener('click', () => {
+	function sendMessage() {
 		const content = messageInput.value.trim();
 		if (!content)
 			return;
@@ -552,8 +626,16 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		ws.send(payload);
 		appendMessage({ display_name, content, timestamp: Date.now() });
 		messageInput.value = '';
-	});
+	}
+	sendBtn.addEventListener('click', sendMessage);
 
+	messageInput.addEventListener('keydown', (e) => {
+		if (e.key == 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			sendMessage();
+		}
+	})
+	
 	function appendMessage(msg: {
 		display_name: string;
 		content: string;
@@ -582,6 +664,7 @@ export function gamePage(workArea: HTMLDivElement | null) {
 		return;
 	}
 	utils.cleanDiv(workArea);
+	cleanUpChatSocket();
 
 	const canvas = document.createElement('canvas');
 
