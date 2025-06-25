@@ -1,5 +1,6 @@
 import * as displayPage from './displayPage.js';
 import * as buttonHandlers from './buttonHandlers.js';
+import { initGlobalChat } from './chatManager.js';
 
 async function isSignedIn() {
   try {
@@ -25,6 +26,7 @@ async function isSignedIn() {
 	  const displayName = localStorage.getItem('displayName')!;
       displayPage.menu(menuArea);
       displayPage.dashboard(workArea);
+	  initGlobalChat(userId, displayName);
       document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea)); 
       document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
       document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));

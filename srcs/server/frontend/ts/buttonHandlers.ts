@@ -1,5 +1,6 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
+import { cleanGlobalChat } from './chatManager.js';
 
 export async function signOut(workArea: HTMLDivElement | null) {
 
@@ -21,10 +22,11 @@ export async function signOut(workArea: HTMLDivElement | null) {
             alert(message);
             return;
         }
+		
+		cleanGlobalChat();
+        localStorage.clear();
         displayPage.header(menuArea);
         displayPage.landingPage(workArea, menuArea);
-        localStorage.removeItem('userId');
-		localStorage.removeItem('displayName');
         document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
         document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
         document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));

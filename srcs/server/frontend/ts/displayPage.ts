@@ -2,17 +2,10 @@ import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
-
-function cleanUpChatSocket() {
-	if (chatSocket) {
-		chatSocket.close();
-		chatSocket = null;
-	}
-}
+import { globalSocket, onlineUsers } from './chatManager.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
 
 	// Create <h1>
 	const heading = document.createElement("h1");
@@ -184,7 +177,6 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 
 export function dashboard(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
 
 	// Create <h1>
 	const heading = document.createElement("h1");
@@ -196,7 +188,6 @@ export function dashboard(workArea: HTMLDivElement | null) {
 
 export function accountSettings(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
 
 	const passwordForm = document.createElement('form');
 	passwordForm.id = 'changePassword';
@@ -441,8 +432,6 @@ export function header(headerArea: HTMLDivElement | null) {
 	headerArea?.appendChild(nav);
 }
 
-let chatSocket: WebSocket | null = null;
-
 export function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
@@ -452,7 +441,7 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	utils.cleanDiv(workArea);
 
 	if (!userId) {
-		console.error('No User ID in local storage.');
+		console.error('User ID error!');
 		return;
 	}
 
@@ -464,8 +453,6 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		alignItems: 'center',
 		height: `calc(85vh - ${headerArea.offsetHeight}px)`
 	});
-
-	// ── Chat Card ─────────────────────────────────────────────────────────────
 
 	const chatCard = document.createElement('div');
 	Object.assign(chatCard.style, {
@@ -517,8 +504,6 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	inputWrapper.append(messageInput, sendBtn);
 	chatCard.appendChild(inputWrapper);
 
-	// ── Online Users Panel ───────────────────────────────────────────────────
-
 	const userListCard = document.createElement('div');
 	Object.assign(userListCard.style, {
 		width: '200px',
@@ -551,17 +536,8 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 
 	userListCard.append(userListHeader, userListContainer);
 
-	// ── Assemble ─────────────────────────────────────────────────────────────
-
 	wrapper.append(chatCard, userListCard);
 	workArea.appendChild(wrapper);
-
-	cleanUpChatSocket();
-	const wsUrl = `wss://localhost:9000/chat`;
-	const ws = new WebSocket(wsUrl);
-	const onlineUsers = new Set<string>();
-	ws.binaryType = 'arraybuffer';
-	chatSocket = ws;
 
 	function renderUserList() {
 		userListContainer.innerHTML = '';
@@ -576,10 +552,13 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		});
 	}
 
-	ws.onopen = () => {
-		ws.send(JSON.stringify({ type: 'identify', userId }));
-	};
-	ws.onmessage = async (evt) => {
+	renderUserList();
+  	window.addEventListener('global-presence-updated', renderUserList);
+
+	globalSocket!.addEventListener('open', () => {
+		globalSocket!.send(JSON.stringify({ type: 'identify', userId }));
+	});
+	globalSocket!.addEventListener('message', async evt => {
 		let dataStr: string;
 		if (typeof evt.data === 'string')
 			dataStr = evt.data;
@@ -591,22 +570,14 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		const msg = JSON.parse(dataStr);
 
 		switch (msg.type) {
-			case 'list':
-				onlineUsers.clear();
-				msg.users.forEach((n: string) => onlineUsers.add(n));
-				renderUserList();
-				break;
 			case 'identify':
-				onlineUsers.add(display_name);
 				renderUserList();
 				break;
 			case 'join':
-				onlineUsers.add(msg.display_name);
 				renderUserList();
 				appendSystemMessage(`${msg.display_name} joined the chat`);
 				break;
 			case 'leave':
-				onlineUsers.delete(msg.display_name);
 				renderUserList();
 				appendSystemMessage(`${msg.display_name} left the chat`);
 				break;
@@ -618,8 +589,8 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 				});
 				break;
 		}
-	};
-	ws.onerror = (err) => console.error('WebSocket error:', err);
+	});
+	globalSocket!.addEventListener('error', err => console.error('Global chat error', err));
 
 	function sendMessage() {
 		const content = messageInput.value.trim();
@@ -627,7 +598,7 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 			return;
 
 		const payload = JSON.stringify({ type: 'message', content });
-		ws.send(payload);
+		globalSocket!.send(payload);
 		appendMessage({ display_name, content, timestamp: Date.now() });
 		messageInput.value = '';
 	}
@@ -742,10 +713,10 @@ export function directMessagePage(
 		padding: '8px',
 	});
 	const messageInput = document.createElement('input');
-	messageInput.placeholder = 'Type a DM…';
+	messageInput.placeholder = 'Type a message…';
 	Object.assign(messageInput.style, {
 		flex: '1 1 auto',
-		padding: '6px 8px',
+		padding: '4px 8px',
 		border: '1px solid #ccc',
 		borderRadius: '4px',
 	});
@@ -753,7 +724,7 @@ export function directMessagePage(
 	sendBtn.textContent = 'Send';
 	Object.assign(sendBtn.style, {
 		marginLeft: '8px',
-		padding: '6px 12px',
+		padding: '4px 12px',
 		border: '1px solid #007bff',
 		background: '#007bff',
 		color: '#fff',
@@ -768,7 +739,6 @@ export function directMessagePage(
 	const wsUrl = `wss://localhost:9000/dm`;
 	const ws = new WebSocket(wsUrl);
 	ws.binaryType = 'arraybuffer';
-	chatSocket = ws;
 
 	ws.onopen = () => {
 		ws.send(JSON.stringify({
@@ -851,7 +821,6 @@ export function gamePage(workArea: HTMLDivElement | null) {
 	if (!workArea)
 		return;
 	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
 
 	const canvas = document.createElement('canvas');
 

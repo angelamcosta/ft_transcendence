@@ -1,6 +1,7 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
 import * as buttonHandlers from './buttonHandlers.js';
+import { initGlobalChat } from './chatManager.js';
 
 export async function signUp(e: Event) {
     e.preventDefault(); // Prevent actual form submission
@@ -119,6 +120,7 @@ export async function signIn(e: Event) {
 			const displayName = data.user.displayName;
             localStorage.setItem('userId', userId);
 			localStorage.setItem('displayName', displayName);
+			initGlobalChat(userId, displayName);
         }
 
         displayPage.menu(menuArea);
