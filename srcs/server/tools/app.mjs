@@ -142,14 +142,21 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 						dmRooms.delete(roomKey);
 				});
 
+				const history = await db.all('SELECT sender_id, content, timestamp FROM dm_messages WHERE room_key = ? ORDER BY timestamp', roomKey);
+
+				socket.send(JSON.stringify({ type: 'history', messages: history }));
+
 			} else if (msg.type === 'message') {
-				if (!clients)
-					return;
+				if (!roomKey || !clients) return;
+
+				const ts = Date.now();
+				await db.run('INSERT INTO dm_messages (room_key, sender_id, content, timestamp) VALUES (?, ?, ?, ?)', [roomKey, userId, msg.content, ts]);
+
 				const broadcast = JSON.stringify({
 					type: 'message',
 					display_name: displayName,
 					content: msg.content,
-					timestamp: Date.now()
+					timestamp: ts
 				});
 				for (const client of clients) {
 					if (client.readyState === ws.OPEN)

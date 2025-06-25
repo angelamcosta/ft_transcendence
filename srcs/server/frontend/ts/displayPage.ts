@@ -553,7 +553,7 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	}
 
 	renderUserList();
-  	window.addEventListener('global-presence-updated', renderUserList);
+	window.addEventListener('global-presence-updated', renderUserList);
 
 	globalSocket!.addEventListener('open', () => {
 		globalSocket!.send(JSON.stringify({ type: 'identify', userId }));
@@ -651,14 +651,14 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 
 	function openDirectMessage(targetName: string) {
 		utils.cleanDiv(workArea);
-		directMessagePage(workArea, display_name, targetName);
+		directMessagePage(workArea, display_name, targetName, userId);
 	}
 }
 
 export function directMessagePage(
 	workArea: HTMLDivElement | null,
 	displayName: string,
-	targetName: string
+	targetName: string, userId: string
 ) {
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
@@ -757,7 +757,15 @@ export function directMessagePage(
 			dataStr = new TextDecoder().decode(evt.data);
 
 		const msg = JSON.parse(dataStr);
-		if (msg.type === 'message') {
+		if (msg.type === 'history') {
+			msg.messages.forEach((m: { sender_id: number, content: string, timestamp: number }) => {
+				appendMessage({
+					displayName: m.sender_id.toString() === userId ? displayName : targetName,
+					content: m.content,
+					timestamp: m.timestamp
+				});
+			});
+		} else if (msg.type === 'message') {
 			if (msg.display_name === displayName) return;
 			appendMessage({
 				displayName: msg.display_name,

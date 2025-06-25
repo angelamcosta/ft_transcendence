@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS blocked_users (
     FOREIGN KEY (blocked_id) REFERENCES users(id)
 );
 
+CREATE TABLE IF NOT EXISTS dm_messages (
+	id        INTEGER PRIMARY KEY AUTOINCREMENT,
+	room_key  TEXT    NOT NULL,
+	sender_id INTEGER NOT NULL,
+	content   TEXT    NOT NULL,
+	timestamp INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
