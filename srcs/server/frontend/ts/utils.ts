@@ -1,3 +1,5 @@
+import { unreadDM } from './displayPage.js';
+
 export const eyeIcon = `
 		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 
        		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
@@ -8,7 +10,7 @@ export const eyeIcon = `
     	<circle cx="12" cy="12" r="3"/>
   		</svg>`;
 
-	export const eyeSlashIcon = `
+export const eyeSlashIcon = `
   		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg"
        		viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
        		stroke-linecap="round" stroke-linejoin="round">
@@ -17,21 +19,63 @@ export const eyeIcon = `
   		</svg>`;
 
 export function cleanDiv(divArea: HTMLDivElement | null) {
-    divArea?.replaceChildren();
+	divArea?.replaceChildren();
 }
 
 export function hasWhitespace(input: string): boolean {
-  console.log(input);
-  return /\s/.test(input);
+	console.log(input);
+	return /\s/.test(input);
 }
 
 export function getCookie(name: string): string | null {
-  const cookies = document.cookie.split(';');
-  for (let cookie of cookies) {
-    const [key, value] = cookie.trim().split('=');
-    if (key === name) {
-      return decodeURIComponent(value);
-    }
-  }
-  return null;
+	const cookies = document.cookie.split(';');
+	for (let cookie of cookies) {
+		const [key, value] = cookie.trim().split('=');
+		if (key === name) {
+			return decodeURIComponent(value);
+		}
+	}
+	return null;
+}
+
+export async function getUsers() {
+	const registeredUsers: string[] = [];
+	try {
+		const res = await fetch('/users', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			credentials: 'include'
+		});
+		if (res.ok) {
+			const data: { display_name: string }[] = await res.json();
+			registeredUsers.push(...data.map(u => u.display_name));
+		} else
+			console.error('Failed to load users list', await res.text());
+	} catch (err) {
+		console.error('Error fetching users', err);
+	}
+
+	return (registeredUsers);
+}
+
+export async function getUnreadMessages() {
+	try {
+		const res = await fetch('/users/dm/unread', {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+			},
+			credentials: 'include'
+		});
+
+		if (res.ok) {
+			const { unread } = await res.json();
+			unread.forEach((name: string) => unreadDM.add(name));
+			window.dispatchEvent(new CustomEvent('global-presence-updated'));
+		}
+	} catch (error) {
+		console.error('Error fetching unread messages', error);
+	}
 }

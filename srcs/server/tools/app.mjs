@@ -43,12 +43,16 @@ await app.register(fastifyCookie);
 await app.register(websocket);
 
 const clients = new Set();
-const nameBySock = new Map();
+const chatClients = new Set();
+
 const dmRooms = new Map();
+const nameBySock = new Map();
+const idBySock = new Map();
 
 app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (socket, req) => {
 	const userId = req.authUser.id;
 	const row = await db.get('SELECT display_name FROM users WHERE id = ?', userId);
+	
 
 	let displayName = 'unknown';
 	if (row && row.display_name)
@@ -65,6 +69,8 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 	}
 
 	clients.add(socket);
+	chatClients.add(socket);
+	idBySock.set(socket, userId);
 	nameBySock.set(socket, displayName);
 	socket.on('close', () => {
 		for (const client of clients) {
@@ -73,7 +79,9 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 			}
 		}
 		clients.delete(socket);
+		idBySock.delete(socket);
 		nameBySock.delete(socket);
+		chatClients.delete(socket);
 	});
 
 	socket.on('message', raw => {
@@ -109,6 +117,7 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 
 		let roomKey;
 		let clients;
+		let targetId;
 
 		socket.on('message', async raw => {
 			let msg;
@@ -125,7 +134,7 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 				);
 				if (!row)
 					return socket.close(1008, 'User not found');
-				const targetId = row.id;
+				targetId = row.id;
 
 				roomKey = [userId, targetId].sort().join(':');
 				clients = dmRooms.get(roomKey);
@@ -146,6 +155,11 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 
 				socket.send(JSON.stringify({ type: 'history', messages: history }));
 
+				const rowMax = await db.get('SELECT MAX(timestamp) AS timestamp FROM dm_messages WHERE room_key = ?',[roomKey]);
+				const newest = rowMax && rowMax.timestamp != null ? rowMax.timestamp: 0;
+
+				await db.run('INSERT INTO dm_reads (user_id, room_key, last_read) VALUES (?, ?, ?) ON CONFLICT(user_id, room_key) DO UPDATE SET last_read = excluded.last_read', [userId, roomKey, newest]);
+
 			} else if (msg.type === 'message') {
 				if (!roomKey || !clients) return;
 
@@ -161,6 +175,15 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 				for (const client of clients) {
 					if (client.readyState === ws.OPEN)
 						client.send(broadcast);
+				}
+
+				for (const client of chatClients) {
+					if (client.readyState === ws.OPEN && idBySock.get(client) === targetId && !clients.has(client)) {
+						client.send(JSON.stringify({
+							type: 'dm-notification',
+     						from: displayName
+						}))
+					}	
 				}
 			}
 		});

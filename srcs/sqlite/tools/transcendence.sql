@@ -45,6 +45,15 @@ CREATE TABLE IF NOT EXISTS dm_messages (
 	timestamp INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS dm_reads (
+	user_id    INTEGER   NOT NULL,
+	room_key   TEXT      NOT NULL,
+	last_read  INTEGER   NOT NULL,
+
+	PRIMARY KEY (user_id, room_key),
+	FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 CREATE TABLE IF NOT EXISTS tournaments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,

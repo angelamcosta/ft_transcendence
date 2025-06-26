@@ -3,6 +3,10 @@ import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
 import { globalSocket, onlineUsers } from './chatManager.js';
+import { getUsers } from './utils.js';
+
+export const unreadDM = new Set<string>();
+let activeDM: string | null = null;
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
@@ -432,12 +436,13 @@ export function header(headerArea: HTMLDivElement | null) {
 	headerArea?.appendChild(nav);
 }
 
-export function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
+export async function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
+	activeDM = null;
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
-	if (!workArea || !headerArea) {
+	if (!workArea || !headerArea)
 		return;
-	}
+
 	utils.cleanDiv(workArea);
 
 	if (!userId) {
@@ -519,7 +524,7 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	});
 
 	const userListHeader = document.createElement('div');
-	userListHeader.textContent = 'Online';
+	userListHeader.textContent = 'Users';
 	Object.assign(userListHeader.style, {
 		padding: '8px',
 		borderBottom: '1px solid #eee',
@@ -539,17 +544,50 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	wrapper.append(chatCard, userListCard);
 	workArea.appendChild(wrapper);
 
+	const registeredUsers = await getUsers();
+
 	function renderUserList() {
 		userListContainer.innerHTML = '';
-		onlineUsers.forEach(name => {
+
+		const onlineList = registeredUsers.filter(name => onlineUsers.has(name));
+		const offlineList = registeredUsers.filter(name => !onlineUsers.has(name));
+
+		const render = (name: string) => {
 			const el = document.createElement('div');
-			el.textContent = name;
-			if (name !== display_name) {
-				el.style.cursor = 'pointer';
+			Object.assign(el.style, {
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'flex-start',
+				padding: '4px 8px',
+				cursor: name !== display_name ? 'pointer' : 'default'
+			});
+
+			const dot = document.createElement('span');
+			Object.assign(dot.style, {
+				width: '8px',
+				height: '8px',
+				borderRadius: '50%',
+				background: onlineUsers.has(name) ? 'green' : 'transparent',
+				marginRight: '8px',
+				flexShrink: '0',
+			});
+			el.appendChild(dot);
+
+			const nameEl = document.createElement('span');
+			nameEl.textContent = name;
+			if (name === display_name)
+				nameEl.style.fontWeight = 'bold';
+			el.appendChild(nameEl);
+
+			if (unreadDM.has(name))
+				nameEl.style.animation = 'blink-color 1s infinite';
+
+			if (name !== display_name)
 				el.addEventListener('click', () => openDirectMessage(name));
-			}
 			userListContainer.appendChild(el);
-		});
+		};
+		onlineList.forEach(render);
+		offlineList.forEach(render);
 	}
 
 	renderUserList();
@@ -580,6 +618,12 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 			case 'leave':
 				renderUserList();
 				appendSystemMessage(`${msg.display_name} left the chat`);
+				break;
+			case 'dm-notification':
+				if (msg.from !== activeDM) {
+					unreadDM.add(msg.from);
+					renderUserList();
+				}
 				break;
 			case 'message':
 				appendMessage({
@@ -651,6 +695,11 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 
 	function openDirectMessage(targetName: string) {
 		utils.cleanDiv(workArea);
+		activeDM = targetName;
+		if (unreadDM.has(targetName)) {
+			unreadDM.delete(targetName);
+			renderUserList();
+		}
 		directMessagePage(workArea, display_name, targetName, userId);
 	}
 }

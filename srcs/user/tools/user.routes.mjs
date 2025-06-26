@@ -492,4 +492,24 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
+
+	fastify.get('/users/dm/unread', {
+		preValidation: fastify.authenticateRequest,
+	}, async (req, res) => {
+		try {
+			const userId = req.authUser.id;
+			const rows = await db.all(
+				`SELECT DISTINCT m.sender_id, u.display_name FROM dm_messages AS m
+				LEFT JOIN dm_reads AS r ON m.room_key = r.room_key AND
+				r.user_id  = ? JOIN users AS u ON u.id = m.sender_id
+				WHERE m.timestamp > COALESCE(r.last_read, 0) AND m.sender_id != ?`, [userId, userId]
+			);
+
+			const unread = rows.map(r => r.display_name);
+			return res.send({ unread });
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database feth failed: ' + err.message);
+		}
+	});
 }
