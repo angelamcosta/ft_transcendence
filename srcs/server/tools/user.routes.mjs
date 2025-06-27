@@ -329,4 +329,22 @@ export default async function userRoutes(app) {
 			return reply.code(500).send({ error: 'Error fetching friend requests' });
 		}
 	})
+
+	app.get('/users/dm/unread', async (req, reply) => {
+		try {
+			const res = await fetch(`${USER_URL}/api/users/dm/unread`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				}
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/dm/unread', e);
+			return reply.code(500).send({ error: 'Error fetching unread messages' });
+		}
+	})
 }

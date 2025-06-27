@@ -1,5 +1,6 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
+import { cleanGlobalChat } from './chatManager.js';
 
 export async function signOut(workArea: HTMLDivElement | null) {
 
@@ -22,6 +23,9 @@ export async function signOut(workArea: HTMLDivElement | null) {
             alert(message);
             return;
         }
+		
+		cleanGlobalChat();
+        localStorage.clear();
         displayPage.header(menuArea);
         displayPage.landingPage(workArea, menuArea);
         utils.cleanLocalStorage();

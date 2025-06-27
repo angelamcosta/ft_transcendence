@@ -8,3 +8,8 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+@keyframes blink-color {
+  0%, 100% { color: inherit; }
+  50%      { color: red;     }
+}

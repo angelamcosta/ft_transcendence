@@ -43,12 +43,16 @@ await app.register(fastifyCookie);
 await app.register(websocket);
 
 const clients = new Set();
-const nameBySock = new Map();
+const chatClients = new Set();
 
-app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (connection, req) => {
-	const socket = connection;
+const dmRooms = new Map();
+const nameBySock = new Map();
+const idBySock = new Map();
+
+app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (socket, req) => {
 	const userId = req.authUser.id;
 	const row = await db.get('SELECT display_name FROM users WHERE id = ?', userId);
+	
 
 	let displayName = 'unknown';
 	if (row && row.display_name)
@@ -65,6 +69,8 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 	}
 
 	clients.add(socket);
+	chatClients.add(socket);
+	idBySock.set(socket, userId);
 	nameBySock.set(socket, displayName);
 	socket.on('close', () => {
 		for (const client of clients) {
@@ -73,7 +79,9 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 			}
 		}
 		clients.delete(socket);
+		idBySock.delete(socket);
 		nameBySock.delete(socket);
+		chatClients.delete(socket);
 	});
 
 	socket.on('message', raw => {
@@ -97,6 +105,90 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 		}
 	});
 });
+
+app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
+	async (socket, req) => {
+		const userId = req.authUser.id;
+		const meRow = await db.get('SELECT display_name FROM users WHERE id = ?',[userId]);
+
+		let displayName = 'unknown';
+		if (meRow && meRow.display_name)
+			displayName = meRow.display_name;
+
+		let roomKey;
+		let clients;
+		let targetId;
+
+		socket.on('message', async raw => {
+			let msg;
+			try {
+				msg = JSON.parse(raw.toString());
+			} catch {
+				return console.error('Invalid JSON from client', err);
+			}
+
+			if (msg.type === 'direct-join') {
+				const row = await db.get(
+					'SELECT id, display_name FROM users WHERE display_name = ?',
+					[msg.targetName]
+				);
+				if (!row)
+					return socket.close(1008, 'User not found');
+				targetId = row.id;
+
+				roomKey = [userId, targetId].sort().join(':');
+				clients = dmRooms.get(roomKey);
+				if (!clients) {
+					clients = new Set();
+					dmRooms.set(roomKey, clients);
+				}
+
+				clients.add(socket);
+
+				socket.on('close', () => {
+					clients.delete(socket);
+					if (clients.size === 0)
+						dmRooms.delete(roomKey);
+				});
+
+				const history = await db.all('SELECT sender_id, content, timestamp FROM dm_messages WHERE room_key = ? ORDER BY timestamp', roomKey);
+
+				socket.send(JSON.stringify({ type: 'history', messages: history }));
+
+				const rowMax = await db.get('SELECT MAX(timestamp) AS timestamp FROM dm_messages WHERE room_key = ?',[roomKey]);
+				const newest = rowMax && rowMax.timestamp != null ? rowMax.timestamp: 0;
+
+				await db.run('INSERT INTO dm_reads (user_id, room_key, last_read) VALUES (?, ?, ?) ON CONFLICT(user_id, room_key) DO UPDATE SET last_read = excluded.last_read', [userId, roomKey, newest]);
+
+			} else if (msg.type === 'message') {
+				if (!roomKey || !clients) return;
+
+				const ts = Date.now();
+				await db.run('INSERT INTO dm_messages (room_key, sender_id, content, timestamp) VALUES (?, ?, ?, ?)', [roomKey, userId, msg.content, ts]);
+
+				const broadcast = JSON.stringify({
+					type: 'message',
+					display_name: displayName,
+					content: msg.content,
+					timestamp: ts
+				});
+				for (const client of clients) {
+					if (client.readyState === ws.OPEN)
+						client.send(broadcast);
+				}
+
+				for (const client of chatClients) {
+					if (client.readyState === ws.OPEN && idBySock.get(client) === targetId && !clients.has(client)) {
+						client.send(JSON.stringify({
+							type: 'dm-notification',
+     						from: displayName
+						}))
+					}	
+				}
+			}
+		});
+	}
+);
 
 await app.register(fastifyStatic, {
 	root: path.join(__dirname, 'public'),

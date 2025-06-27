@@ -2,17 +2,13 @@ import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
+import { globalSocket, onlineUsers, unreadDM } from './chatManager.js';
+import { getUsers } from './utils.js';
 
-function cleanUpChatSocket() {
-	if (chatSocket) {
-		chatSocket.close();
-		chatSocket = null;
-	}
-}
+let activeDM: string | null = null;
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
 
 	// Create <h1>
 	const heading = document.createElement("h1");
@@ -222,7 +218,6 @@ export function verify2FA(workArea: HTMLDivElement | null) {
 
 export function dashboard(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
 
 	// Create <h1>
 	const heading = document.createElement("h1");
@@ -615,18 +610,17 @@ export function header(headerArea: HTMLDivElement | null) {
 	headerArea?.appendChild(nav);
 }
 
-let chatSocket: WebSocket | null = null;
-
-export function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
+export async function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
+	activeDM = null;
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
-	if (!workArea || !headerArea) {
+	if (!workArea || !headerArea)
 		return;
-	}
+
 	utils.cleanDiv(workArea);
 
 	if (!userId) {
-		console.error('No User ID in local storage.');
+		console.error('User ID error!');
 		return;
 	}
 
@@ -638,8 +632,6 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		alignItems: 'center',
 		height: `calc(85vh - ${headerArea.offsetHeight}px)`
 	});
-
-	// ── Chat Card ─────────────────────────────────────────────────────────────
 
 	const chatCard = document.createElement('div');
 	Object.assign(chatCard.style, {
@@ -691,8 +683,6 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	inputWrapper.append(messageInput, sendBtn);
 	chatCard.appendChild(inputWrapper);
 
-	// ── Online Users Panel ───────────────────────────────────────────────────
-
 	const userListCard = document.createElement('div');
 	Object.assign(userListCard.style, {
 		width: '200px',
@@ -708,7 +698,7 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 	});
 
 	const userListHeader = document.createElement('div');
-	userListHeader.textContent = 'Online';
+	userListHeader.textContent = 'Users';
 	Object.assign(userListHeader.style, {
 		padding: '8px',
 		borderBottom: '1px solid #eee',
@@ -725,31 +715,62 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 
 	userListCard.append(userListHeader, userListContainer);
 
-	// ── Assemble ─────────────────────────────────────────────────────────────
-
 	wrapper.append(chatCard, userListCard);
 	workArea.appendChild(wrapper);
 
-	cleanUpChatSocket();
-	const wsUrl = `wss://localhost:9000/chat`;
-	const ws = new WebSocket(wsUrl);
-	const onlineUsers = new Set<string>();
-	ws.binaryType = 'arraybuffer';
-	chatSocket = ws;
+	const registeredUsers = await getUsers();
 
 	function renderUserList() {
 		userListContainer.innerHTML = '';
-		onlineUsers.forEach(name => {
+
+		const onlineList = registeredUsers.filter(name => onlineUsers.has(name));
+		const offlineList = registeredUsers.filter(name => !onlineUsers.has(name));
+
+		const render = (name: string) => {
 			const el = document.createElement('div');
-			el.textContent = name;
+			Object.assign(el.style, {
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'flex-start',
+				padding: '4px 8px',
+				cursor: name !== display_name ? 'pointer' : 'default'
+			});
+
+			const dot = document.createElement('span');
+			Object.assign(dot.style, {
+				width: '8px',
+				height: '8px',
+				borderRadius: '50%',
+				background: onlineUsers.has(name) ? 'green' : 'transparent',
+				marginRight: '8px',
+				flexShrink: '0',
+			});
+			el.appendChild(dot);
+
+			const nameEl = document.createElement('span');
+			nameEl.textContent = name;
+			if (name === display_name)
+				nameEl.style.fontWeight = 'bold';
+			el.appendChild(nameEl);
+
+			if (unreadDM.has(name))
+				nameEl.style.animation = 'blink-color 1s infinite';
+
+			if (name !== display_name)
+				el.addEventListener('click', () => openDirectMessage(name));
 			userListContainer.appendChild(el);
-		});
+		};
+		onlineList.forEach(render);
+		offlineList.forEach(render);
 	}
 
-	ws.onopen = () => {
-		ws.send(JSON.stringify({ type: 'identify', userId }));
-	};
-	ws.onmessage = async (evt) => {
+	renderUserList();
+	window.addEventListener('global-presence-updated', renderUserList);
+
+	globalSocket!.addEventListener('open', () => {
+		globalSocket!.send(JSON.stringify({ type: 'identify', userId }));
+	});
+	globalSocket!.addEventListener('message', async evt => {
 		let dataStr: string;
 		if (typeof evt.data === 'string')
 			dataStr = evt.data;
@@ -761,24 +782,22 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		const msg = JSON.parse(dataStr);
 
 		switch (msg.type) {
-			case 'list':
-				onlineUsers.clear();
-				msg.users.forEach((n: string) => onlineUsers.add(n));
-				renderUserList();
-				break;
 			case 'identify':
-				onlineUsers.add(display_name);
 				renderUserList();
 				break;
 			case 'join':
-				onlineUsers.add(msg.display_name);
 				renderUserList();
 				appendSystemMessage(`${msg.display_name} joined the chat`);
 				break;
 			case 'leave':
-				onlineUsers.delete(msg.display_name);
 				renderUserList();
 				appendSystemMessage(`${msg.display_name} left the chat`);
+				break;
+			case 'dm-notification':
+				if (msg.from !== activeDM) {
+					unreadDM.add(msg.from);
+					renderUserList();
+				}
 				break;
 			case 'message':
 				appendMessage({
@@ -788,8 +807,8 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 				});
 				break;
 		}
-	};
-	ws.onerror = (err) => console.error('WebSocket error:', err);
+	});
+	globalSocket!.addEventListener('error', err => console.error('Global chat error', err));
 
 	function sendMessage() {
 		const content = messageInput.value.trim();
@@ -797,7 +816,7 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 			return;
 
 		const payload = JSON.stringify({ type: 'message', content });
-		ws.send(payload);
+		globalSocket!.send(payload);
 		appendMessage({ display_name, content, timestamp: Date.now() });
 		messageInput.value = '';
 	}
@@ -809,16 +828,33 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 			sendMessage();
 		}
 	})
-	
+
 	function appendMessage(msg: {
 		display_name: string;
 		content: string;
 		timestamp: number;
 	}) {
+		const messageWrapper = document.createElement('div');
+		messageWrapper.style.marginBottom = '8px';
+
 		const line = document.createElement('div');
 		line.style.textAlign = msg.display_name === display_name ? 'right' : 'left';
 		line.textContent = `${msg.display_name}: ${msg.content}`;
-		chatContainer.appendChild(line);
+		messageWrapper.appendChild(line);
+
+		const time = document.createElement('div');
+		time.style.fontSize = '0.7em';
+		time.style.color = '#666';
+		time.style.marginTop = '2px';
+		time.style.textAlign = line.style.textAlign;
+
+		time.textContent = new Date(msg.timestamp).toLocaleTimeString([], {
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+		messageWrapper.appendChild(time);
+
+		chatContainer.appendChild(messageWrapper);
 		chatContainer.scrollTop = chatContainer.scrollHeight;
 	}
 
@@ -830,15 +866,192 @@ export function chatPage(workArea: HTMLDivElement | null, userId: string, displa
 		chatContainer.appendChild(line);
 		chatContainer.scrollTop = chatContainer.scrollHeight;
 	}
+
+	function openDirectMessage(targetName: string) {
+		utils.cleanDiv(workArea);
+		activeDM = targetName;
+		if (unreadDM.has(targetName)) {
+			unreadDM.delete(targetName);
+			renderUserList();
+		}
+		directMessagePage(workArea, display_name, targetName, userId);
+	}
+}
+
+export function directMessagePage(
+	workArea: HTMLDivElement | null,
+	displayName: string,
+	targetName: string, userId: string
+) {
+	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
+
+	if (!workArea || !headerArea) return;
+	utils.cleanDiv(workArea);
+
+	const wrapper = document.createElement('div');
+	Object.assign(wrapper.style, {
+		position: 'relative',
+		display: 'flex',
+		justifyContent: 'center',
+		alignItems: 'center',
+		height: `calc(85vh - ${headerArea.offsetHeight}px)`,
+	});
+
+	const dmCard = document.createElement('div');
+	Object.assign(dmCard.style, {
+		width: '400px',
+		maxWidth: '90vw',
+		height: '500px',
+		background: '#fff',
+		border: '1px solid #ccc',
+		borderRadius: '8px',
+		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+		display: 'flex',
+		flexDirection: 'column',
+		overflow: 'hidden',
+	});
+
+	const title = document.createElement('div');
+	title.textContent = `${targetName}`;
+	Object.assign(title.style, {
+		padding: '12px 16px',
+		borderBottom: '1px solid #eee',
+		fontWeight: 'bold',
+		background: '#f7f7f7',
+	});
+	dmCard.appendChild(title);
+
+	const chatContainer = document.createElement('div');
+	Object.assign(chatContainer.style, {
+		flex: '1 1 auto',
+		padding: '8px',
+		overflowY: 'auto',
+	});
+	dmCard.appendChild(chatContainer);
+
+	const inputWrapper = document.createElement('div');
+	Object.assign(inputWrapper.style, {
+		display: 'flex',
+		borderTop: '1px solid #eee',
+		padding: '8px',
+	});
+	const messageInput = document.createElement('input');
+	messageInput.placeholder = 'Type a message…';
+	Object.assign(messageInput.style, {
+		flex: '1 1 auto',
+		padding: '4px 8px',
+		border: '1px solid #ccc',
+		borderRadius: '4px',
+	});
+	const sendBtn = document.createElement('button');
+	sendBtn.textContent = 'Send';
+	Object.assign(sendBtn.style, {
+		marginLeft: '8px',
+		padding: '4px 12px',
+		border: '1px solid #007bff',
+		background: '#007bff',
+		color: '#fff',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+	inputWrapper.append(messageInput, sendBtn);
+	dmCard.appendChild(inputWrapper);
+	wrapper.appendChild(dmCard);
+	workArea.appendChild(wrapper);
+
+	const wsUrl = `wss://localhost:9000/dm`;
+	const ws = new WebSocket(wsUrl);
+	ws.binaryType = 'arraybuffer';
+
+	ws.onopen = () => {
+		ws.send(JSON.stringify({
+			type: 'direct-join',
+			targetName
+		}));
+	};
+
+	ws.onmessage = async evt => {
+		let dataStr: string;
+		if (typeof evt.data === 'string')
+			dataStr = evt.data;
+		else if (evt.data instanceof Blob)
+			dataStr = await evt.data.text();
+		else
+			dataStr = new TextDecoder().decode(evt.data);
+
+		const msg = JSON.parse(dataStr);
+		if (msg.type === 'history') {
+			msg.messages.forEach((m: { sender_id: number, content: string, timestamp: number }) => {
+				appendMessage({
+					displayName: m.sender_id.toString() === userId ? displayName : targetName,
+					content: m.content,
+					timestamp: m.timestamp
+				});
+			});
+		} else if (msg.type === 'message') {
+			if (msg.display_name === displayName) return;
+			appendMessage({
+				displayName: msg.display_name,
+				content: msg.content,
+				timestamp: msg.timestamp
+			});
+		}
+	};
+
+	function sendMessage() {
+		const content = messageInput.value.trim();
+		if (!content)
+			return;
+
+		const payload = JSON.stringify({ type: 'message', content });
+		ws.send(payload);
+		appendMessage({ displayName, content, timestamp: Date.now() });
+		messageInput.value = '';
+	}
+
+	function appendMessage(msg: {
+		displayName: string;
+		content: string;
+		timestamp: number;
+	}) {
+		const messageWrapper = document.createElement('div');
+		messageWrapper.style.marginBottom = '8px';
+
+		const line = document.createElement('div');
+		line.style.textAlign = msg.displayName === displayName ? 'right' : 'left';
+		line.textContent = `${msg.displayName}: ${msg.content}`;
+		messageWrapper.appendChild(line);
+
+		const time = document.createElement('div');
+		time.style.fontSize = '0.7em';
+		time.style.color = '#666';
+		time.style.marginTop = '2px';
+		time.style.textAlign = line.style.textAlign;
+
+		time.textContent = new Date(msg.timestamp).toLocaleTimeString([], {
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+		messageWrapper.appendChild(time);
+
+		chatContainer.appendChild(messageWrapper);
+		chatContainer.scrollTop = chatContainer.scrollHeight;
+	}
+
+	sendBtn.addEventListener('click', sendMessage);
+	messageInput.addEventListener('keydown', e => {
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			sendMessage();
+		}
+	});
 }
 
 // TODO : - game won't present errors, but won't start
 export function gamePage(workArea: HTMLDivElement | null) {
-	if (!workArea) {
+	if (!workArea)
 		return;
-	}
 	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
 
 	const canvas = document.createElement('canvas');
 
