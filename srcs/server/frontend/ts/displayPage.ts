@@ -182,6 +182,44 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
 }
 
+export function verify2FA(workArea: HTMLDivElement | null) {
+	utils.cleanDiv(workArea);
+
+	const form = document.createElement('form');
+	form.id = 'verify';
+	form.classList.add('flex', 'flex-col', 'items-center');
+
+	const codeInput = document.createElement('input');
+	codeInput.type = 'number';
+	codeInput.id = "codeInput";
+	codeInput.name = 'code';
+	codeInput.placeholder = 'Enter your code';
+	codeInput.willValidate;
+	codeInput.required = true;
+	codeInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+
+	const submitButton = document.createElement('button');
+	submitButton.type = 'submit';
+	submitButton.textContent = 'Verify code';
+	submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+
+	// Create an error message span
+	const errorMessage = document.createElement("span");
+	errorMessage.id = "verifyError";
+	errorMessage.className = "text-red-500 text-sm ml-2";
+	errorMessage.style.minWidth = "1rem";
+	errorMessage.textContent = "";
+
+	form.appendChild(codeInput);
+	form.appendChild(document.createElement('br'));
+	form.appendChild(submitButton);
+	form.appendChild(errorMessage);
+
+	workArea?.appendChild(form);
+
+	form.addEventListener('submit', formHandlers.verify2FA);
+}
+
 export function dashboard(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 	cleanUpChatSocket();
@@ -369,8 +407,10 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 }
 
 export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
+	const user2FA = localStorage.getItem('user2FA')!;
+
     const twoFactorForm = document.createElement('form');
-    twoFactorForm.id = 'changeName';
+    twoFactorForm.id = 'set2FA';
 	twoFactorForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
 
     const twoFactorContainer = document.createElement('div');
@@ -385,33 +425,52 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
     const labelSpan = document.createElement("span");
     labelSpan.id = "toggle-label";
     labelSpan.className = "text-sm font-medium text-gray-800";
-    labelSpan.textContent = "Disabled";
 
     // Create the label wrapper
     const label = document.createElement("label");
     label.className = "relative inline-flex items-center cursor-pointer";
 
     // Create the checkbox input
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.id = "toggle";
-    checkbox.className = "sr-only peer";
+    const twoFactorCheckbox = document.createElement("input");
+    twoFactorCheckbox.type = "checkbox";
+    twoFactorCheckbox.id = "toggle";
+    twoFactorCheckbox.className = "sr-only peer";
 
     // Create the track div
     const track = document.createElement("div");
-    track.className = "w-14 h-8 bg-gray-500 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-500 rounded-full peer peer-checked:bg-blue-500 transition-colors duration-300";
-
+	track.id = "twoFactorTrack";
+    
     // Create the knob div
     const knob = document.createElement("div");
-    knob.className = "absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 transform peer-checked:translate-x-6";
+	knob.id = "twoFactorKnob";
+    
+	labelSpan.setAttribute("data-hidden-value", "OK");
+	if (user2FA === 'enabled') {
+		labelSpan.textContent = "Enabled";
+		track.className = "w-14 h-8 bg-blue-500 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-500 rounded-full peer peer-checked:bg-gray-500 transition-colors duration-300";
+		knob.className = "absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 transform peer-checked:-translate-x-6";
+	}
+	else {
+		labelSpan.textContent = "Disabled";
+		track.className = "w-14 h-8 bg-gray-500 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-500 rounded-full peer peer-checked:bg-blue-500 transition-colors duration-300";
+		knob.className = "absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 transform peer-checked:translate-x-6";
+	}
+
+	// Create an error message span
+	const errorMessage = document.createElement("span");
+	errorMessage.id = "twoFactorError";
+	errorMessage.className = "text-red-500 text-sm ml-2";
+	errorMessage.style.minWidth = "1rem";
+	errorMessage.textContent = "";
 
     // Append elements appropriately
-    label.appendChild(checkbox);
+    label.appendChild(twoFactorCheckbox);
     label.appendChild(track);
     label.appendChild(knob);
 
     twoFactorContainer.appendChild(labelSpan);
     twoFactorContainer.appendChild(label);
+	twoFactorContainer.appendChild(errorMessage);
 
     // Add to the body (or any other container)
     twoFactorForm.appendChild(twoFactorHeading);
@@ -421,9 +480,7 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
     workArea?.appendChild(twoFactorForm);
 
     // Add toggle behavior
-    checkbox.addEventListener("change", () => {
-    labelSpan.textContent = checkbox.checked ? "Enabled" : "Disabled";
-    });
+    twoFactorCheckbox.addEventListener("change", (e: Event) => buttonHandlers.set2FA(e, twoFactorCheckbox, labelSpan, errorMessage));
 }
 
 export function accountSettings(workArea: HTMLDivElement | null) {

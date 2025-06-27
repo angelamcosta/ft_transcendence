@@ -20,8 +20,14 @@ export function cleanDiv(divArea: HTMLDivElement | null) {
     divArea?.replaceChildren();
 }
 
+export function cleanLocalStorage() {
+  localStorage.removeItem('userId');
+  localStorage.removeItem('displayName');
+  localStorage.removeItem('email');
+  localStorage.removeItem('user2FA');
+}
+
 export function hasWhitespace(input: string): boolean {
-  console.log(input);
   return /\s/.test(input);
 }
 
@@ -34,4 +40,8 @@ export function getCookie(name: string): string | null {
     }
   }
   return null;
+}
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

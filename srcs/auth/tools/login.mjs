@@ -32,13 +32,17 @@ export async function loginUser(db, {email, password}) {
 			await db.run(`UPDATE users SET otp = NULL, expire = NULL WHERE email = ?`, [email])
 			return ({ message: 'Failed to send verification code. Please try again later', twofa: 'failed' })
 		}
-		return ({ message: 'Verification code sent', twofa: 'enabled' })
+		return ({
+			message: 'Verification code sent',
+			twofa: 'enabled',
+			user: {id: user.id, displayName: user.display_name, email: user.email}
+		 })
 	}
 
 	const token = generateJWT({ userId: user.id, email: user.email })
 	return ({ 
 		cookie: `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`, 
 		twofa: 'disabled', 
-		user: {id: user.id, displayName: user.display_name}
+		user: {id: user.id, displayName: user.display_name, email: user.email}
 	})
 }
