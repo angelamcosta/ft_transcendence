@@ -182,6 +182,44 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
 }
 
+export function verify2FA(workArea: HTMLDivElement | null) {
+	utils.cleanDiv(workArea);
+
+	const form = document.createElement('form');
+	form.id = 'verify';
+	form.classList.add('flex', 'flex-col', 'items-center');
+
+	const codeInput = document.createElement('input');
+	codeInput.type = 'number';
+	codeInput.id = "codeInput";
+	codeInput.name = 'code';
+	codeInput.placeholder = 'Enter your code';
+	codeInput.willValidate;
+	codeInput.required = true;
+	codeInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+
+	const submitButton = document.createElement('button');
+	submitButton.type = 'submit';
+	submitButton.textContent = 'Verify code';
+	submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+
+	// Create an error message span
+	const errorMessage = document.createElement("span");
+	errorMessage.id = "verifyError";
+	errorMessage.className = "text-red-500 text-sm ml-2";
+	errorMessage.style.minWidth = "1rem";
+	errorMessage.textContent = "";
+
+	form.appendChild(codeInput);
+	form.appendChild(document.createElement('br'));
+	form.appendChild(submitButton);
+	form.appendChild(errorMessage);
+
+	workArea?.appendChild(form);
+
+	form.addEventListener('submit', formHandlers.verify2FA);
+}
+
 export function dashboard(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 	cleanUpChatSocket();
@@ -194,13 +232,10 @@ export function dashboard(workArea: HTMLDivElement | null) {
 	workArea?.appendChild(heading);
 }
 
-export function accountSettings(workArea: HTMLDivElement | null) {
-	utils.cleanDiv(workArea);
-	cleanUpChatSocket();
-
-	const passwordForm = document.createElement('form');
-	passwordForm.id = 'changePassword';
-	passwordForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'border', 'border-4', 'border-blue-500', 'rounded');
+export function changePassword(workArea: HTMLDivElement | null) {
+    const passwordForm = document.createElement('form');
+    passwordForm.id = 'changePassword';
+	passwordForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
 
 	const oldPasswordContainer = document.createElement('div');
 	oldPasswordContainer.classList.add('relative', 'w-60', 'm-4');
@@ -315,6 +350,145 @@ export function accountSettings(workArea: HTMLDivElement | null) {
 	passwordResetButton.addEventListener("click", () => {
 		passwordForm.reset();
 	});
+}
+
+export function changeDisplayName(workArea: HTMLDivElement | null) {
+    const nameForm = document.createElement('form');
+    nameForm.id = 'changeName';
+	nameForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+
+    const nameContainer = document.createElement('div');
+    nameContainer.classList.add('relative', 'w-60', 'm-4');
+
+    // Create an password input
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = "nameInput";
+    nameInput.name = 'name';
+    nameInput.placeholder = 'Enter new display name';
+    nameInput.required = true;
+    nameInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	nameContainer.appendChild(nameInput);
+
+    // Create a submit button
+    const nameSubmitButton = document.createElement('button');
+    nameSubmitButton.type = 'submit';
+    nameSubmitButton.textContent = 'Change name';
+    nameSubmitButton.classList.add('px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+
+    // Create a reset button button
+    const nameResetButton = document.createElement('button');
+    nameResetButton.id = 'nameResetButton';
+    nameResetButton.type = 'button';
+    nameResetButton.textContent = 'Reset';
+    nameResetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
+
+    const nameButtonContainer = document.createElement('div');
+    nameButtonContainer.classList.add('flex', 'w-60', 'm-4');
+	nameButtonContainer.appendChild(nameSubmitButton);
+	nameButtonContainer.appendChild(nameResetButton);
+
+    // Creates a heading
+    const nameHeading = document.createElement("h1");
+    nameHeading.textContent = "Change display name";
+    nameHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
+
+    nameForm.appendChild(nameHeading);
+	nameForm.appendChild(nameContainer);
+	nameForm.appendChild(document.createElement('br'));
+	nameForm.appendChild(nameButtonContainer);
+
+    // Append nameForm and login button to the body
+    workArea?.appendChild(nameForm);
+
+    nameResetButton.addEventListener("click", () => {
+        nameForm.reset();
+    });
+}
+
+export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
+	const user2FA = localStorage.getItem('user2FA')!;
+
+    const twoFactorForm = document.createElement('form');
+    twoFactorForm.id = 'set2FA';
+	twoFactorForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+
+    const twoFactorContainer = document.createElement('div');
+    twoFactorContainer.classList.add('flex', 'items-center',  'gap-2', 'relative', 'w-60', 'm-4');
+
+    // Creates a heading
+    const twoFactorHeading = document.createElement("h1");
+    twoFactorHeading.textContent = "Manage Two Factor Authentication";
+    twoFactorHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
+
+    // Create the label span
+    const labelSpan = document.createElement("span");
+    labelSpan.id = "toggle-label";
+    labelSpan.className = "text-sm font-medium text-gray-800";
+
+    // Create the label wrapper
+    const label = document.createElement("label");
+    label.className = "relative inline-flex items-center cursor-pointer";
+
+    // Create the checkbox input
+    const twoFactorCheckbox = document.createElement("input");
+    twoFactorCheckbox.type = "checkbox";
+    twoFactorCheckbox.id = "toggle";
+    twoFactorCheckbox.className = "sr-only peer";
+
+    // Create the track div
+    const track = document.createElement("div");
+	track.id = "twoFactorTrack";
+    
+    // Create the knob div
+    const knob = document.createElement("div");
+	knob.id = "twoFactorKnob";
+    
+	labelSpan.setAttribute("data-hidden-value", "OK");
+	if (user2FA === 'enabled') {
+		labelSpan.textContent = "Enabled";
+		track.className = "w-14 h-8 bg-blue-500 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-500 rounded-full peer peer-checked:bg-gray-500 transition-colors duration-300";
+		knob.className = "absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 transform peer-checked:-translate-x-6";
+	}
+	else {
+		labelSpan.textContent = "Disabled";
+		track.className = "w-14 h-8 bg-gray-500 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-500 rounded-full peer peer-checked:bg-blue-500 transition-colors duration-300";
+		knob.className = "absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 transform peer-checked:translate-x-6";
+	}
+
+	// Create an error message span
+	const errorMessage = document.createElement("span");
+	errorMessage.id = "twoFactorError";
+	errorMessage.className = "text-red-500 text-sm ml-2";
+	errorMessage.style.minWidth = "1rem";
+	errorMessage.textContent = "";
+
+    // Append elements appropriately
+    label.appendChild(twoFactorCheckbox);
+    label.appendChild(track);
+    label.appendChild(knob);
+
+    twoFactorContainer.appendChild(labelSpan);
+    twoFactorContainer.appendChild(label);
+	twoFactorContainer.appendChild(errorMessage);
+
+    // Add to the body (or any other container)
+    twoFactorForm.appendChild(twoFactorHeading);
+    twoFactorForm.appendChild(twoFactorContainer);
+
+    // Append twoFactorForm and login button to the body
+    workArea?.appendChild(twoFactorForm);
+
+    // Add toggle behavior
+    twoFactorCheckbox.addEventListener("change", (e: Event) => buttonHandlers.set2FA(e, twoFactorCheckbox, labelSpan, errorMessage));
+}
+
+export function accountSettings(workArea: HTMLDivElement | null) {
+    utils.cleanDiv(workArea);
+
+    changePassword(workArea);
+    changeDisplayName(workArea);
+    manageTwoFactorAuth(workArea);
 }
 
 export function menu(menuArea: HTMLDivElement | null) {

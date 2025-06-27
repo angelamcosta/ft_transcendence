@@ -114,20 +114,86 @@ export async function signIn(e: Event) {
             return;
         }
 
-        if (data.user && data.user.id) {
-            const userId = data.user.id;
-			const displayName = data.user.displayName;
-            localStorage.setItem('userId', userId);
-			localStorage.setItem('displayName', displayName);
+        if (data.user) {
+            if (data.user.id) {
+                const userId = data.user.id;
+                localStorage.setItem('userId', userId);
+            }
+            if (data.user.displayName) {
+                const displayName = data.user.displayName;
+                localStorage.setItem('displayName', displayName);
+            }
+            if (data.user.email) {
+                const email = data.user.email;
+                localStorage.setItem('email', email);
+            }
+        }
+        let user2FA = '';
+        if (data.twofa) {
+            user2FA = data.twofa;
+            localStorage.setItem('user2FA', user2FA);
         }
 
+        if (user2FA === 'enabled') {
+            displayPage.verify2FA(workArea);
+        }
+        else {
+            displayPage.menu(menuArea);
+            displayPage.dashboard(workArea);
+            document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
+            document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
+            document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
+            document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
+            document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
+        }
+    } catch (error) {
+        console.error('Error sending form data:', error);
+        alert('Login failed! Catched on Try');
+    }
+}
+
+export async function verify2FA(e: Event) {
+    e.preventDefault();
+
+    const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+    const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const email = localStorage.getItem('email');
+    const otp = formData.get('code');
+    console.log('Email: ', email);
+    try {
+        const response = await fetch('/verify-2fa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                otp
+            }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        console.log('API response:', data);
+        if (!response.ok) {
+            const message = data?.error || 'Login failed.';
+            console.error('Error verifying 2FA: ', message);
+            const errorMessage = form.querySelector('#verifyError') as HTMLSpanElement | null; 
+            if (errorMessage) {
+                errorMessage.textContent = message;
+            }
+            return;
+        }
         displayPage.menu(menuArea);
         displayPage.dashboard(workArea);
         document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
         document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
         document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
         document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
-		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
+        document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Login failed! Catched on Try');
