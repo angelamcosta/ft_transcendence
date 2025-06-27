@@ -142,12 +142,12 @@ export async function signIn(e: Event) {
 		else {
 			initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 			getUnreadMessages();
-			displayPage.menu(menuArea);
+			displayPage.menu(menuArea, workArea);
 			displayPage.dashboard(workArea);
 			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-			document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
+			document.getElementById('playButton')?.addEventListener("click", () => displayPage.gamePage(workArea));
 			document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 		}
 	} catch (error) {
@@ -193,12 +193,12 @@ export async function verify2FA(e: Event) {
 		}
 		initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 		getUnreadMessages();
-		displayPage.menu(menuArea);
+		displayPage.menu(menuArea, workArea);
 		displayPage.dashboard(workArea);
 		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-		document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePage(workArea));
+		document.getElementById('playButton')?.addEventListener("click", () => displayPage.gamePage(workArea));
 		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 	} catch (error) {
 		console.error('Error sending form data:', error);

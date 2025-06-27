@@ -1,5 +1,6 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
+import { gamePage } from './displayPage.js';
 import { cleanGlobalChat } from './chatManager.js';
 
 export async function signOut(workArea: HTMLDivElement | null) {
@@ -42,8 +43,8 @@ export async function accountSettings(workArea: HTMLDivElement | null) {
     displayPage.accountSettings(workArea);
 }
 
-export async function gamePage(workArea: HTMLDivElement | null) {
-    displayPage.gamePage(workArea);
+export function gamePageHandler(workArea: HTMLDivElement | null) {
+  gamePage(workArea);
 }
 
 export async function chatPage(workArea: HTMLDivElement | null, userId: string, displayName: string) {
