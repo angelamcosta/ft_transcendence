@@ -22,20 +22,15 @@ export function cleanDiv(divArea: HTMLDivElement | null) {
 	divArea?.replaceChildren();
 }
 
-export function hasWhitespace(input: string): boolean {
-	console.log(input);
-	return /\s/.test(input);
+export function cleanLocalStorage() {
+  localStorage.removeItem('userId');
+  localStorage.removeItem('displayName');
+  localStorage.removeItem('email');
+  localStorage.removeItem('user2FA');
 }
 
-export function getCookie(name: string): string | null {
-	const cookies = document.cookie.split(';');
-	for (let cookie of cookies) {
-		const [key, value] = cookie.trim().split('=');
-		if (key === name) {
-			return decodeURIComponent(value);
-		}
-	}
-	return null;
+export function hasWhitespace(input: string): boolean {
+  return /\s/.test(input);
 }
 
 export async function getUsers() {
@@ -78,4 +73,19 @@ export async function getUnreadMessages() {
 	} catch (error) {
 		console.error('Error fetching unread messages', error);
 	}
+}
+
+export function getCookie(name: string): string | null {
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [key, value] = cookie.trim().split('=');
+    if (key === name) {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+}
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
