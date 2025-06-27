@@ -86,6 +86,46 @@ export default async function userRoutes(fastify) {
 	});
 
 	// ! block / unblock
+
+	fastify.get('/users/block/relationship/:id', { 
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers] 
+	}, async (req, reply) => {
+		try {
+			const userId = req.authUser.id;
+			const paramId = req.params.id;
+
+			const row = await db.get(
+				`SELECT EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blocked_by_me,
+				EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blocked_by_target`,
+				[userId, paramId, paramId, userId]);
+			
+			return reply.send({
+				blockedByMe: Boolean(row.blocked_by_me),
+				blockedByTarget: Boolean(row.blocked_by_target)
+			})
+		} catch (e) {
+			console.error('Proxy /users/block/status/:id error:', e);
+			return reply.code(500).send({ error: 'Error fetching blocked status' });
+		}
+	})
+
+	fastify.get('/users/block/status/:id',  {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers]
+	}, async (req) => {
+		try {
+			const userId = req.authUser.id;
+			const paramId = Number(req.params.id);
+	
+			const row = await db.get('SELECT status FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?)', [userId, paramId]);
+
+			const blocked = row ? Boolean(row.status) : false;
+			return ({ blocked} );
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
+		}
+	})
+
 	fastify.post('/users/block/:id', {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship],
 	}, async (req) => {
@@ -98,7 +138,7 @@ export default async function userRoutes(fastify) {
 
 			if (req.friendship)
 				await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
-			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)`, [userId, paramId]);
+			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id, status) VALUES (?, ?, ?)`, [userId, paramId, true]);
 			return { message: 'User blocked successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -106,7 +146,7 @@ export default async function userRoutes(fastify) {
 		}
 	});
 
-	fastify.post('/users/unblock/:id', {
+	fastify.delete('/users/unblock/:id', {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.isBlocked],
 	}, async (req) => {
 		try {
@@ -268,6 +308,11 @@ export default async function userRoutes(fastify) {
 	}, async (req) => {
 		const { userId, targetId } = req;
 
+		const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
+
+		if (blocked)
+			throw fastify.httpErrors.forbidden('You cannot add this user');
+
 		if (req.friendship?.friendship_status === "accepted")
 			throw fastify.httpErrors.conflict('Friendship is already accepted');
 
@@ -399,13 +444,10 @@ export default async function userRoutes(fastify) {
 	})
 
 	fastify.post('/users/invite/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship, fastify.loadMatchInvites],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadMatchInvites],
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
-
-		if (!req.friendship)
-			throw fastify.httpErrors.badRequest('Only friends can be invited directly to a match');
 
 		if (req.invite?.invite_status === 'pending')
 			throw fastify.httpErrors.badRequest('There is already a pending match invite');

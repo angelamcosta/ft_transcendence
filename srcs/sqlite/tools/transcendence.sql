@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS match_invites (
 CREATE TABLE IF NOT EXISTS blocked_users (
     blocker_id INTEGER NOT NULL,
     blocked_id INTEGER NOT NULL,
+	status boolean,
     PRIMARY KEY (blocker_id, blocked_id),
     FOREIGN KEY (blocker_id) REFERENCES users(id),
     FOREIGN KEY (blocked_id) REFERENCES users(id)

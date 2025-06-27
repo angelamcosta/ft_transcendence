@@ -52,7 +52,7 @@ const idBySock = new Map();
 app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (socket, req) => {
 	const userId = req.authUser.id;
 	const row = await db.get('SELECT display_name FROM users WHERE id = ?', userId);
-	
+
 
 	let displayName = 'unknown';
 	if (row && row.display_name)
@@ -109,7 +109,7 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 	async (socket, req) => {
 		const userId = req.authUser.id;
-		const meRow = await db.get('SELECT display_name FROM users WHERE id = ?',[userId]);
+		const meRow = await db.get('SELECT display_name FROM users WHERE id = ?', [userId]);
 
 		let displayName = 'unknown';
 		if (meRow && meRow.display_name)
@@ -155,14 +155,26 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 
 				socket.send(JSON.stringify({ type: 'history', messages: history }));
 
-				const rowMax = await db.get('SELECT MAX(timestamp) AS timestamp FROM dm_messages WHERE room_key = ?',[roomKey]);
-				const newest = rowMax && rowMax.timestamp != null ? rowMax.timestamp: 0;
+				const rowMax = await db.get('SELECT MAX(timestamp) AS timestamp FROM dm_messages WHERE room_key = ?', [roomKey]);
+				const newest = rowMax && rowMax.timestamp != null ? rowMax.timestamp : 0;
 
 				await db.run('INSERT INTO dm_reads (user_id, room_key, last_read) VALUES (?, ?, ?) ON CONFLICT(user_id, room_key) DO UPDATE SET last_read = excluded.last_read', [userId, roomKey, newest]);
 
 			} else if (msg.type === 'message') {
 				if (!roomKey || !clients) return;
 
+				const block = await db.get(
+					`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?)
+					OR (blocker_id = ? AND blocked_id = ?)`, [userId, targetId, targetId, userId]
+				);
+
+				if (block) {
+					return socket.send(JSON.stringify({
+						type: 'blocked',
+						message: 'Cannot send: you are blocked or you have blocked this user'
+					}));
+				}
+				
 				const ts = Date.now();
 				await db.run('INSERT INTO dm_messages (room_key, sender_id, content, timestamp) VALUES (?, ?, ?, ?)', [roomKey, userId, msg.content, ts]);
 
@@ -181,9 +193,9 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 					if (client.readyState === ws.OPEN && idBySock.get(client) === targetId && !clients.has(client)) {
 						client.send(JSON.stringify({
 							type: 'dm-notification',
-     						from: displayName
+							from: displayName
 						}))
-					}	
+					}
 				}
 			}
 		});

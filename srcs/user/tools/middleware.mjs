@@ -71,11 +71,6 @@ export function loadFriendship(fastify) {
 		const { userId, targetId } = req;
 
 		try {
-			const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
-
-			if (blocked)
-				throw fastify.httpErrors.forbidden('You cannot add this user');
-
 			const friendship = await db.get(`SELECT * FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, targetId, targetId, userId]);
 
 			req.friendship = friendship || null;

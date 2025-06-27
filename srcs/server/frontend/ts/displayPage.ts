@@ -3,7 +3,7 @@ import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
 import { globalSocket, onlineUsers, unreadDM } from './chatManager.js';
-import { getUsers } from './utils.js';
+import { getUsers, User } from './utils.js';
 
 let activeDM: string | null = null;
 
@@ -228,9 +228,9 @@ export function dashboard(workArea: HTMLDivElement | null) {
 }
 
 export function changePassword(workArea: HTMLDivElement | null) {
-    const passwordForm = document.createElement('form');
-    passwordForm.id = 'changePassword';
-	passwordForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+	const passwordForm = document.createElement('form');
+	passwordForm.id = 'changePassword';
+	passwordForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
 
 	const oldPasswordContainer = document.createElement('div');
 	oldPasswordContainer.classList.add('relative', 'w-60', 'm-4');
@@ -348,97 +348,97 @@ export function changePassword(workArea: HTMLDivElement | null) {
 }
 
 export function changeDisplayName(workArea: HTMLDivElement | null) {
-    const nameForm = document.createElement('form');
-    nameForm.id = 'changeName';
-	nameForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+	const nameForm = document.createElement('form');
+	nameForm.id = 'changeName';
+	nameForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
 
-    const nameContainer = document.createElement('div');
-    nameContainer.classList.add('relative', 'w-60', 'm-4');
+	const nameContainer = document.createElement('div');
+	nameContainer.classList.add('relative', 'w-60', 'm-4');
 
-    // Create an password input
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.id = "nameInput";
-    nameInput.name = 'name';
-    nameInput.placeholder = 'Enter new display name';
-    nameInput.required = true;
-    nameInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	// Create an password input
+	const nameInput = document.createElement('input');
+	nameInput.type = 'text';
+	nameInput.id = "nameInput";
+	nameInput.name = 'name';
+	nameInput.placeholder = 'Enter new display name';
+	nameInput.required = true;
+	nameInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 	nameContainer.appendChild(nameInput);
 
-    // Create a submit button
-    const nameSubmitButton = document.createElement('button');
-    nameSubmitButton.type = 'submit';
-    nameSubmitButton.textContent = 'Change name';
-    nameSubmitButton.classList.add('px-4','py-2','bg-blue-500','text-white','rounded','hover:bg-blue-700');
+	// Create a submit button
+	const nameSubmitButton = document.createElement('button');
+	nameSubmitButton.type = 'submit';
+	nameSubmitButton.textContent = 'Change name';
+	nameSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
-    // Create a reset button button
-    const nameResetButton = document.createElement('button');
-    nameResetButton.id = 'nameResetButton';
-    nameResetButton.type = 'button';
-    nameResetButton.textContent = 'Reset';
-    nameResetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
+	// Create a reset button button
+	const nameResetButton = document.createElement('button');
+	nameResetButton.id = 'nameResetButton';
+	nameResetButton.type = 'button';
+	nameResetButton.textContent = 'Reset';
+	nameResetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
 
-    const nameButtonContainer = document.createElement('div');
-    nameButtonContainer.classList.add('flex', 'w-60', 'm-4');
+	const nameButtonContainer = document.createElement('div');
+	nameButtonContainer.classList.add('flex', 'w-60', 'm-4');
 	nameButtonContainer.appendChild(nameSubmitButton);
 	nameButtonContainer.appendChild(nameResetButton);
 
-    // Creates a heading
-    const nameHeading = document.createElement("h1");
-    nameHeading.textContent = "Change display name";
-    nameHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
+	// Creates a heading
+	const nameHeading = document.createElement("h1");
+	nameHeading.textContent = "Change display name";
+	nameHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
-    nameForm.appendChild(nameHeading);
+	nameForm.appendChild(nameHeading);
 	nameForm.appendChild(nameContainer);
 	nameForm.appendChild(document.createElement('br'));
 	nameForm.appendChild(nameButtonContainer);
 
-    // Append nameForm and login button to the body
-    workArea?.appendChild(nameForm);
+	// Append nameForm and login button to the body
+	workArea?.appendChild(nameForm);
 
-    nameResetButton.addEventListener("click", () => {
-        nameForm.reset();
-    });
+	nameResetButton.addEventListener("click", () => {
+		nameForm.reset();
+	});
 }
 
 export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 	const user2FA = localStorage.getItem('user2FA')!;
 
-    const twoFactorForm = document.createElement('form');
-    twoFactorForm.id = 'set2FA';
-	twoFactorForm.classList.add('flex', 'flex-col', 'items-center',  'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+	const twoFactorForm = document.createElement('form');
+	twoFactorForm.id = 'set2FA';
+	twoFactorForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
 
-    const twoFactorContainer = document.createElement('div');
-    twoFactorContainer.classList.add('flex', 'items-center',  'gap-2', 'relative', 'w-60', 'm-4');
+	const twoFactorContainer = document.createElement('div');
+	twoFactorContainer.classList.add('flex', 'items-center', 'gap-2', 'relative', 'w-60', 'm-4');
 
-    // Creates a heading
-    const twoFactorHeading = document.createElement("h1");
-    twoFactorHeading.textContent = "Manage Two Factor Authentication";
-    twoFactorHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
+	// Creates a heading
+	const twoFactorHeading = document.createElement("h1");
+	twoFactorHeading.textContent = "Manage Two Factor Authentication";
+	twoFactorHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
-    // Create the label span
-    const labelSpan = document.createElement("span");
-    labelSpan.id = "toggle-label";
-    labelSpan.className = "text-sm font-medium text-gray-800";
+	// Create the label span
+	const labelSpan = document.createElement("span");
+	labelSpan.id = "toggle-label";
+	labelSpan.className = "text-sm font-medium text-gray-800";
 
-    // Create the label wrapper
-    const label = document.createElement("label");
-    label.className = "relative inline-flex items-center cursor-pointer";
+	// Create the label wrapper
+	const label = document.createElement("label");
+	label.className = "relative inline-flex items-center cursor-pointer";
 
-    // Create the checkbox input
-    const twoFactorCheckbox = document.createElement("input");
-    twoFactorCheckbox.type = "checkbox";
-    twoFactorCheckbox.id = "toggle";
-    twoFactorCheckbox.className = "sr-only peer";
+	// Create the checkbox input
+	const twoFactorCheckbox = document.createElement("input");
+	twoFactorCheckbox.type = "checkbox";
+	twoFactorCheckbox.id = "toggle";
+	twoFactorCheckbox.className = "sr-only peer";
 
-    // Create the track div
-    const track = document.createElement("div");
+	// Create the track div
+	const track = document.createElement("div");
 	track.id = "twoFactorTrack";
-    
-    // Create the knob div
-    const knob = document.createElement("div");
+
+	// Create the knob div
+	const knob = document.createElement("div");
 	knob.id = "twoFactorKnob";
-    
+
 	labelSpan.setAttribute("data-hidden-value", "OK");
 	if (user2FA === 'enabled') {
 		labelSpan.textContent = "Enabled";
@@ -458,32 +458,32 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 	errorMessage.style.minWidth = "1rem";
 	errorMessage.textContent = "";
 
-    // Append elements appropriately
-    label.appendChild(twoFactorCheckbox);
-    label.appendChild(track);
-    label.appendChild(knob);
+	// Append elements appropriately
+	label.appendChild(twoFactorCheckbox);
+	label.appendChild(track);
+	label.appendChild(knob);
 
-    twoFactorContainer.appendChild(labelSpan);
-    twoFactorContainer.appendChild(label);
+	twoFactorContainer.appendChild(labelSpan);
+	twoFactorContainer.appendChild(label);
 	twoFactorContainer.appendChild(errorMessage);
 
-    // Add to the body (or any other container)
-    twoFactorForm.appendChild(twoFactorHeading);
-    twoFactorForm.appendChild(twoFactorContainer);
+	// Add to the body (or any other container)
+	twoFactorForm.appendChild(twoFactorHeading);
+	twoFactorForm.appendChild(twoFactorContainer);
 
-    // Append twoFactorForm and login button to the body
-    workArea?.appendChild(twoFactorForm);
+	// Append twoFactorForm and login button to the body
+	workArea?.appendChild(twoFactorForm);
 
-    // Add toggle behavior
-    twoFactorCheckbox.addEventListener("change", (e: Event) => buttonHandlers.set2FA(e, twoFactorCheckbox, labelSpan, errorMessage));
+	// Add toggle behavior
+	twoFactorCheckbox.addEventListener("change", (e: Event) => buttonHandlers.set2FA(e, twoFactorCheckbox, labelSpan, errorMessage));
 }
 
 export function accountSettings(workArea: HTMLDivElement | null) {
-    utils.cleanDiv(workArea);
+	utils.cleanDiv(workArea);
 
-    changePassword(workArea);
-    changeDisplayName(workArea);
-    manageTwoFactorAuth(workArea);
+	changePassword(workArea);
+	changeDisplayName(workArea);
+	manageTwoFactorAuth(workArea);
 }
 
 export function menu(menuArea: HTMLDivElement | null) {
@@ -718,22 +718,22 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 	wrapper.append(chatCard, userListCard);
 	workArea.appendChild(wrapper);
 
-	const registeredUsers = await getUsers();
+	const registeredUsers: User[] = await getUsers();
 
 	function renderUserList() {
 		userListContainer.innerHTML = '';
 
-		const onlineList = registeredUsers.filter(name => onlineUsers.has(name));
-		const offlineList = registeredUsers.filter(name => !onlineUsers.has(name));
+		const onlineList = registeredUsers.filter(user => onlineUsers.has(user.display_name));
+		const offlineList = registeredUsers.filter(user => !onlineUsers.has(user.display_name));
 
-		const render = (name: string) => {
+		const render = (user: User) => {
 			const el = document.createElement('div');
 			Object.assign(el.style, {
 				display: 'flex',
 				alignItems: 'center',
 				justifyContent: 'flex-start',
 				padding: '4px 8px',
-				cursor: name !== display_name ? 'pointer' : 'default'
+				cursor: user.display_name !== display_name ? 'pointer' : 'default'
 			});
 
 			const dot = document.createElement('span');
@@ -741,23 +741,23 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 				width: '8px',
 				height: '8px',
 				borderRadius: '50%',
-				background: onlineUsers.has(name) ? 'green' : 'transparent',
+				background: onlineUsers.has(user.display_name) ? 'green' : 'transparent',
 				marginRight: '8px',
 				flexShrink: '0',
 			});
 			el.appendChild(dot);
 
 			const nameEl = document.createElement('span');
-			nameEl.textContent = name;
-			if (name === display_name)
+			nameEl.textContent = user.display_name;
+			if (user.display_name === display_name)
 				nameEl.style.fontWeight = 'bold';
 			el.appendChild(nameEl);
 
-			if (unreadDM.has(name))
+			if (unreadDM.has(user.display_name))
 				nameEl.style.animation = 'blink-color 1s infinite';
 
-			if (name !== display_name)
-				el.addEventListener('click', () => openDirectMessage(name));
+			if (user.display_name !== display_name)
+				el.addEventListener('click', () => openDirectMessage(user.display_name, user.id));
 			userListContainer.appendChild(el);
 		};
 		onlineList.forEach(render);
@@ -867,26 +867,32 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 		chatContainer.scrollTop = chatContainer.scrollHeight;
 	}
 
-	function openDirectMessage(targetName: string) {
+	function openDirectMessage(targetName: string, targetId: number) {
 		utils.cleanDiv(workArea);
 		activeDM = targetName;
 		if (unreadDM.has(targetName)) {
 			unreadDM.delete(targetName);
 			renderUserList();
 		}
-		directMessagePage(workArea, display_name, targetName, userId);
+		directMessagePage(workArea, display_name, targetName, userId, targetId);
 	}
 }
 
-export function directMessagePage(
+export async function directMessagePage(
 	workArea: HTMLDivElement | null,
-	displayName: string,
-	targetName: string, userId: string
+	displayName: string, targetName: string,
+	userId: string, targetId: number
 ) {
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
 	if (!workArea || !headerArea) return;
 	utils.cleanDiv(workArea);
+
+	console.log('target -> ', targetId);
+	const { blockedByMe, blockedByTarget } = await fetch(`/users/block/relationship/${targetId}`,
+		{ credentials: 'include' }).then(r => r.json());
+
+	console.log('blocked by me -> ', blockedByMe, "blocked by them -> ", blockedByTarget);
 
 	const wrapper = document.createElement('div');
 	Object.assign(wrapper.style, {
@@ -919,7 +925,160 @@ export function directMessagePage(
 		fontWeight: 'bold',
 		background: '#f7f7f7',
 	});
+
+	const controls = document.createElement('div');
+	Object.assign(controls.style, {
+		gap: '8px',
+		display: 'flex',
+		margin:  '0 auto',
+		padding: '2px 3px',
+		width: 'fit-content'
+	});
+
 	dmCard.appendChild(title);
+	dmCard.appendChild(controls);
+
+	const banner = document.createElement('div');
+	banner.style.padding = '8px';
+	banner.style.textAlign = 'center';
+	banner.style.fontStyle = 'italic';
+
+	if (blockedByMe) banner.textContent = 'You have blocked this user.';
+	else if (blockedByTarget) banner.textContent = 'You have been blocked by this user.';
+
+	if (blockedByMe || blockedByTarget)
+		dmCard.appendChild(banner);
+
+	const addFriendBtn = document.createElement('button');
+	addFriendBtn.textContent = 'Add Friend';
+	Object.assign(addFriendBtn.style, {
+		background: '#28a745',
+		color: '#fff',
+		border: '1px solid #28a745',
+		padding: '2px 3px',
+		fontSize: '0.875rem',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+
+	const viewProfileBtn = document.createElement('button');
+	viewProfileBtn.textContent = 'View Profile';
+	Object.assign(viewProfileBtn.style, {
+		background: '#17a2b8',
+		color: '#fff',
+		border: '1px solid #17a2b8',
+		padding: '2px 3px',
+		fontSize: '0.875rem',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+
+	const inviteBtn = document.createElement('button');
+	inviteBtn.textContent = 'Invite to Game';
+	Object.assign(inviteBtn.style, {
+		background: '#007bff',
+		color: '#fff',
+		border: '1px solid #007bff',
+		padding: '2px 3px',
+		fontSize: '0.875rem',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+
+	const blockBtn = document.createElement('button');
+	blockBtn.textContent = 'Block User';
+	Object.assign(blockBtn.style, {
+		background: '#dc3545',
+		color: '#fff',
+		border: '1px solid #dc3545',
+		padding: '2px 3px',
+		fontSize: '0.875rem',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+
+	let invitePending = false;
+	async function refreshInviteStatus() {
+		let sentData: unknown;
+		try {
+			const res = await fetch('/users/invite/sent', { credentials: 'include' });
+			sentData = await res.json();
+		} catch (err) {
+			console.error('Error fetching sent invites', err);
+			sentData = [];
+		}
+
+		const sent = Array.isArray(sentData) ? sentData : [];
+
+		invitePending = sent.some((i: any) => i.friend_id === targetId);
+		inviteBtn.textContent = invitePending ? 'Cancel Invite' : 'Invite to Game';
+	}
+
+	inviteBtn.addEventListener('click', async () => {
+		inviteBtn.disabled = true;
+		try {
+			if (!invitePending) {
+				const res = await fetch(`/users/invite/${targetId}`, {
+					method: 'POST',
+					credentials: 'include'
+				});
+				if (!res.ok) throw new Error(await res.text());
+			} else {
+				const res = await fetch(`/users/invite/cancel/${targetId}`, {
+					method: 'PUT',
+					credentials: 'include'
+				});
+				if (!res.ok) throw new Error(await res.text());
+			}
+			invitePending = !invitePending;
+			inviteBtn.textContent = invitePending ? 'Cancel Invite' : 'Invite to Game';
+		} catch (err) {
+			console.error('Invite error', err);
+			alert('Couldn’t update invite: ' + err);
+		} finally {
+			inviteBtn.disabled = false;
+		}
+	});
+
+	let isBlocked = false;
+	async function refreshBlockStatus() {
+		const res = await fetch(`/users/block/status/${targetId}`, {
+			credentials: 'include'
+		});
+		const { blocked } = await res.json();
+		isBlocked = blocked;
+		blockBtn.textContent = isBlocked ? 'Unblock User' : 'Block User';
+	}
+
+	blockBtn.addEventListener('click', async () => {
+		blockBtn.disabled = true;
+		try {
+			if (!isBlocked) {
+				const res = await fetch(`/users/block/${targetId}`, {
+					method: 'POST',
+					credentials: 'include'
+				});
+				if (!res.ok) throw new Error(await res.text());
+			} else {
+				const res = await fetch(`/users/unblock/${targetId}`, {
+					method: 'DELETE',
+					credentials: 'include'
+				});
+				if (!res.ok) throw new Error(await res.text());
+			}
+			isBlocked = !isBlocked;
+			blockBtn.textContent = isBlocked ? 'Unblock User' : 'Block User';
+		} catch (err) {
+			console.error('Block error', err);
+			alert('Couldn’t update block status: ' + err);
+		} finally {
+			blockBtn.disabled = false;
+		}
+	});
+
+	controls.append(addFriendBtn, viewProfileBtn, inviteBtn, blockBtn);
+
+	await Promise.all([refreshInviteStatus(), refreshBlockStatus()]);
 
 	const chatContainer = document.createElement('div');
 	Object.assign(chatContainer.style, {
@@ -954,10 +1113,18 @@ export function directMessagePage(
 		borderRadius: '4px',
 		cursor: 'pointer',
 	});
-	inputWrapper.append(messageInput, sendBtn);
+
+	dmCard.appendChild(chatContainer);
 	dmCard.appendChild(inputWrapper);
 	wrapper.appendChild(dmCard);
 	workArea.appendChild(wrapper);
+	inputWrapper.append(messageInput, sendBtn);
+
+	if (blockedByMe || blockedByTarget) {
+		chatContainer.style.opacity = '0.5';
+		messageInput.disabled = true;
+		sendBtn.disabled = true;
+	}
 
 	const wsUrl = `wss://localhost:9000/dm`;
 	const ws = new WebSocket(wsUrl);
