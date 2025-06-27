@@ -33,8 +33,12 @@ export function hasWhitespace(input: string): boolean {
   return /\s/.test(input);
 }
 
-export async function getUsers() {
-	const registeredUsers: string[] = [];
+export interface User {
+	id: number;
+	display_name: string;
+}
+
+export async function getUsers(): Promise<User[]> {
 	try {
 		const res = await fetch('/users', {
 			method: 'GET',
@@ -44,15 +48,15 @@ export async function getUsers() {
 			credentials: 'include'
 		});
 		if (res.ok) {
-			const data: { display_name: string }[] = await res.json();
-			registeredUsers.push(...data.map(u => u.display_name));
+			const users: User[] = await res.json();
+    		return users;
 		} else
 			console.error('Failed to load users list', await res.text());
 	} catch (err) {
 		console.error('Error fetching users', err);
+		return [];
 	}
-
-	return (registeredUsers);
+	return [];
 }
 
 export async function getUnreadMessages() {

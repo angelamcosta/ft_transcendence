@@ -81,6 +81,44 @@ export default async function userRoutes(app) {
 		}
 	})
 
+	app.get('/users/block/relationship/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/block/relationship/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/block/relationship/:id error:', e);
+			return reply.code(500).send({ error: 'Error fetching blocked relationship' });
+		}
+	})
+
+	app.get('/users/block/status/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/block/status/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/block/status/:id error:', e);
+			return reply.code(500).send({ error: 'Error fetching blockked status' });
+		}
+	})
+
 	app.post('/users/block/:id', async (req, reply) => {
 		try {
 			const userId = req.params.id;
@@ -88,10 +126,8 @@ export default async function userRoutes(app) {
 				dispatcher: tlsAgent,
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
 					cookie: req.headers.cookie,
 				},
-				body: JSON.stringify(req.body),
 			});
 			const data = await res.json();
 			return reply.code(res.status).send(data);
@@ -101,17 +137,15 @@ export default async function userRoutes(app) {
 		}
 	})
 
-	app.post('/users/unblock/:id', async (req, reply) => {
+	app.delete('/users/unblock/:id', async (req, reply) => {
 		try {
 			const userId = req.params.id;
 			const res = await fetch(`${USER_URL}/api/users/unblock/${userId}`, {
 				dispatcher: tlsAgent,
-				method: 'POST',
+				method: 'DELETE',
 				headers: {
-					'Content-Type': 'application/json',
 					cookie: req.headers.cookie,
 				},
-				body: JSON.stringify(req.body),
 			});
 			const data = await res.json();
 			return reply.code(res.status).send(data);
@@ -194,6 +228,114 @@ export default async function userRoutes(app) {
 		} catch (e) {
 			console.error('Proxy /users/:id/avatar error', e);
 			return reply.code(500).send({ error: 'Error deleting avatar' });
+		}
+	})
+
+	app.get('/users/invite/received', async (req, reply) => {
+		try {
+			const res = await fetch(`${USER_URL}/api/users/invite/received`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				}
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/invite/received error', e);
+			return reply.code(500).send({ error: 'Error fetching match invites received' });
+		}
+	})
+
+	app.get('/users/invite/sent', async (req, reply) => {
+		try {
+			const res = await fetch(`${USER_URL}/api/users/invite/sent`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				}
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/invite/sent error', e);
+			return reply.code(500).send({ error: 'Error fetching match invites sent' });
+		}
+	})
+
+	app.put('/users/invite/accept/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/accept/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'PUT',
+				headers: {
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/invite/accept/:id error:', e);
+			return reply.code(500).send({ error: 'Error accepting match invite' });
+		}
+	})
+
+	app.put('/users/invite/reject/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/reject/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'PUT',
+				headers: {
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/invite/accept/:id error:', e);
+			return reply.code(500).send({ error: 'Error accepting match invite' });
+		}
+	})
+
+	app.put('/users/invite/cancel/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/invite/cancel/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'PUT',
+				headers: {
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/invite/cancel/:id error:', e);
+			return reply.code(500).send({ error: 'Error canceling match invite' });
+		}
+	})
+
+	app.post('/users/invite/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/invite/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'POST',
+				headers: {
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/invite/:id error', e);
+			return reply.code(500).send({ error: 'Error sending match invite' });
 		}
 	})
 
