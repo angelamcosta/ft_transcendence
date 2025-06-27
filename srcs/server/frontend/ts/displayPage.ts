@@ -2,10 +2,9 @@ import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
-import { globalSocket, onlineUsers } from './chatManager.js';
+import { globalSocket, onlineUsers, unreadDM } from './chatManager.js';
 import { getUsers } from './utils.js';
 
-export const unreadDM = new Set<string>();
 let activeDM: string | null = null;
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {

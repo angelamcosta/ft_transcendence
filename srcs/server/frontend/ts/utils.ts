@@ -1,4 +1,4 @@
-import { unreadDM } from './displayPage.js';
+import { unreadDM } from './chatManager.js';
 
 export const eyeIcon = `
 		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 

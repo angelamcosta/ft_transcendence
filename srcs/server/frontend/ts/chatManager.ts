@@ -1,5 +1,6 @@
 export let globalSocket: WebSocket | null = null;
 export const onlineUsers = new Set<string>();
+export const unreadDM = new Set<string>();
 
 export function initGlobalChat(userId: string, display_name: string) {
 	if (globalSocket) return;
