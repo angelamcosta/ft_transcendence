@@ -327,6 +327,30 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	passwordHeading.textContent = "Change password";
 	passwordHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
+	// Create an error message span
+	const oldPasswordErrorMessage = document.createElement("span");
+	oldPasswordErrorMessage.id = "oldPasswordError";
+	oldPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	oldPasswordErrorMessage.style.minWidth = "1rem";
+	oldPasswordErrorMessage.textContent = "";
+	oldPasswordContainer.appendChild(oldPasswordErrorMessage);
+
+	// Create an error message span
+	const newPasswordErrorMessage = document.createElement("span");
+	newPasswordErrorMessage.id = "newPasswordError";
+	newPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	newPasswordErrorMessage.style.minWidth = "1rem";
+	newPasswordErrorMessage.textContent = "";
+	newPasswordContainer.appendChild(newPasswordErrorMessage);
+
+	// Create an error message span
+	const confirmPasswordErrorMessage = document.createElement("span");
+	confirmPasswordErrorMessage.id = "confirmPasswordError";
+	confirmPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	confirmPasswordErrorMessage.style.minWidth = "1rem";
+	confirmPasswordErrorMessage.textContent = "";
+	confirmPasswordContainer.appendChild(confirmPasswordErrorMessage);
+
 	passwordForm.appendChild(passwordHeading);
 	passwordForm.appendChild(oldPasswordContainer);
 	passwordForm.appendChild(document.createElement('br'));
@@ -339,6 +363,7 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	// Append passwordForm and login button to the body
 	workArea?.appendChild(passwordForm);
 
+	passwordForm.addEventListener('submit', formHandlers.changePassword);
 	oldToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, oldPasswordInput, oldToggleButton));
 	newToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, newPasswordInput, newToggleButton));
 	confirmToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, confirmPasswordInput, confirmToggleButton));

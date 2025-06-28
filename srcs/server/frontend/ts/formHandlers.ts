@@ -208,3 +208,23 @@ export async function verify2FA(e: Event) {
 		alert('Login failed! Catched on Try');
 	}
 }
+
+export async function changePassword(e: Event) {
+	e.preventDefault();
+
+	const formData = e.target as HTMLFormElement;
+	const oldPassword = formData.get('oldPassword');
+	const newPassword = formData.get('newPassword');
+	const confirmPassword = formData.get('confirmPassword');
+
+	// check password length
+	if (!oldPassword.checkValidity() || !newPassword.checkValidity() || !confirmPassword.checkValidity()) {
+		return;
+	}
+
+	if (utils.hasWhitespace(oldPassword.value)) {
+		oldPassword.setCustomValidity('Password cannot have whitespaces.');
+		oldPassword.reportValidity();
+		return;
+	}
+}
