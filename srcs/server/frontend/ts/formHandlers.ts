@@ -144,6 +144,7 @@ export async function signIn(e: Event) {
 			getUnreadMessages();
 			displayPage.menu(menuArea, workArea);
 			displayPage.dashboard(workArea);
+			buttonHandlers.initThemeToggle();
 			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));

@@ -557,6 +557,13 @@ export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement |
 	logoutButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
 	menu.appendChild(logoutButton);
 
+	const themeBtn = document.createElement("button");
+	themeBtn.id = "theme-toggle";
+	themeBtn.type = "button";
+	themeBtn.className = "p-2 bg-background text-foreground hover:bg-primary hover:text-white transition";
+	themeBtn.innerText = "🌓";
+	menu.appendChild(themeBtn);
+
 	inner.appendChild(logo);
 	inner.appendChild(menu);
 	container.appendChild(inner);
@@ -567,7 +574,6 @@ export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement |
 	});
 
 	menuArea?.appendChild(nav);
-	menuArea?.appendChild(menu);
 }
 
 export function header(headerArea: HTMLDivElement | null) {

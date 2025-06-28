@@ -29,8 +29,8 @@ async function isSignedIn() {
 			const displayName = localStorage.getItem('displayName')!;
 			displayPage.menu(menuArea, workArea);
 			displayPage.dashboard(workArea);
-			initGlobalChat(userId, displayName);
 			buttonHandlers.initThemeToggle();
+			initGlobalChat(userId, displayName);
 			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));

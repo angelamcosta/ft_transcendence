@@ -3,6 +3,22 @@ import * as displayPage from './displayPage.js';
 import { gamePage } from './displayPage.js';
 import { cleanGlobalChat } from './chatManager.js';
 
+export function initThemeToggle() {
+    const btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+
+    const saved = localStorage.getItem('theme');
+    if (saved)
+        document.documentElement.classList.add(saved);
+    else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.add('dark');
+
+    btn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+}
+
 export async function signOut(workArea: HTMLDivElement | null) {
 
     const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
@@ -29,6 +45,7 @@ export async function signOut(workArea: HTMLDivElement | null) {
         localStorage.clear();
         displayPage.header(menuArea);
         displayPage.landingPage(workArea, menuArea);
+        initThemeToggle();
         utils.cleanLocalStorage();
         document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
         document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
@@ -120,20 +137,4 @@ export function showPassword(e: Event, passwordInput: HTMLInputElement | null, t
     const isHidden = passwordInput.type === 'password';
     passwordInput.type = isHidden ? 'text' : 'password';
     toggleButton.innerHTML = isHidden ? utils.eyeSlashIcon : utils.eyeIcon;
-}
-
-export function initThemeToggle() {
-    const btn = document.getElementById('theme-toggle');
-    if (!btn) return;
-
-    const saved = localStorage.getItem('theme');
-    if (saved)
-        document.documentElement.classList.add(saved);
-    else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
-        document.documentElement.classList.add('dark');
-
-    btn.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
 }
