@@ -1,7 +1,8 @@
 export default {
-    content: ["./public/*.html", "./public/*.js"],
-    theme: {
-      extend: {},
-    },
-    plugins: [],
+  content: ["./public/*.html", "./public/*.js"],
+  darkMode: 'class',
+  theme: {
+    extend: {},
+  },
+  plugins: [],
 }

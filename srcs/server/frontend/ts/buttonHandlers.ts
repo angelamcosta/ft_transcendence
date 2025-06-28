@@ -20,12 +20,12 @@ export async function signOut(workArea: HTMLDivElement | null) {
         console.log('API response:', data);
         if (!response.ok) {
             const message = data?.error || 'logouy failed';
-    
+
             alert(message);
             return;
         }
-		
-		cleanGlobalChat();
+
+        cleanGlobalChat();
         localStorage.clear();
         displayPage.header(menuArea);
         displayPage.landingPage(workArea, menuArea);
@@ -44,7 +44,7 @@ export async function accountSettings(workArea: HTMLDivElement | null) {
 }
 
 export function gamePageHandler(workArea: HTMLDivElement | null) {
-  gamePage(workArea);
+    gamePage(workArea);
 }
 
 export async function chatPage(workArea: HTMLDivElement | null, userId: string, displayName: string) {
@@ -88,7 +88,7 @@ export async function set2FA(e: Event, checkbox: HTMLInputElement | null, span: 
             const message = data?.error || 'Error setting 2FA.';
             console.error('Error setting 2FA: ', message);
             span.setAttribute("data-hidden-value", "Error");
-            await utils.sleep(300); 
+            await utils.sleep(300);
             checkbox.checked = !checkbox.checked;
             const changeEvent = new Event("change", { bubbles: true });
             checkbox.dispatchEvent(changeEvent);
@@ -111,13 +111,29 @@ export async function set2FA(e: Event, checkbox: HTMLInputElement | null, span: 
     }
 }
 
-export function showPassword(e: Event,  passwordInput: HTMLInputElement | null, toggleButton: HTMLButtonElement | null) {
+export function showPassword(e: Event, passwordInput: HTMLInputElement | null, toggleButton: HTMLButtonElement | null) {
     if (!passwordInput || !toggleButton) {
         return;
     }
     e.preventDefault();
-    
+
     const isHidden = passwordInput.type === 'password';
     passwordInput.type = isHidden ? 'text' : 'password';
     toggleButton.innerHTML = isHidden ? utils.eyeSlashIcon : utils.eyeIcon;
+}
+
+export function initThemeToggle() {
+    const btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+
+    const saved = localStorage.getItem('theme');
+    if (saved)
+        document.documentElement.classList.add(saved);
+    else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.add('dark');
+
+    btn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
 }

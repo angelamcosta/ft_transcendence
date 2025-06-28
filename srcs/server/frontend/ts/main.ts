@@ -18,6 +18,7 @@ async function isSignedIn() {
 		if (!response.ok) {
 			displayPage.header(menuArea);
 			displayPage.landingPage(workArea, menuArea);
+			buttonHandlers.initThemeToggle();
 			document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
 			document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
 			document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
@@ -29,6 +30,7 @@ async function isSignedIn() {
 			displayPage.menu(menuArea, workArea);
 			displayPage.dashboard(workArea);
 			initGlobalChat(userId, displayName);
+			buttonHandlers.initThemeToggle();
 			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
@@ -40,6 +42,7 @@ async function isSignedIn() {
 		alert('Verify failed! Catched on Try');
 		displayPage.header(menuArea);
 		displayPage.landingPage(workArea, menuArea);
+		buttonHandlers.initThemeToggle();
 		document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
 		document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
 		document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));

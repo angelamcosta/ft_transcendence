@@ -486,7 +486,8 @@ export function accountSettings(workArea: HTMLDivElement | null) {
 	manageTwoFactorAuth(workArea);
 }
 
-export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {	utils.cleanDiv(menuArea);
+export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
+	utils.cleanDiv(menuArea);
 
 	const nav = document.createElement("nav");
 	nav.className = "bg-blue-500 shadow-md";
@@ -562,8 +563,8 @@ export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement |
 	nav.appendChild(container);
 
 	playButton.addEventListener('click', () => {
-        buttonHandlers.gamePageHandler(workArea);
-    });
+		buttonHandlers.gamePageHandler(workArea);
+	});
 
 	menuArea?.appendChild(nav);
 	menuArea?.appendChild(menu);
@@ -606,6 +607,13 @@ export function header(headerArea: HTMLDivElement | null) {
 	signUpButton.textContent = "Sign Up";
 	signUpButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
 	menu.appendChild(signUpButton);
+
+	const themeBtn = document.createElement("button");
+	themeBtn.id = "theme-toggle";
+	themeBtn.type = "button";
+	themeBtn.className = "p-2 bg-background text-foreground hover:bg-primary hover:text-white transition";
+	themeBtn.innerText = "🌓";
+	menu.appendChild(themeBtn);
 
 	inner.appendChild(logo);
 	inner.appendChild(menu);
@@ -935,7 +943,7 @@ export async function directMessagePage(
 	Object.assign(controls.style, {
 		gap: '8px',
 		display: 'flex',
-		margin:  '0 auto',
+		margin: '0 auto',
 		padding: '2px 3px',
 		width: 'fit-content'
 	});

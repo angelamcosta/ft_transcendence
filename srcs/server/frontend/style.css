@@ -13,3 +13,22 @@ html, body {
   0%, 100% { color: inherit; }
   50%      { color: red;     }
 }
+
+:root {
+  --bg:       #f7fafc;
+  --fg:       #1a202c;
+  --primary:  #3182ce;
+  --border:   #cbd5e0;
+}
+
+.dark {
+  --bg:       #1a202c;
+  --fg:       #edf2f7;
+  --primary:  #63b3ed;
+  --border:   #4a5568;
+}
+
+body {
+  background-color: var(--bg) !important;
+  color:            var(--fg) !important;
+}
