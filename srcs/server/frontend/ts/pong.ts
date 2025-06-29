@@ -62,7 +62,14 @@ export async function initPong(canvas: HTMLCanvasElement) {
   });
 
   const sendControl = (player: number, action: 'up' | 'down' | '') => {
-    socket.send(JSON.stringify({ type: 'control', data: { player, action } }));
+    socket.send(JSON.stringify({
+      type: 'control',
+      data: {
+        player,
+        action: action
+      }
+    }));
+    console.log('Controle enviado:', { player, action });
   };
 
   if (!gameListenersAdded) {

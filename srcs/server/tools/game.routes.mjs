@@ -32,26 +32,37 @@ export default async function gameRoutes(app) {
     app.get('/api/game/ws', { websocket: true, onRequest: authenticateRequest(app) }, (connection, req) => {
         console.log('➡️ Novo WebSocket do front conectado ao proxy');
 
+        console.log('Conectando ao WebSocket do jogo:', GAME_WS);
+
         const upstream = new WebSocket(GAME_WS, {
             rejectUnauthorized: false,
             agent: wsAgent
         });
 
+        let messageQueue = [];
+        let isUpstreamOpen = false;
+
+        connection.on('message', buf => {
+            const data = buf.toString();
+            console.log('➡️ Mensagem do front para o container game:', data);
+
+            if (isUpstreamOpen) {
+                upstream.send(data);
+            } else {
+                messageQueue.push(data);
+            }
+        });
+
         upstream.on('open', () => {
             console.log('✅ Proxy conectado ao container game');
+            isUpstreamOpen = true;
 
-            connection.on('message', buf => {
-                if (typeof buf === 'string')
-                    upstream.send(buf);
-                else
-                    upstream.send(buf.toString());
-            });
+            messageQueue.forEach(msg => upstream.send(msg));
+            messageQueue = [];
 
             upstream.on('message', msg => {
-                if (typeof msg === 'string')
-                    connection.send(msg);
-                else
-                    connection.send(msg.toString());
+                console.log('⬅️ Mensagem do container game para o front:', msg.toString());
+                connection.send(msg);
             });
         });
 
@@ -66,6 +77,7 @@ export default async function gameRoutes(app) {
 
         upstream.on('error', (err) => {
             console.error('❌ Erro no WebSocket upstream:', err.message);
+            console.error('Detalhes do erro:', err);
         });
     });
 }

@@ -40,6 +40,7 @@ export class GameService extends EventEmitter {
     }
 
     control(playerIndex, action) {
+        console.log(`Controle: player=${playerIndex}, action=${action}`);
         let p = this.state.players[playerIndex];
         p.up = action === "up";
         p.down = action === "down";

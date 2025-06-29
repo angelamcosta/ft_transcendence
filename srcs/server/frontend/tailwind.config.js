@@ -3,6 +3,10 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        body: ['Roboto', ...defaultTheme.fontFamily.sans],
+      },
       colors: {
         primary: 'var(--primary)',
         background: 'var(--bg)',
@@ -11,5 +15,6 @@ export default {
       }
     }
   },
+  variants: ['responsive', 'dark'],
   plugins: [],
 }

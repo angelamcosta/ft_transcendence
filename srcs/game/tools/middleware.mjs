@@ -12,13 +12,17 @@ export function attachWebSocket(server, game) {
         game.on('state', sendState);
 
         ws.on('message', msg => {
+            console.log('📥 Mensagem recebida do proxy:', msg.toString());
+
             let data;
-            if (msg instanceof Buffer) {
-                data = JSON.parse(msg.toString());
-            } else if (typeof msg === 'string') {
-                data = JSON.parse(msg);
-            } else {
-                console.error('Formato de mensagem não suportado:', msg);
+            try {
+                if (msg instanceof Buffer) data = JSON.parse(msg.toString());
+                else if (typeof msg === 'string') data = JSON.parse(msg);
+                else return;
+
+                console.log('Dados parseados:', data);
+            } catch (err) {
+                console.error('Erro ao parsear mensagem:', err);
                 return;
             }
 
