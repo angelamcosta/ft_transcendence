@@ -2,7 +2,7 @@ let activeSocket: WebSocket | null = null;
 let animationId: number | null = null;
 let gameListenersAdded = false;
 
-export function initPong(canvas: HTMLCanvasElement) {
+export async function initPong(canvas: HTMLCanvasElement) {
   if (activeSocket) {
     console.log('⚠️ Fechando WebSocket antigo');
     activeSocket.close();
@@ -36,11 +36,28 @@ export function initPong(canvas: HTMLCanvasElement) {
     loop();
   });
 
-  socket.addEventListener('message', ev => {
-    const msg = JSON.parse(ev.data);
-    if (msg.type === 'state') {
-      state = msg.data;
-      console.log('Estado recebido:', state);
+  socket.addEventListener('message', async ev => {
+    let dataStr: string;
+
+    if (typeof ev.data === 'string') {
+      dataStr = ev.data;
+    } else if (ev.data instanceof ArrayBuffer) {
+      dataStr = new TextDecoder().decode(ev.data);
+    } else if (ev.data instanceof Blob) {
+      dataStr = await ev.data.text();
+    } else {
+      console.error('Formato de mensagem não suportado:', ev.data);
+      return;
+    }
+
+    try {
+      const msg = JSON.parse(dataStr);
+      if (msg.type === 'state') {
+        state = msg.data;
+        console.log('Estado recebido:', state);
+      }
+    } catch (err) {
+      console.error('Erro ao analisar JSON:', err, 'Dados:', dataStr);
     }
   });
 

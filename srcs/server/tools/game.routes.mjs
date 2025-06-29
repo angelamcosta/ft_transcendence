@@ -41,11 +41,17 @@ export default async function gameRoutes(app) {
             console.log('✅ Proxy conectado ao container game');
 
             connection.on('message', buf => {
-                upstream.send(buf);
+                if (typeof buf === 'string')
+                    upstream.send(buf);
+                else
+                    upstream.send(buf.toString());
             });
 
             upstream.on('message', msg => {
-                connection.send(msg);
+                if (typeof msg === 'string')
+                    connection.send(msg);
+                else
+                    connection.send(msg.toString());
             });
         });
 
