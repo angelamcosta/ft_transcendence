@@ -1,21 +1,38 @@
 import { WebSocketServer } from 'ws';
-import { GameService } from './service.mjs';
-const game = new GameService();
 
-export function attachWebSocket(server) {
+export function attachWebSocket(server, game) {
     const wss = new WebSocketServer({ server });
     wss.on('connection', ws => {
-        const sendState = state => {
-            if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'state', data: state }));
-        };
+        console.log('🟢 Cliente conectado ao WebSocket do jogo');
+
+        const sendState = state => { if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'state', data: state })); };
+
+        sendState(game.state);
+
         game.on('state', sendState);
 
         ws.on('message', msg => {
-            const { type, data } = JSON.parse(msg);
-            if (type === 'control') game.control(data.player, data.action);
+            console.log('📥 Mensagem recebida do proxy:', msg.toString());
+
+            let data;
+            try {
+                if (msg instanceof Buffer) data = JSON.parse(msg.toString());
+                else if (typeof msg === 'string') data = JSON.parse(msg);
+                else return;
+
+                console.log('Dados parseados:', data);
+            } catch (err) {
+                console.error('Erro ao parsear mensagem:', err);
+                return;
+            }
+
+            const { type, data: payload } = data;
+            if (type === 'control') game.control(payload.player, payload.action);
             else if (type === 'start') game.start();
         });
 
-        ws.on('close', () => game.removeListener('state', sendState));
+        ws.on('close', () => {
+            game.removeListener('state', sendState);
+        });
     });
 }

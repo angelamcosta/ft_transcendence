@@ -15,20 +15,27 @@ html, body {
 }
 
 :root {
-  --bg:       #f7fafc;
-  --fg:       #1a202c;
-  --primary:  #3182ce;
-  --border:   #cbd5e0;
+  --bg: #E0E5EC;
+  --surface: #F7F9FC;
+  --primary: #A3B1C6;
+  --shadow-light: rgba(255, 255, 255, 0.8);
+  --shadow-dark: rgba(163, 177, 198, 0.6);
 }
 
 .dark {
-  --bg:       #1a202c;
-  --fg:       #edf2f7;
-  --primary:  #63b3ed;
-  --border:   #4a5568;
+  --bg: #1E1C24;
+  --surface: #2A2830;
+  --primary: #3D3B43;
+  --shadow-light: rgba(255, 255, 255, 0.05);
+  --shadow-dark: rgba(0, 0, 0, 0.7);
 }
 
 body {
-  background-color: var(--bg) !important;
-  color:            var(--fg) !important;
+  background-color: var(--bg);
+  color: var(--primary);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
 }

@@ -2,7 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import Fastify from 'fastify';
 import gameRoutes from './game.routes.mjs';
+import { GameService } from './service.mjs';
 import { attachWebSocket } from './middleware.mjs';
+
+const game = new GameService();
 
 const __dirname = new URL('.', import.meta.url).pathname;
 const PORT = process.env.GAME_PORT || 9002;
@@ -27,7 +30,7 @@ process.on('SIGTERM', shutdown);
 await app.register(gameRoutes, { prefix: '/api' });
 
 const server = app.server;
-attachWebSocket(server);
+attachWebSocket(server, game);
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
   if (err) {

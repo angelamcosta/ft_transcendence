@@ -145,11 +145,11 @@ export async function signIn(e: Event) {
 			displayPage.menu(menuArea, workArea);
 			displayPage.dashboard(workArea);
 			buttonHandlers.initThemeToggle();
-			document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
+
 			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-			document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
+
 			document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 		}
 	} catch (error) {
@@ -198,7 +198,7 @@ export async function verify2FA(e: Event) {
 		displayPage.menu(menuArea, workArea);
 		displayPage.dashboard(workArea);
 		buttonHandlers.initThemeToggle();
-		document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
+
 		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));

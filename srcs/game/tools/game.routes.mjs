@@ -1,6 +1,3 @@
-import { GameService } from './service.mjs';
-const game = new GameService();
-
 export default async function (fastify, opts) {
   fastify.post('/game/init', async (req, res) => {
     game.reset();
