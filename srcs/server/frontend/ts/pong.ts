@@ -1,18 +1,29 @@
-export function initPong(canvas: HTMLCanvasElement) {
-  const ctx = canvas.getContext('2d')!;
+let activeSocket: WebSocket | null = null;
+let animationId: number | null = null;
+let gameListenersAdded = false;
 
+export function initPong(canvas: HTMLCanvasElement) {
+  if (activeSocket) {
+    console.log('⚠️ Fechando WebSocket antigo');
+    activeSocket.close();
+    activeSocket = null;
+  }
+  if (animationId) {
+    console.log('⚠️ Cancelando loop antigo');
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  const ctx = canvas.getContext('2d')!;
   type GameState = {
     ball: { x: number; y: number };
     players: { y: number }[];
     scores: number[];
   };
-
   let state: GameState | undefined;
 
-  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const hostname = window.location.hostname;
-  const port = window.location.port;
-  const socket = new WebSocket(`${protocol}://${hostname}:${port}/api/game/ws`);
+  const socket = new WebSocket(`wss://${window.location.hostname}:${window.location.port}/api/game/ws`);
+  activeSocket = socket;
 
   socket.addEventListener('open', () => {
     console.log('WebSocket conectado ao jogo!');
@@ -20,28 +31,33 @@ export function initPong(canvas: HTMLCanvasElement) {
 
     const loop = () => {
       draw();
-      requestAnimationFrame(loop);
+      animationId = requestAnimationFrame(loop);
     };
     loop();
   });
 
   socket.addEventListener('message', ev => {
     const msg = JSON.parse(ev.data);
-    if (msg.type === 'state') state = msg.data;
+    if (msg.type === 'state') {
+      state = msg.data;
+      console.log('Estado recebido:', state);
+    }
   });
 
   const sendControl = (player: number, action: 'up' | 'down' | '') => {
     socket.send(JSON.stringify({ type: 'control', data: { player, action } }));
   };
 
-  window.addEventListener('keydown', e => {
-    if (e.code === 'ArrowUp') sendControl(0, 'up');
-    if (e.code === 'ArrowDown') sendControl(0, 'down');
-  });
-
-  window.addEventListener('keyup', e => {
-    if (['ArrowUp', 'ArrowDown'].indexOf(e.code) !== -1) sendControl(0, '');
-  });
+  if (!gameListenersAdded) {
+    window.addEventListener('keydown', e => {
+      if (e.code === 'ArrowUp') sendControl(0, 'up');
+      if (e.code === 'ArrowDown') sendControl(0, 'down');
+    });
+    window.addEventListener('keyup', e => {
+      if (['ArrowUp', 'ArrowDown'].includes(e.code)) sendControl(0, '');
+    });
+    gameListenersAdded = true;
+  }
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);

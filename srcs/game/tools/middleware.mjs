@@ -1,13 +1,18 @@
 import { WebSocketServer } from 'ws';
-import { GameService } from './service.mjs';
-const game = new GameService();
 
-export function attachWebSocket(server) {
+export function attachWebSocket(server, game) {
     const wss = new WebSocketServer({ server });
     wss.on('connection', ws => {
+        console.log('🟢 Cliente conectado ao WebSocket do jogo');
+
         const sendState = state => {
-            if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'state', data: state }));
+            if (ws.readyState === ws.OPEN) {
+                ws.send(JSON.stringify({ type: 'state', data: state }));
+            }
         };
+
+        sendState(game.state);
+        
         game.on('state', sendState);
 
         ws.on('message', msg => {
@@ -16,6 +21,8 @@ export function attachWebSocket(server) {
             else if (type === 'start') game.start();
         });
 
-        ws.on('close', () => game.removeListener('state', sendState));
+        ws.on('close', () => {
+            game.removeListener('state', sendState);
+        });
     });
 }

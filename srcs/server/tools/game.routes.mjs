@@ -1,12 +1,13 @@
 import { fetch, Agent as UndiciAgent } from 'undici';
 import WebSocket from 'ws';
+import { Agent as HttpsAgent } from 'https';
 import { authenticateRequest } from './chat.utils.mjs';
 
 const GAME_URL = process.env.GAME_URL;
 if (!GAME_URL) throw new Error('⛔️ Missing env GAME_URL');
 
-const GAME_WS = GAME_URL.replace(/^http/, 'ws');
-const tlsAgent = new UndiciAgent({ connect: { rejectUnauthorized: false } });
+const GAME_WS = `${GAME_URL.replace(/^https/, 'wss')}/api/game/ws`;
+const wsAgent = new HttpsAgent({ rejectUnauthorized: false });
 
 export default async function gameRoutes(app) {
     app.post('/api/game/init', async (req, reply) => {
@@ -29,22 +30,36 @@ export default async function gameRoutes(app) {
     });
 
     app.get('/api/game/ws', { websocket: true, onRequest: authenticateRequest(app) }, (connection, req) => {
-        const upstream = new WebSocket(GAME_WS, { rejectUnauthorized: false });
+        console.log('➡️ Novo WebSocket do front conectado ao proxy');
 
-        upstream.on('message', msg => {
-            connection.socket.send(msg);
+        const upstream = new WebSocket(GAME_WS, {
+            rejectUnauthorized: false,
+            agent: wsAgent
         });
 
-        connection.socket.on('message', buf => {
-            upstream.send(buf);
+        upstream.on('open', () => {
+            console.log('✅ Proxy conectado ao container game');
+
+            connection.on('message', buf => {
+                upstream.send(buf);
+            });
+
+            upstream.on('message', msg => {
+                connection.send(msg);
+            });
         });
 
         const closeBoth = () => {
+            console.log('🔌 Conexão encerrada');
             upstream.close();
-            connection.socket.close();
+            connection.close();
         };
 
-        connection.socket.on('close', closeBoth);
+        connection.on('close', closeBoth);
         upstream.on('close', closeBoth);
+
+        upstream.on('error', (err) => {
+            console.error('❌ Erro no WebSocket upstream:', err.message);
+        });
     });
 }
