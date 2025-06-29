@@ -1,6 +1,7 @@
 let activeSocket: WebSocket | null = null;
 let animationId: number | null = null;
 let gameListenersAdded = false;
+const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 export async function initPong(canvas: HTMLCanvasElement) {
   if (activeSocket) {
@@ -16,8 +17,18 @@ export async function initPong(canvas: HTMLCanvasElement) {
 
   const ctx = canvas.getContext('2d')!;
   type GameState = {
-    ball: { x: number; y: number };
-    players: { y: number }[];
+    ball: {
+      x: number;
+      y: number;
+      radius: number;
+    };
+    players: {
+      y: number;
+      width?: number;
+      height?: number;
+      up?: boolean;
+      down?: boolean;
+    }[];
     scores: number[];
   };
   let state: GameState | undefined;
@@ -73,30 +84,57 @@ export async function initPong(canvas: HTMLCanvasElement) {
   };
 
   if (!gameListenersAdded) {
+    // Jogador 1 (setas)
     window.addEventListener('keydown', e => {
       if (e.code === 'ArrowUp') sendControl(0, 'up');
       if (e.code === 'ArrowDown') sendControl(0, 'down');
     });
+
     window.addEventListener('keyup', e => {
       if (['ArrowUp', 'ArrowDown'].includes(e.code)) sendControl(0, '');
     });
+
+    // Jogador 2 (W/S)
+    window.addEventListener('keydown', e => {
+      if (e.code === 'KeyW') sendControl(1, 'up');
+      if (e.code === 'KeyS') sendControl(1, 'down');
+    });
+
+    window.addEventListener('keyup', e => {
+      if (['KeyW', 'KeyS'].includes(e.code)) sendControl(1, '');
+    });
+
     gameListenersAdded = true;
   }
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Define cores baseadas no tema
+    const bgColor = isDarkMode ? 'black' : 'white';
+    const fgColor = isDarkMode ? 'white' : 'black';
+
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     if (!state) return;
 
-    ctx.fillStyle = 'white';
-    ctx.fillRect(state.ball.x, state.ball.y, 10, 10);
+    // Bola
+    ctx.fillStyle = fgColor;
+    ctx.beginPath();
+    ctx.arc(state.ball.x, state.ball.y, 10, 0, Math.PI * 2);
+    ctx.fill();
 
+    // Raquetes
     state.players.forEach((p, i) => {
       const x = i === 0 ? 0 : canvas.width - 10;
       ctx.fillRect(x, p.y, 10, 100);
     });
 
+    // Placar
     ctx.font = '30px sans-serif';
-    ctx.fillText(state.scores[0].toString(), canvas.width / 4, 50);
-    ctx.fillText(state.scores[1].toString(), (canvas.width * 3) / 4, 50);
+    ctx.fillStyle = fgColor;
+    ctx.fillText(state.scores[0]?.toString() || "0", canvas.width / 4, 50);
+    ctx.fillText(state.scores[1]?.toString() || "0", (canvas.width * 3) / 4, 50);
   }
 }
