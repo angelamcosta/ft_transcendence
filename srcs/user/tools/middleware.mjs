@@ -104,7 +104,7 @@ export function loadMatchInvites(fastify) {
 				OR (blocker_id = ?AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
 
 			if (blocked)
-				throw fastify.httpErrors.forbidden('User cannot be invited to a match');
+				throw fastify.httpErrors.badRequest('User cannot be invited to a match');
 
 			const invite = await db.get(`SELECT * FROM match_invites WHERE (user_id = ? AND friend_id = ?) 
 				OR (user_id = ? AND friend_id = ?)`, [userId, targetId, targetId, userId]);

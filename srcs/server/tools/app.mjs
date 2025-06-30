@@ -84,7 +84,7 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 		chatClients.delete(socket);
 	});
 
-	socket.on('message', raw => {
+	socket.on('message', async raw => {
 		let incoming;
 		try {
 			incoming = JSON.parse(raw.toString());
@@ -99,8 +99,16 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 				timestamp: Date.now()
 			});
 			for (const client of clients) {
-				if (client.readyState === ws.OPEN && client !== socket)
+				if (client.readyState === ws.OPEN && client !== socket) {
+					const targetId = idBySock.get(client);
+					const block = await db.get(
+						`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?)
+						OR (blocker_id = ? AND blocked_id = ?)`, [userId, targetId, targetId, userId]
+					);
+					if (block)
+						continue;
 					client.send(broadcast);
+				}
 			}
 		}
 	});
