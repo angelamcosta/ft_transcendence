@@ -1,4 +1,15 @@
 import { unreadDM } from './chatManager.js';
+import * as displayPage from './displayPage.js'
+import * as buttonHandlers from './buttonHandlers.js'
+
+export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
+		displayPage.menu(menuArea, workArea);
+		displayPage.dashboard(workArea);
+		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
+		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
+		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
+		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
+}
 
 export const eyeIcon = `
 		<svg class="w-5 h-5 fill-blue-500 hover:fill-blue-700" xmlns="http://www.w3.org/2000/svg" 

@@ -67,7 +67,6 @@ export async function signUp(e: Event) {
 		});
 
 		const data = await response.json();
-		console.log('API response:', data);
 		if (!response.ok) {
 			messageDiv.textContent = data?.error || 'Register failed';
 			return;
@@ -114,12 +113,10 @@ export async function signIn(e: Event) {
 		});
 
 		const data = await response.json();
-		console.log('API response:', data);
 		if (!response.ok) {
 			messageDiv.textContent = data?.error || 'Login failed.';
 			return;
 		}
-
 		messageDiv.textContent = '';
 
 		if (data.user) {
@@ -148,15 +145,8 @@ export async function signIn(e: Event) {
 		else {
 			initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 			getUnreadMessages();
-			displayPage.menu(menuArea, workArea);
-			displayPage.dashboard(workArea);
+			utils.initAppNav(menuArea, workArea);
 			buttonHandlers.initThemeToggle();
-
-			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-
-			document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);
@@ -188,7 +178,6 @@ export async function verify2FA(e: Event) {
 		});
 
 		const data = await response.json();
-		console.log('API response:', data);
 		if (!response.ok) {
 			const message = data?.error || 'Login failed.';
 			console.error('Error verifying 2FA: ', message);
@@ -200,14 +189,8 @@ export async function verify2FA(e: Event) {
 		}
 		initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 		getUnreadMessages();
-		displayPage.menu(menuArea, workArea);
-		displayPage.dashboard(workArea);
+		utils.initAppNav(menuArea, workArea);
 		buttonHandlers.initThemeToggle();
-
-		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Login failed! Catched on Try');
@@ -261,12 +244,7 @@ export async function changeDisplayName(e: Event) {
 		window.dispatchEvent(new CustomEvent('global-presence-updated'));
 		messageDiv.textContent = '';
 		utils.showModal('Display name changed successfully!');
-		displayPage.menu(menuArea, workArea);
-		displayPage.dashboard(workArea);
-		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
+		utils.initAppNav(menuArea, workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed changing display name');
@@ -312,12 +290,7 @@ export async function changePassword(e: Event) {
 
 		messageDiv.textContent = '';
 		utils.showModal('Password changed successfully!');
-		displayPage.menu(menuArea, workArea);
-		displayPage.dashboard(workArea);
-		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
+		utils.initAppNav(menuArea, workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed changing password');
