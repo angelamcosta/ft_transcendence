@@ -339,6 +339,8 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	// Append passwordForm and login button to the body
 	workArea?.appendChild(passwordForm);
 
+	passwordForm.addEventListener('submit', formHandlers.changePassword)
+
 	oldToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, oldPasswordInput, oldToggleButton));
 	newToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, newPasswordInput, newToggleButton));
 	confirmToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, confirmPasswordInput, confirmToggleButton));
@@ -395,6 +397,8 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 
 	// Append nameForm and login button to the body
 	workArea?.appendChild(nameForm);
+
+	nameForm.addEventListener('submit', formHandlers.changeDisplayName)
 
 	nameResetButton.addEventListener("click", () => {
 		nameForm.reset();
@@ -707,6 +711,13 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 		const msg = JSON.parse(dataStr);
 
 		switch (msg.type) {
+			case 'rename':
+				registeredUsers.splice(0, registeredUsers.length, ...(await getUsers()))
+				onlineUsers.delete(msg.old);
+				onlineUsers.add(msg._new);
+				renderUserList();
+				appendSystemMessage(`${msg.old} is now known as ${msg._new}`);
+				break;
 			case 'identify':
 				renderUserList();
 				break;

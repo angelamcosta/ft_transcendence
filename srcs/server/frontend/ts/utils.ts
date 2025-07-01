@@ -23,14 +23,14 @@ export function cleanDiv(divArea: HTMLDivElement | null) {
 }
 
 export function cleanLocalStorage() {
-  localStorage.removeItem('userId');
-  localStorage.removeItem('displayName');
-  localStorage.removeItem('email');
-  localStorage.removeItem('user2FA');
+	localStorage.removeItem('userId');
+	localStorage.removeItem('displayName');
+	localStorage.removeItem('email');
+	localStorage.removeItem('user2FA');
 }
 
 export function hasWhitespace(input: string): boolean {
-  return /\s/.test(input);
+	return /\s/.test(input);
 }
 
 export interface User {
@@ -49,7 +49,7 @@ export async function getUsers(): Promise<User[]> {
 		});
 		if (res.ok) {
 			const users: User[] = await res.json();
-    		return users;
+			return users;
 		} else
 			console.error('Failed to load users list', await res.text());
 	} catch (err) {
@@ -80,16 +80,87 @@ export async function getUnreadMessages() {
 }
 
 export function getCookie(name: string): string | null {
-  const cookies = document.cookie.split(';');
-  for (let cookie of cookies) {
-    const [key, value] = cookie.trim().split('=');
-    if (key === name) {
-      return decodeURIComponent(value);
-    }
-  }
-  return null;
+	const cookies = document.cookie.split(';');
+	for (let cookie of cookies) {
+		const [key, value] = cookie.trim().split('=');
+		if (key === name) {
+			return decodeURIComponent(value);
+		}
+	}
+	return null;
 }
 
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function showModal(message: string) {
+	const backdrop = document.createElement('div');
+	Object.assign(backdrop.style, {
+		position: 'fixed',
+		inset: '0',
+		background: 'rgba(0,0,0,0.5)',
+		display: 'flex',
+		justifyContent: 'center',
+		alignItems: 'center',
+		zIndex: '10000',
+	});
+
+	const box = document.createElement('div');
+	Object.assign(box.style, {
+		background: '#fff',
+		borderRadius: '8px',
+		width: '320px',
+		maxWidth: '90%',
+		boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+		position: 'relative',
+		padding: '24px',
+		display: 'flex',
+		flexDirection: 'column',
+	});
+
+	const messageBox = document.createElement('div');
+	messageBox.textContent = message;
+	Object.assign(messageBox.style, {
+		background: '#f7f7f7',
+		padding: '16px',
+		borderRadius: '4px',
+		margin: '16px 0',
+		color: '#333',
+		fontSize: '1rem',
+		lineHeight: '1.4',
+		textAlign: 'center',
+	});
+
+	const hr = document.createElement('hr');
+	Object.assign(hr.style, {
+		border: 'none',
+		borderTop: '1px solid #ddd',
+		margin: '0 0 16px',
+	});
+
+	const footer = document.createElement('div');
+	Object.assign(footer.style, {
+		display: 'flex',
+		justifyContent: 'center',
+	});
+
+	const okBtn = document.createElement('button');
+	okBtn.textContent = 'OK';
+	Object.assign(okBtn.style, {
+		padding: '4px 8px',
+		border: 'none',
+		borderRadius: '4px',
+		background: '#007bff',
+		color: '#fff',
+		cursor: 'pointer',
+		fontSize: '0.9rem',
+	});
+	okBtn.addEventListener('click', () => backdrop.remove());
+
+	footer.appendChild(okBtn);
+
+	box.append(messageBox, hr, footer);
+	backdrop.appendChild(box);
+	document.body.appendChild(backdrop);
 }
