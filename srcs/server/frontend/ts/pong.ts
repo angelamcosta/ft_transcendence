@@ -113,7 +113,6 @@ export async function initPong(canvas: HTMLCanvasElement) {
     };
 
     if (!gameListenersAdded) {
-      // Player 1: Setas
       window.addEventListener('keydown', e => {
         if (e.code === 'ArrowUp') sendControl(0, 'up');
         if (e.code === 'ArrowDown') sendControl(0, 'down');
@@ -122,7 +121,6 @@ export async function initPong(canvas: HTMLCanvasElement) {
         if (['ArrowUp', 'ArrowDown'].includes(e.code))
           sendControl(0, '');
       });
-      // Player 2 (or Computer): W/S
       window.addEventListener('keydown', e => {
         if (e.code === 'KeyW') sendControl(1, 'up');
         if (e.code === 'KeyS') sendControl(1, 'down');
@@ -180,23 +178,19 @@ export async function initPong(canvas: HTMLCanvasElement) {
           canvas.height / 2
         );
         setTimeout(() => {
-          // 1) Reabre o socket e pede um novo 'start'
           const newSocket = new WebSocket(
             `wss://${window.location.hostname}:${window.location.port}/api/game/wss`
           );
         activeSocket = newSocket;
         newSocket.addEventListener('open', () => {
           newSocket.send(JSON.stringify({ type: 'start' }));
-          // 2) Zera o placar local
           state!.scores = [0, 0];
-          // 3) Retoma o loop de animação
           const loop = () => {
             draw();
             animationId = requestAnimationFrame(loop);
           };
           loop();
         });
-        // Se quiseres, reaproveita os event listeners de controle.
       }, 2000);
       }
     }
