@@ -44,7 +44,9 @@ export default async function userRoutes(fastify) {
 
 		const { currentPassword, password, display_name } = req.body;
 		const updates = [];
-		const params = [];
+		const params = [];		
+		const { oldPassword, newPassword, confirmPassword, display_name } = req.body;
+		const row = await db.get('SELECT display_name, password FROM users WHERE id = ?', req.authUser.id);
 
 		if (password !== undefined) {
 			if (currentPassword === undefined)
