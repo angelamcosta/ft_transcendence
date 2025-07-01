@@ -2,7 +2,7 @@ import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
-import { globalSocket, onlineUsers, unreadDM } from './chatManager.js';
+import { buildDMChatContainer, buildControls, buildDmCard, buildDMInputWrapper, globalSocket, onlineUsers, unreadDM, updateBlockUI, buildGlobalWrapper, buildGlobalChatCard, buildUserListPanel } from './chatManager.js';
 import { getUsers, User } from './utils.js';
 
 let activeDM: string | null = null;
@@ -339,6 +339,8 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	// Append passwordForm and login button to the body
 	workArea?.appendChild(passwordForm);
 
+	passwordForm.addEventListener('submit', formHandlers.changePassword)
+
 	oldToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, oldPasswordInput, oldToggleButton));
 	newToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, newPasswordInput, newToggleButton));
 	confirmToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, confirmPasswordInput, confirmToggleButton));
@@ -395,6 +397,8 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 
 	// Append nameForm and login button to the body
 	workArea?.appendChild(nameForm);
+
+	nameForm.addEventListener('submit', formHandlers.changeDisplayName)
 
 	nameResetButton.addEventListener("click", () => {
 		nameForm.reset();
@@ -635,101 +639,10 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 
 	utils.cleanDiv(workArea);
 
-	if (!userId) {
-		console.error('User ID error!');
-		return;
-	}
+	const wrapper = buildGlobalWrapper(headerArea);
 
-	const wrapper = document.createElement('div');
-	Object.assign(wrapper.style, {
-		position: 'relative',
-		display: 'flex',
-		justifyContent: 'center',
-		alignItems: 'center',
-		height: `calc(85vh - ${headerArea.offsetHeight}px)`
-	});
-
-	const chatCard = document.createElement('div');
-	Object.assign(chatCard.style, {
-		width: '400px',
-		maxWidth: '90vw',
-		height: '500px',
-		background: '#fff',
-		border: '1px solid #ccc',
-		borderRadius: '8px',
-		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-		display: 'flex',
-		flexDirection: 'column',
-		overflow: 'hidden',
-	});
-
-	const chatContainer = document.createElement('div');
-	Object.assign(chatContainer.style, {
-		flex: '1 1 auto',
-		padding: '8px',
-		overflowY: 'auto',
-	});
-	chatCard.appendChild(chatContainer);
-
-	const inputWrapper = document.createElement('div');
-	Object.assign(inputWrapper.style, {
-		display: 'flex',
-		borderTop: '1px solid #eee',
-		padding: '8px',
-	});
-	const messageInput = document.createElement('input');
-	messageInput.placeholder = 'Type a message…';
-	Object.assign(messageInput.style, {
-		flex: '1 1 auto',
-		padding: '4px 8px',
-		border: '1px solid #ccc',
-		borderRadius: '4px',
-	});
-	const sendBtn = document.createElement('button');
-	sendBtn.textContent = 'Send';
-	Object.assign(sendBtn.style, {
-		marginLeft: '8px',
-		padding: '4px 12px',
-		border: '1px solid #007bff',
-		background: '#007bff',
-		color: '#fff',
-		borderRadius: '4px',
-		cursor: 'pointer',
-	});
-	inputWrapper.append(messageInput, sendBtn);
-	chatCard.appendChild(inputWrapper);
-
-	const userListCard = document.createElement('div');
-	Object.assign(userListCard.style, {
-		width: '200px',
-		height: '500px',
-		background: '#fafafa',
-		border: '1px solid #ccc',
-		borderRadius: '8px',
-		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-		display: 'flex',
-		flexDirection: 'column',
-		overflow: 'hidden',
-		marginLeft: '16px',
-	});
-
-	const userListHeader = document.createElement('div');
-	userListHeader.textContent = 'Users';
-	Object.assign(userListHeader.style, {
-		padding: '8px',
-		borderBottom: '1px solid #eee',
-		fontWeight: 'bold',
-		textAlign: 'center',
-	});
-
-	const userListContainer = document.createElement('div');
-	Object.assign(userListContainer.style, {
-		flex: '1 1 auto',
-		padding: '8px',
-		overflowY: 'auto',
-	});
-
-	userListCard.append(userListHeader, userListContainer);
+	const { chatCard, chatContainer, messageInput, sendBtn } = buildGlobalChatCard();
+	const { userListCard, userListContainer } = buildUserListPanel();
 
 	wrapper.append(chatCard, userListCard);
 	workArea.appendChild(wrapper);
@@ -798,6 +711,13 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 		const msg = JSON.parse(dataStr);
 
 		switch (msg.type) {
+			case 'rename':
+				registeredUsers.splice(0, registeredUsers.length, ...(await getUsers()))
+				onlineUsers.delete(msg.old);
+				onlineUsers.add(msg._new);
+				renderUserList();
+				appendSystemMessage(`${msg.old} is now known as ${msg._new}`);
+				break;
 			case 'identify':
 				renderUserList();
 				break;
@@ -904,66 +824,37 @@ export async function directMessagePage(
 	if (!workArea || !headerArea) return;
 	utils.cleanDiv(workArea);
 
-	console.log('target -> ', targetId);
-	const { blockedByMe, blockedByTarget } = await fetch(`/users/block/relationship/${targetId}`,
-		{ credentials: 'include' }).then(r => r.json());
 
-	console.log('blocked by me -> ', blockedByMe, "blocked by them -> ", blockedByTarget);
-
-	const wrapper = document.createElement('div');
-	Object.assign(wrapper.style, {
-		position: 'relative',
-		display: 'flex',
-		justifyContent: 'center',
-		alignItems: 'center',
-		height: `calc(85vh - ${headerArea.offsetHeight}px)`,
-	});
-
-	const dmCard = document.createElement('div');
-	Object.assign(dmCard.style, {
-		width: '400px',
-		maxWidth: '90vw',
-		height: '500px',
-		background: '#fff',
-		border: '1px solid #ccc',
-		borderRadius: '8px',
-		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-		display: 'flex',
-		flexDirection: 'column',
-		overflow: 'hidden',
-	});
-
-	const title = document.createElement('div');
-	title.textContent = `${targetName}`;
-	Object.assign(title.style, {
-		padding: '12px 16px',
-		borderBottom: '1px solid #eee',
-		fontWeight: 'bold',
-		background: '#f7f7f7',
-	});
-
-	const controls = document.createElement('div');
-	Object.assign(controls.style, {
-		gap: '8px',
-		display: 'flex',
-		margin: '0 auto',
-		padding: '2px 3px',
-		width: 'fit-content'
-	});
-
-	dmCard.appendChild(title);
-	dmCard.appendChild(controls);
+	const { wrapper, dmCard } = buildDmCard(targetName, headerArea);
 
 	const banner = document.createElement('div');
 	banner.style.padding = '8px';
 	banner.style.textAlign = 'center';
 	banner.style.fontStyle = 'italic';
 
-	if (blockedByMe) banner.textContent = 'You have blocked this user.';
-	else if (blockedByTarget) banner.textContent = 'You have been blocked by this user.';
+	const chatContainer = buildDMChatContainer();
 
-	if (blockedByMe || blockedByTarget)
-		dmCard.appendChild(banner);
+	const messageInput = document.createElement('input');
+	messageInput.placeholder = 'Type a message…';
+	Object.assign(messageInput.style, {
+		flex: '1 1 auto',
+		padding: '4px 8px',
+		border: '1px solid #ccc',
+		borderRadius: '4px',
+	});
+
+	const sendBtn = document.createElement('button');
+	sendBtn.textContent = 'Send';
+	Object.assign(sendBtn.style, {
+		marginLeft: '8px',
+		padding: '4px 12px',
+		border: '1px solid #007bff',
+		background: '#007bff',
+		color: '#fff',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+	const inputWrapper = buildDMInputWrapper(sendBtn, messageInput);
 
 	const addFriendBtn = document.createElement('button');
 	addFriendBtn.textContent = 'Add Friend';
@@ -1089,58 +980,21 @@ export async function directMessagePage(
 			alert('Couldn’t update block status: ' + err);
 		} finally {
 			blockBtn.disabled = false;
+			await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
 		}
 	});
 
-	controls.append(addFriendBtn, viewProfileBtn, inviteBtn, blockBtn);
+	const controls = buildControls(
+		() => console.log('add friend'),
+		() => console.log('view profile'),
+		inviteBtn,
+		blockBtn
+	);
+	dmCard.append(controls, chatContainer, inputWrapper);
+	wrapper.append(dmCard);
+	workArea.append(wrapper);
 
-	await Promise.all([refreshInviteStatus(), refreshBlockStatus()]);
-
-	const chatContainer = document.createElement('div');
-	Object.assign(chatContainer.style, {
-		flex: '1 1 auto',
-		padding: '8px',
-		overflowY: 'auto',
-	});
-	dmCard.appendChild(chatContainer);
-
-	const inputWrapper = document.createElement('div');
-	Object.assign(inputWrapper.style, {
-		display: 'flex',
-		borderTop: '1px solid #eee',
-		padding: '8px',
-	});
-	const messageInput = document.createElement('input');
-	messageInput.placeholder = 'Type a message…';
-	Object.assign(messageInput.style, {
-		flex: '1 1 auto',
-		padding: '4px 8px',
-		border: '1px solid #ccc',
-		borderRadius: '4px',
-	});
-	const sendBtn = document.createElement('button');
-	sendBtn.textContent = 'Send';
-	Object.assign(sendBtn.style, {
-		marginLeft: '8px',
-		padding: '4px 12px',
-		border: '1px solid #007bff',
-		background: '#007bff',
-		color: '#fff',
-		borderRadius: '4px',
-		cursor: 'pointer',
-	});
-
-	dmCard.appendChild(chatContainer);
-	dmCard.appendChild(inputWrapper);
-	wrapper.appendChild(dmCard);
-	workArea.appendChild(wrapper);
-	inputWrapper.append(messageInput, sendBtn);
-
-	if (blockedByMe || blockedByTarget) {
-		chatContainer.style.opacity = '0.5';
-		messageInput.disabled = true;
-		sendBtn.disabled = true;
-	}
+	await Promise.all([refreshInviteStatus(), refreshBlockStatus(), updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner)]);
 
 	const wsUrl = `wss://localhost:9000/dm`;
 	const ws = new WebSocket(wsUrl);

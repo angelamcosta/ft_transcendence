@@ -1,11 +1,11 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
 import * as buttonHandlers from './buttonHandlers.js';
-import { initGlobalChat } from './chatManager.js';
+import { globalSocket, initGlobalChat, onlineUsers } from './chatManager.js';
 import { getUnreadMessages } from './utils.js';
 
 export async function signUp(e: Event) {
-	e.preventDefault(); // Prevent actual form submission
+	e.preventDefault();
 
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
 
@@ -44,6 +44,15 @@ export async function signUp(e: Event) {
 	const display_name = formData.get('name');
 	const password = formData.get('password');
 
+	let messageDiv = document.getElementById('registerError') as HTMLDivElement | null;
+
+	if (!messageDiv) {
+		messageDiv = document.createElement('div');
+		messageDiv.id = 'registerError';
+		messageDiv.className = 'text-red-600 mt-2 text-sm';
+		form.append(messageDiv);
+	}
+
 	try {
 		const response = await fetch('/register', {
 			method: 'POST',
@@ -58,16 +67,8 @@ export async function signUp(e: Event) {
 		});
 
 		const data = await response.json();
-		console.log('API response:', data);
 		if (!response.ok) {
-			const message = data?.error || 'Register failed';
-
-			// Create  a message container
-			let errorMessage = document.createElement('div');
-			errorMessage.id = 'registerError';
-			errorMessage.className = 'text-red-600 mt-2 text-sm';
-			form.append(errorMessage);
-			errorMessage.textContent = message;
+			messageDiv.textContent = data?.error || 'Register failed';
 			return;
 		}
 		const message = data?.success || 'Register success';
@@ -90,6 +91,14 @@ export async function signIn(e: Event) {
 	const email = formData.get('email');
 	const password = formData.get('password');
 
+	let messageDiv = document.getElementById('loginError') as HTMLDivElement | null;
+	if (!messageDiv) {
+		messageDiv = document.createElement('div');
+		messageDiv.id = 'loginError';
+		messageDiv.className = 'text-red-600 mt-2 text-sm';
+		form.append(messageDiv);
+	}
+
 	try {
 		const response = await fetch('/login', {
 			method: 'POST',
@@ -104,17 +113,11 @@ export async function signIn(e: Event) {
 		});
 
 		const data = await response.json();
-		console.log('API response:', data);
 		if (!response.ok) {
-			const message = data?.error || 'Login failed.';
-
-			let messageDiv = document.createElement('div');
-			messageDiv.id = 'loginError';
-			messageDiv.className = 'text-red-600 mt-2 text-sm';
-			form.append(messageDiv);
-			messageDiv.textContent = message;
+			messageDiv.textContent = data?.error || 'Login failed.';
 			return;
 		}
+		messageDiv.textContent = '';
 
 		if (data.user) {
 			if (data.user.id) {
@@ -142,15 +145,8 @@ export async function signIn(e: Event) {
 		else {
 			initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 			getUnreadMessages();
-			displayPage.menu(menuArea, workArea);
-			displayPage.dashboard(workArea);
+			utils.initAppNav(menuArea, workArea);
 			buttonHandlers.initThemeToggle();
-
-			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-
-			document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);
@@ -168,7 +164,6 @@ export async function verify2FA(e: Event) {
 	const formData = new FormData(form);
 	const email = localStorage.getItem('email');
 	const otp = formData.get('code');
-	console.log('Email: ', email);
 	try {
 		const response = await fetch('/verify-2fa', {
 			method: 'POST',
@@ -183,7 +178,6 @@ export async function verify2FA(e: Event) {
 		});
 
 		const data = await response.json();
-		console.log('API response:', data);
 		if (!response.ok) {
 			const message = data?.error || 'Login failed.';
 			console.error('Error verifying 2FA: ', message);
@@ -195,16 +189,110 @@ export async function verify2FA(e: Event) {
 		}
 		initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 		getUnreadMessages();
-		displayPage.menu(menuArea, workArea);
-		displayPage.dashboard(workArea);
+		utils.initAppNav(menuArea, workArea);
 		buttonHandlers.initThemeToggle();
-
-		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Login failed! Catched on Try');
+	}
+}
+
+export async function changeDisplayName(e: Event) {
+	e.preventDefault();
+
+	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
+	const form = e.target as HTMLFormElement;
+	const formData = new FormData(form);
+	const display_name = formData.get('name');
+	const userId = localStorage.getItem('userId');
+
+	let messageDiv = document.getElementById('loginError') as HTMLDivElement | null;
+	if (!messageDiv) {
+		messageDiv = document.createElement('div');
+		messageDiv.id = 'loginError';
+		messageDiv.className = 'text-red-600 mt-2 text-sm';
+		form.append(messageDiv);
+	}
+
+	try {
+		const response = await fetch(`/users/${userId}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ display_name }),
+			credentials: 'include'
+		})
+
+		const data = await response.json();
+		if (!response.ok) {
+			messageDiv.textContent = data?.message || 'Error changing display name';
+			return;
+		}
+		onlineUsers.delete(localStorage.getItem('displayName')!);
+		localStorage.setItem('displayName', display_name?.toString()!)
+		onlineUsers.add(localStorage.getItem('displayName')!)
+		window.dispatchEvent(new CustomEvent('global-presence-updated'));
+		if (globalSocket && globalSocket.readyState === WebSocket.OPEN) {
+ 			globalSocket.send(JSON.stringify({
+    			type: 'identify',
+    			userId: localStorage.getItem('userId'),
+				display_name: localStorage.getItem('displayName')
+  			}));
+		}
+		window.dispatchEvent(new CustomEvent('global-presence-updated'));
+		messageDiv.textContent = '';
+		utils.showModal('Display name changed successfully!');
+		utils.initAppNav(menuArea, workArea);
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Failed changing display name');
+	}
+}
+
+export async function changePassword(e: Event) {
+	e.preventDefault();
+
+	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
+	const form = e.target as HTMLFormElement;
+	const formData = new FormData(form);
+	const oldPassword = formData.get('oldPassword');
+	const newPassword = formData.get('newPassword');
+	const confirmPassword = formData.get('confirmPassword');
+	const userId = localStorage.getItem('userId');
+
+	let messageDiv = document.getElementById('changeDetailsError') as HTMLDivElement | null;
+
+	if (!messageDiv) {
+		messageDiv = document.createElement('div');
+		messageDiv.id = 'changeDetailsError';
+		messageDiv.className = 'text-red-600 mt-2 text-sm';
+		form.append(messageDiv);
+	}
+
+	try {
+		const response = await fetch(`/users/${userId}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ oldPassword, newPassword, confirmPassword }),
+			credentials: 'include'
+		});
+
+		const data = await response.json();
+		if (!response.ok) {
+			messageDiv.textContent = data?.message || 'Error changing details';
+			return;
+		}
+
+		messageDiv.textContent = '';
+		utils.showModal('Password changed successfully!');
+		utils.initAppNav(menuArea, workArea);
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Failed changing password');
 	}
 }
