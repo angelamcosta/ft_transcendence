@@ -168,7 +168,6 @@ export async function verify2FA(e: Event) {
 	const formData = new FormData(form);
 	const email = localStorage.getItem('email');
 	const otp = formData.get('code');
-	console.log('Email: ', email);
 	try {
 		const response = await fetch('/verify-2fa', {
 			method: 'POST',
@@ -212,19 +211,114 @@ export async function verify2FA(e: Event) {
 export async function changePassword(e: Event) {
 	e.preventDefault();
 
-	const formData = e.target as HTMLFormElement;
-	const oldPassword = formData.get('oldPassword');
-	const newPassword = formData.get('newPassword');
-	const confirmPassword = formData.get('confirmPassword');
+	const form = e.target as HTMLFormElement;
+	const oldPassword = document.getElementById('oldPasswordInput') as HTMLInputElement;
+	const Password = document.getElementById('newPasswordInput') as HTMLInputElement;
+	const confirmPassword = document.getElementById('confirmPasswordInput') as HTMLInputElement;
+	const submitErrorMessage = document.getElementById('passwordButtonError') as HTMLSpanElement | null;
+	const oldErrorMessage = document.getElementById('oldPasswordError') as HTMLSpanElement | null;
+	const newErrorMessage = document.getElementById('newPasswordError') as HTMLSpanElement | null;
+	const confirmErrorMessage = document.getElementById('confirmPasswordError') as HTMLSpanElement | null;
+
+	if (oldErrorMessage) {
+		oldErrorMessage.textContent = "";
+	}
+	if (newErrorMessage) {
+		newErrorMessage.textContent = "";
+	}
+	if (confirmErrorMessage) {
+		confirmErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.textContent = "";
+	}
 
 	// check password length
-	if (!oldPassword.checkValidity() || !newPassword.checkValidity() || !confirmPassword.checkValidity()) {
+	if (!oldPassword.checkValidity() || !Password.checkValidity() || !confirmPassword.checkValidity()) {
 		return;
 	}
 
+	// check if passwords have whitespaces
 	if (utils.hasWhitespace(oldPassword.value)) {
-		oldPassword.setCustomValidity('Password cannot have whitespaces.');
-		oldPassword.reportValidity();
+		if (oldErrorMessage) {
+			oldErrorMessage.textContent = "Password cannot have whitespaces.";
+		}
 		return;
+	}
+	if (utils.hasWhitespace(Password.value)) {
+		if (newErrorMessage) {
+			newErrorMessage.textContent = "Password cannot have whitespaces.";
+		}
+		return;
+	}
+	if (utils.hasWhitespace(confirmPassword.value)) {
+		if (confirmErrorMessage) {
+			confirmErrorMessage.textContent = "Password cannot have whitespaces.";
+		}
+		return;
+	}
+
+	// Check if confirm password is equal to the new password
+	if (confirmPassword.value !== Password.value) {
+		if (confirmErrorMessage) {
+			confirmErrorMessage.textContent = "Password confirmation do not match new password.";
+		}
+		return;
+	}
+
+	// Check if old password is equal to the new password
+	if (oldPassword.value === Password.value) {
+		if (newErrorMessage) {
+			newErrorMessage.textContent = "New password must be different from current one.";
+		}
+		return;
+	}
+
+	const id = localStorage.getItem('userId');
+	const password: string = Password.value;
+	const currentPassword: string = oldPassword.value;
+	try {
+		const response = await fetch('/users/' + id, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				currentPassword,
+				password
+			}),
+			credentials: 'include'
+		});
+
+		const data = await response.json();
+		console.log('API response:', data);
+		if (!response.ok) {
+			let message = data?.error || 'Password change failed.';
+			if (data && data.message)
+				message += ': ' + data.message;
+			console.error('Error changing password: ', message);
+			if (submitErrorMessage) {
+				submitErrorMessage.className = "text-red-500 text-sm ml-2";
+				submitErrorMessage.textContent = message;
+			}
+			return;
+		}
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Login failed! Catched on Try');
+	}
+	form.reset();
+	if (oldErrorMessage) {
+		oldErrorMessage.textContent = "";
+	}
+	if (newErrorMessage) {
+		newErrorMessage.textContent = "";
+	}
+	if (confirmErrorMessage) {
+		confirmErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.className = "text-green-500 text-sm ml-2";
+		submitErrorMessage.textContent = "Password changed with success!";
 	}
 }

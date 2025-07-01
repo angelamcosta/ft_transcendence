@@ -333,7 +333,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	oldPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	oldPasswordErrorMessage.style.minWidth = "1rem";
 	oldPasswordErrorMessage.textContent = "";
-	oldPasswordContainer.appendChild(oldPasswordErrorMessage);
 
 	// Create an error message span
 	const newPasswordErrorMessage = document.createElement("span");
@@ -341,7 +340,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	newPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	newPasswordErrorMessage.style.minWidth = "1rem";
 	newPasswordErrorMessage.textContent = "";
-	newPasswordContainer.appendChild(newPasswordErrorMessage);
 
 	// Create an error message span
 	const confirmPasswordErrorMessage = document.createElement("span");
@@ -349,16 +347,26 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	confirmPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	confirmPasswordErrorMessage.style.minWidth = "1rem";
 	confirmPasswordErrorMessage.textContent = "";
-	confirmPasswordContainer.appendChild(confirmPasswordErrorMessage);
+
+	// Create an error message span
+	const passwordButtonErrorMessage = document.createElement("span");
+	passwordButtonErrorMessage.id = "passwordButtonError";
+	passwordButtonErrorMessage.className = "text-green-500 text-sm ml-2";
+	passwordButtonErrorMessage.style.minWidth = "1rem";
+	passwordButtonErrorMessage.textContent = "";
 
 	passwordForm.appendChild(passwordHeading);
 	passwordForm.appendChild(oldPasswordContainer);
+	passwordForm.appendChild(oldPasswordErrorMessage);
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(newPasswordContainer);
+	passwordForm.appendChild(newPasswordErrorMessage);
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(confirmPasswordContainer);
+	passwordForm.appendChild(confirmPasswordErrorMessage);
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(passwordButtonContainer);
+	passwordForm.appendChild(passwordButtonErrorMessage);
 
 	// Append passwordForm and login button to the body
 	workArea?.appendChild(passwordForm);

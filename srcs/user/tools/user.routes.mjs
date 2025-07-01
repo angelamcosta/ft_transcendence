@@ -1,4 +1,4 @@
-import { db } from './utils.mjs'
+import { db , verifyPassword } from './utils.mjs'
 import { promises as fsp } from 'fs';
 import fs from 'fs';
 import path from 'path';
@@ -42,11 +42,19 @@ export default async function userRoutes(fastify) {
 		if (req.authUser.id !== paramId)
 			throw fastify.httpErrors.forbidden('You cannot modify another user');
 
-		const { password, display_name } = req.body;
+		const { currentPassword, password, display_name } = req.body;
 		const updates = [];
 		const params = [];
 
-		if (password !== undefined) { 
+		if (password !== undefined) {
+			if (currentPassword === undefined)
+				throw fastify.httpErrors.unauthorized('Need current password');
+			const userPassword = await db.get('SELECT password FROM users WHERE id = ?', [req.params.id]);
+			if (!userPassword)
+				throw fastify.httpErrors.notFound('User not found');
+			const validPassword = await verifyPassword(currentPassword, userPassword.password);
+			if(!validPassword)
+				throw fastify.httpErrors.unauthorized('Authentication failed');
 			const hashedPassword = await argon2.hash(password);
 			updates.push('password = ?');
 			params.push(hashedPassword);
