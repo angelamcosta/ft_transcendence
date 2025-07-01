@@ -61,6 +61,9 @@ export default async function userRoutes(fastify) {
 		}
 
 		if (display_name !== undefined) {
+			const userDisplayName = await db.get('SELECT display_name FROM users WHERE display_name = ?', [display_name]);
+			if (userDisplayName)
+				throw fastify.httpErrors.conflict('Display name already in use!');
 			updates.push('display_name = ?');
 			params.push(display_name);
 		}

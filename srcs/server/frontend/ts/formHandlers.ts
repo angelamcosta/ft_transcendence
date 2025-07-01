@@ -322,3 +322,76 @@ export async function changePassword(e: Event) {
 		submitErrorMessage.textContent = "Password changed with success!";
 	}
 }
+
+export async function changeDisplayName(e: Event) {
+	e.preventDefault();
+
+	const form = e.target as HTMLFormElement;
+	const displayName = document.getElementById('nameInput') as HTMLInputElement;
+	const nameErrorMessage = document.getElementById('nameError') as HTMLSpanElement | null;
+	const submitErrorMessage = document.getElementById('nameButtonError') as HTMLSpanElement | null;
+
+	if (nameErrorMessage) {
+		nameErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.textContent = "";
+	}
+
+	// check if display name have whitespaces
+	if (utils.hasWhitespace(displayName.value)) {
+		if (nameErrorMessage) {
+			nameErrorMessage.textContent = "Display name cannot have whitespaces.";
+		}
+		return;
+	}
+
+	// Check if display name is equal to the current one
+	const curentDisplayName = localStorage.getItem('displayName');
+	if (curentDisplayName === displayName.value) {
+		if (nameErrorMessage) {
+			nameErrorMessage.textContent = "New display name must be different from current one.";
+		}
+		return;
+	}
+
+	const id = localStorage.getItem('userId');
+	const display_name: string = displayName.value;
+	try {
+		const response = await fetch('/users/' + id, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				display_name
+			}),
+			credentials: 'include'
+		});
+
+		const data = await response.json();
+		console.log('API response:', data);
+		if (!response.ok) {
+			let message = data?.error || 'Display name change failed.';
+			if (data && data.message)
+				message += ': ' + data.message;
+			console.error('Error changing display name: ', message);
+			if (submitErrorMessage) {
+				submitErrorMessage.className = "text-red-500 text-sm ml-2";
+				submitErrorMessage.textContent = message;
+			}
+			return;
+		}
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Login failed! Catched on Try');
+	}
+	form.reset();
+	if (nameErrorMessage) {
+		nameErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.className = "text-green-500 text-sm ml-2";
+		submitErrorMessage.textContent = "Display name changed with success!";
+	}
+}

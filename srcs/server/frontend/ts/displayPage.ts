@@ -401,7 +401,7 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	// Create a submit button
 	const nameSubmitButton = document.createElement('button');
 	nameSubmitButton.type = 'submit';
-	nameSubmitButton.textContent = 'Change name';
+	nameSubmitButton.textContent = 'Change display name';
 	nameSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
 	// Create a reset button button
@@ -421,14 +421,31 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	nameHeading.textContent = "Change display name";
 	nameHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
+	// Create an error message span
+	const nameErrorMessage = document.createElement("span");
+	nameErrorMessage.id = "nameError";
+	nameErrorMessage.className = "text-red-500 text-sm ml-2";
+	nameErrorMessage.style.minWidth = "1rem";
+	nameErrorMessage.textContent = "";
+	
+	// Create an error message span
+	const nameButtonErrorMessage = document.createElement("span");
+	nameButtonErrorMessage.id = "nameButtonError";
+	nameButtonErrorMessage.className = "text-green-500 text-sm ml-2";
+	nameButtonErrorMessage.style.minWidth = "1rem";
+	nameButtonErrorMessage.textContent = "";
+
 	nameForm.appendChild(nameHeading);
 	nameForm.appendChild(nameContainer);
+	nameForm.appendChild(nameErrorMessage);
 	nameForm.appendChild(document.createElement('br'));
 	nameForm.appendChild(nameButtonContainer);
+	nameForm.appendChild(nameButtonErrorMessage);
 
 	// Append nameForm and login button to the body
 	workArea?.appendChild(nameForm);
 
+	nameForm.addEventListener('submit', formHandlers.changeDisplayName);
 	nameResetButton.addEventListener("click", () => {
 		nameForm.reset();
 	});
