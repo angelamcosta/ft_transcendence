@@ -201,9 +201,9 @@ export async function changePassword(e: Event) {
 	e.preventDefault();
 
 	const form = e.target as HTMLFormElement;
-	const oldPassword = document.getElementById('oldPasswordInput') as HTMLInputElement;
-	const Password = document.getElementById('newPasswordInput') as HTMLInputElement;
-	const confirmPassword = document.getElementById('confirmPasswordInput') as HTMLInputElement;
+	const oldPasswordInput = document.getElementById('oldPasswordInput') as HTMLInputElement;
+	const newPasswordInput = document.getElementById('newPasswordInput') as HTMLInputElement;
+	const confirmPasswordInput = document.getElementById('confirmPasswordInput') as HTMLInputElement;
 	const submitErrorMessage = document.getElementById('passwordButtonError') as HTMLSpanElement | null;
 	const oldErrorMessage = document.getElementById('oldPasswordError') as HTMLSpanElement | null;
 	const newErrorMessage = document.getElementById('newPasswordError') as HTMLSpanElement | null;
@@ -223,24 +223,24 @@ export async function changePassword(e: Event) {
 	}
 
 	// check password length
-	if (!oldPassword.checkValidity() || !Password.checkValidity() || !confirmPassword.checkValidity()) {
+	if (!oldPasswordInput.checkValidity() || !newPasswordInput.checkValidity() || !confirmPasswordInput.checkValidity()) {
 		return;
 	}
 
 	// check if passwords have whitespaces
-	if (utils.hasWhitespace(oldPassword.value)) {
+	if (utils.hasWhitespace(oldPasswordInput.value)) {
 		if (oldErrorMessage) {
 			oldErrorMessage.textContent = "Password cannot have whitespaces.";
 		}
 		return;
 	}
-	if (utils.hasWhitespace(Password.value)) {
+	if (utils.hasWhitespace(newPasswordInput.value)) {
 		if (newErrorMessage) {
 			newErrorMessage.textContent = "Password cannot have whitespaces.";
 		}
 		return;
 	}
-	if (utils.hasWhitespace(confirmPassword.value)) {
+	if (utils.hasWhitespace(confirmPasswordInput.value)) {
 		if (confirmErrorMessage) {
 			confirmErrorMessage.textContent = "Password cannot have whitespaces.";
 		}
@@ -248,7 +248,7 @@ export async function changePassword(e: Event) {
 	}
 
 	// Check if confirm password is equal to the new password
-	if (confirmPassword.value !== Password.value) {
+	if (confirmPasswordInput.value !== newPasswordInput.value) {
 		if (confirmErrorMessage) {
 			confirmErrorMessage.textContent = "Password confirmation do not match new password.";
 		}
@@ -256,7 +256,7 @@ export async function changePassword(e: Event) {
 	}
 
 	// Check if old password is equal to the new password
-	if (oldPassword.value === Password.value) {
+	if (oldPasswordInput.value === newPasswordInput.value) {
 		if (newErrorMessage) {
 			newErrorMessage.textContent = "New password must be different from current one.";
 		}
@@ -264,8 +264,10 @@ export async function changePassword(e: Event) {
 	}
 
 	const id = localStorage.getItem('userId');
-	const password: string = Password.value;
-	const currentPassword: string = oldPassword.value;
+	const formData = new FormData(form);
+	const oldPassword = formData.get('oldPassword');
+	const newPassword = formData.get('newPassword');
+	const confirmPassword = formData.get('confirmPassword');
 	try {
 		const response = await fetch('/users/' + id, {
 			method: 'PUT',
@@ -273,8 +275,9 @@ export async function changePassword(e: Event) {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
-				currentPassword,
-				password
+				oldPassword,
+				newPassword,
+				confirmPassword
 			}),
 			credentials: 'include'
 		});

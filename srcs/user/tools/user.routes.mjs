@@ -42,27 +42,27 @@ export default async function userRoutes(fastify) {
 		if (req.authUser.id !== paramId)
 			throw fastify.httpErrors.forbidden('You cannot modify another user');
 
-		const { currentPassword, password, display_name } = req.body;
 		const updates = [];
 		const params = [];		
 		const { oldPassword, newPassword, confirmPassword, display_name } = req.body;
 		const row = await db.get('SELECT display_name, password FROM users WHERE id = ?', req.authUser.id);
 
-		if (password !== undefined) {
-			if (currentPassword === undefined)
-				throw fastify.httpErrors.unauthorized('Need current password');
-			const userPassword = await db.get('SELECT password FROM users WHERE id = ?', [req.params.id]);
-			if (!userPassword)
-				throw fastify.httpErrors.notFound('User not found');
-			const validPassword = await verifyPassword(currentPassword, userPassword.password);
-			if(!validPassword)
-				throw fastify.httpErrors.unauthorized('Authentication failed');
-			const hashedPassword = await argon2.hash(password);
+		if (newPassword !== undefined) {
+			const verify = await argon2.verify(row.password, oldPassword);
+			if (!verify)
+				throw fastify.httpErrors.unauthorized('Current password is incorrect');
+			if (oldPassword === newPassword)
+				throw fastify.httpErrors.badRequest('New password must differ from current one');
+			if (newPassword !== confirmPassword)
+				throw fastify.httpErrors.badRequest('Confirm password and new password dont match');
+			const hashedPassword = await argon2.hash(newPassword);
 			updates.push('password = ?');
 			params.push(hashedPassword);
 		}
 
 		if (display_name !== undefined) {
+			if (display_name === row.display_name)
+				throw fastify.httpErrors.badRequest('Display name must differ from current one');
 			const userDisplayName = await db.get('SELECT display_name FROM users WHERE display_name = ?', [display_name]);
 			if (userDisplayName)
 				throw fastify.httpErrors.conflict('Display name already in use!');
