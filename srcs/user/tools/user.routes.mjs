@@ -48,19 +48,25 @@ export default async function userRoutes(fastify) {
 		const row = await db.get('SELECT display_name, password FROM users WHERE id = ?', req.authUser.id);
 
 		if (newPassword !== undefined) {
+			if (/\s/.test(oldPassword) || /\s/.test(newPassword) ||  /\s/.test(confirmPassword))
+				throw fastify.httpErrors.badRequest('Password cannot have whitespaces');
+			if (newPassword !== confirmPassword)
+				throw fastify.httpErrors.badRequest('Confirm password and new password dont match');
+			if (oldPassword === newPassword)
+				throw fastify.httpErrors.badRequest('New password must differ from current one');
+			if (newPassword.length < 6)
+				throw fastify.httpErrors.badRequest('Password must be at least 6 characters');
 			const verify = await argon2.verify(row.password, oldPassword);
 			if (!verify)
 				throw fastify.httpErrors.unauthorized('Current password is incorrect');
-			if (oldPassword === newPassword)
-				throw fastify.httpErrors.badRequest('New password must differ from current one');
-			if (newPassword !== confirmPassword)
-				throw fastify.httpErrors.badRequest('Confirm password and new password dont match');
 			const hashedPassword = await argon2.hash(newPassword);
 			updates.push('password = ?');
 			params.push(hashedPassword);
 		}
 
 		if (display_name !== undefined) {
+			if (/\s/.test(display_name))
+				throw fastify.httpErrors.badRequest('Display name cannot have whitespaces');
 			if (display_name === row.display_name)
 				throw fastify.httpErrors.badRequest('Display name must differ from current one');
 			const userDisplayName = await db.get('SELECT display_name FROM users WHERE display_name = ?', [display_name]);

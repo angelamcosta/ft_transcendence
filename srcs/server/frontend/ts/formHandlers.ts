@@ -13,37 +13,6 @@ export async function signUp(e: Event) {
 	const emailInput = document.getElementById('emailInput') as HTMLInputElement;
 	const nameInput = document.getElementById('nameInput') as HTMLInputElement;
 	const passwordInput = document.getElementById('passwordInput') as HTMLInputElement;
-
-	// Check whitespaces
-	emailInput.setCustomValidity('');
-	nameInput.setCustomValidity('');
-	passwordInput.setCustomValidity('');
-
-	if (utils.hasWhitespace(nameInput.value)) {
-		nameInput.setCustomValidity('Display name cannot have whitespaces.');
-		nameInput.reportValidity();
-		return;
-	}
-	nameInput.setCustomValidity('');
-
-	// check password length
-	if (!passwordInput.checkValidity()) {
-		alert("Password must be at least 6 characters long.");
-		return;
-	}
-
-	if (utils.hasWhitespace(passwordInput.value)) {
-		passwordInput.setCustomValidity('Password cannot have whitespaces.');
-		passwordInput.reportValidity();
-		return;
-	}
-	passwordInput.setCustomValidity('');
-
-	const formData = new FormData(form);
-	const email = formData.get('email');
-	const display_name = formData.get('name');
-	const password = formData.get('password');
-
 	let messageDiv = document.getElementById('registerError') as HTMLDivElement | null;
 
 	if (!messageDiv) {
@@ -52,6 +21,29 @@ export async function signUp(e: Event) {
 		messageDiv.className = 'text-red-600 mt-2 text-sm';
 		form.append(messageDiv);
 	}
+
+	// Check whitespaces
+	if (utils.hasWhitespace(nameInput.value)) {
+		messageDiv.textContent = "Display name cannot have whitespaces.";
+		return;
+	}
+
+	// check password length
+	if (!passwordInput.checkValidity()) {
+		messageDiv.textContent = "Password must be at least 6 characters long.";
+		return;
+	}
+
+	if (utils.hasWhitespace(passwordInput.value)) {
+		messageDiv.textContent = "Password cannot have whitespaces.";
+		return;
+	}
+	passwordInput.setCustomValidity('');
+
+	const formData = new FormData(form);
+	const email = formData.get('email');
+	const display_name = formData.get('name');
+	const password = formData.get('password');
 
 	try {
 		const response = await fetch('/register', {
@@ -72,7 +64,6 @@ export async function signUp(e: Event) {
 			return;
 		}
 		const message = data?.success || 'Register success';
-		emailInput.setCustomValidity('');
 		displayPage.signIn(workArea, message);
 	} catch (error) {
 		console.error('Error sending form data:', error);
