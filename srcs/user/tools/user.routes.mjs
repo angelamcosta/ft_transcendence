@@ -42,17 +42,29 @@ export default async function userRoutes(fastify) {
 		if (req.authUser.id !== paramId)
 			throw fastify.httpErrors.forbidden('You cannot modify another user');
 
-		const { password, display_name } = req.body;
 		const updates = [];
-		const params = [];
+		const params = [];		
+		const { oldPassword, newPassword, confirmPassword, display_name } = req.body;
+		const row = await db.get('SELECT display_name, password FROM users WHERE id = ?', req.authUser.id);
 
-		if (password !== undefined) { 
+		if (newPassword !== undefined) {
+			const verify = await argon2.verify(row.password, oldPassword);
+			if (!verify)
+				throw fastify.httpErrors.badRequest('Old password is incorrect');
+			if (oldPassword === newPassword)
+				throw fastify.httpErrors.badRequest('New password must differ from current one');
+			if (newPassword !== confirmPassword)
+				throw fastify.httpErrors.badRequest('Confirm password and new password dont match');
+
+			const password = newPassword;
 			const hashedPassword = await argon2.hash(password);
 			updates.push('password = ?');
 			params.push(hashedPassword);
 		}
 
 		if (display_name !== undefined) {
+			if (display_name === row.display_name)
+				throw fastify.httpErrors.badRequest('Display name must differ from current one');
 			updates.push('display_name = ?');
 			params.push(display_name);
 		}

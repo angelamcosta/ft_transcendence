@@ -91,6 +91,23 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 		} catch (err) {
 			return console.error('Invalid JSON from client', err);
 		}
+		if (incoming.type === 'identify') {
+			const oldName = nameBySock.get(socket);
+			const newName = incoming.display_name;
+      		if (oldName && newName && oldName !== newName) {
+        		nameBySock.set(socket, newName);
+				const renameMsg = JSON.stringify({
+					type: 'rename',
+					old: oldName,
+					_new: newName
+				});
+				for (let client of clients) {
+					if (client.readyState === ws.OPEN)
+						client.send(renameMsg);
+				}
+      		}
+      		return;
+		}
 		if (incoming.type === 'message') {
 			const broadcast = JSON.stringify({
 				type: 'message',

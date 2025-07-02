@@ -8,15 +8,18 @@ const tlsAgent = new UndiciAgent({
 export function validateData(fastify) {
 	return async (req) => {
 		if (req.method === 'PUT') {
-			const { password, display_name } = req.body;
+			const { oldPassword, newPassword, confirmPassword, display_name } = req.body;
 
-			if (password === undefined && display_name === undefined)
-				throw fastify.httpErrors.badRequest('At least one field (password or display_name) must be provided');
+			const changedName = display_name !== undefined;
+			const changedPassword = (oldPassword !== undefined && newPassword !== undefined && confirmPassword !== undefined);
 
-			if (password !== undefined) {
-				if (typeof password !== 'string')
+			if (!changedName && !changedPassword)
+				throw fastify.httpErrors.badRequest('You must provide either display_name or all of oldPassword, newPassword and confirmPassword');
+
+			if (newPassword !== undefined) {
+				if (typeof newPassword !== 'string')
 					throw fastify.httpErrors.badRequest('Invalid password');
-				if (password.length < 6)
+				if (newPassword.length < 6)
 					throw fastify.httpErrors.badRequest('Password must be at least 6 characters long');
 			}
 
