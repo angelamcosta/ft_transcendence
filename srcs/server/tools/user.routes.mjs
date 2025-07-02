@@ -43,6 +43,25 @@ export default async function userRoutes(app) {
 		}
 	})
 
+	app.get('/users/:id/history', async (req, reply) => {
+		try{
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/${userId}/history`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				},
+			}) ;
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/:id/history error:', e);
+			return reply.code(500).send({ error: 'Error fetching match history' });
+		}
+	})
+
 	app.put('/users/:id', async (req, reply) => {
 		try {
 			const userId = req.params.id;
@@ -270,7 +289,7 @@ export default async function userRoutes(app) {
 	app.put('/users/invite/accept/:id', async (req, reply) => {
 		try {
 			const userId = req.params.id;
-			const res = await fetch(`${USER_URL}/api/users/accept/${userId}`, {
+			const res = await fetch(`${USER_URL}/api/users/invite/accept/${userId}`, {
 				dispatcher: tlsAgent,
 				method: 'PUT',
 				headers: {
@@ -288,7 +307,7 @@ export default async function userRoutes(app) {
 	app.put('/users/invite/reject/:id', async (req, reply) => {
 		try {
 			const userId = req.params.id;
-			const res = await fetch(`${USER_URL}/api/users/reject/${userId}`, {
+			const res = await fetch(`${USER_URL}/api/users/invite/reject/${userId}`, {
 				dispatcher: tlsAgent,
 				method: 'PUT',
 				headers: {
