@@ -327,20 +327,51 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	passwordHeading.textContent = "Change password";
 	passwordHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
+	// Create an error message span
+	const oldPasswordErrorMessage = document.createElement("span");
+	oldPasswordErrorMessage.id = "oldPasswordError";
+	oldPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	oldPasswordErrorMessage.style.minWidth = "1rem";
+	oldPasswordErrorMessage.textContent = "";
+
+	// Create an error message span
+	const newPasswordErrorMessage = document.createElement("span");
+	newPasswordErrorMessage.id = "newPasswordError";
+	newPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	newPasswordErrorMessage.style.minWidth = "1rem";
+	newPasswordErrorMessage.textContent = "";
+
+	// Create an error message span
+	const confirmPasswordErrorMessage = document.createElement("span");
+	confirmPasswordErrorMessage.id = "confirmPasswordError";
+	confirmPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	confirmPasswordErrorMessage.style.minWidth = "1rem";
+	confirmPasswordErrorMessage.textContent = "";
+
+	// Create an error message span
+	const passwordButtonErrorMessage = document.createElement("span");
+	passwordButtonErrorMessage.id = "passwordButtonError";
+	passwordButtonErrorMessage.className = "text-green-500 text-sm ml-2";
+	passwordButtonErrorMessage.style.minWidth = "1rem";
+	passwordButtonErrorMessage.textContent = "";
+
 	passwordForm.appendChild(passwordHeading);
 	passwordForm.appendChild(oldPasswordContainer);
+	passwordForm.appendChild(oldPasswordErrorMessage);
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(newPasswordContainer);
+	passwordForm.appendChild(newPasswordErrorMessage);
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(confirmPasswordContainer);
+	passwordForm.appendChild(confirmPasswordErrorMessage);
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(passwordButtonContainer);
+	passwordForm.appendChild(passwordButtonErrorMessage);
 
 	// Append passwordForm and login button to the body
 	workArea?.appendChild(passwordForm);
 
-	passwordForm.addEventListener('submit', formHandlers.changePassword)
-
+	passwordForm.addEventListener('submit', formHandlers.changePassword);
 	oldToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, oldPasswordInput, oldToggleButton));
 	newToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, newPasswordInput, newToggleButton));
 	confirmToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, confirmPasswordInput, confirmToggleButton));
@@ -370,7 +401,7 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	// Create a submit button
 	const nameSubmitButton = document.createElement('button');
 	nameSubmitButton.type = 'submit';
-	nameSubmitButton.textContent = 'Change name';
+	nameSubmitButton.textContent = 'Change display name';
 	nameSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
 	// Create a reset button button
@@ -390,16 +421,31 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	nameHeading.textContent = "Change display name";
 	nameHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
+	// Create an error message span
+	const nameErrorMessage = document.createElement("span");
+	nameErrorMessage.id = "nameError";
+	nameErrorMessage.className = "text-red-500 text-sm ml-2";
+	nameErrorMessage.style.minWidth = "1rem";
+	nameErrorMessage.textContent = "";
+	
+	// Create an error message span
+	const nameButtonErrorMessage = document.createElement("span");
+	nameButtonErrorMessage.id = "nameButtonError";
+	nameButtonErrorMessage.className = "text-green-500 text-sm ml-2";
+	nameButtonErrorMessage.style.minWidth = "1rem";
+	nameButtonErrorMessage.textContent = "";
+
 	nameForm.appendChild(nameHeading);
 	nameForm.appendChild(nameContainer);
+	nameForm.appendChild(nameErrorMessage);
 	nameForm.appendChild(document.createElement('br'));
 	nameForm.appendChild(nameButtonContainer);
+	nameForm.appendChild(nameButtonErrorMessage);
 
 	// Append nameForm and login button to the body
 	workArea?.appendChild(nameForm);
 
-	nameForm.addEventListener('submit', formHandlers.changeDisplayName)
-
+	nameForm.addEventListener('submit', formHandlers.changeDisplayName);
 	nameResetButton.addEventListener("click", () => {
 		nameForm.reset();
 	});

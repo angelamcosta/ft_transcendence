@@ -13,37 +13,6 @@ export async function signUp(e: Event) {
 	const emailInput = document.getElementById('emailInput') as HTMLInputElement;
 	const nameInput = document.getElementById('nameInput') as HTMLInputElement;
 	const passwordInput = document.getElementById('passwordInput') as HTMLInputElement;
-
-	// Check whitespaces
-	emailInput.setCustomValidity('');
-	nameInput.setCustomValidity('');
-	passwordInput.setCustomValidity('');
-
-	if (utils.hasWhitespace(nameInput.value)) {
-		nameInput.setCustomValidity('Display name cannot have whitespaces.');
-		nameInput.reportValidity();
-		return;
-	}
-	nameInput.setCustomValidity('');
-
-	// check password length
-	if (!passwordInput.checkValidity()) {
-		alert("Password must be at least 6 characters long.");
-		return;
-	}
-
-	if (utils.hasWhitespace(passwordInput.value)) {
-		passwordInput.setCustomValidity('Password cannot have whitespaces.');
-		passwordInput.reportValidity();
-		return;
-	}
-	passwordInput.setCustomValidity('');
-
-	const formData = new FormData(form);
-	const email = formData.get('email');
-	const display_name = formData.get('name');
-	const password = formData.get('password');
-
 	let messageDiv = document.getElementById('registerError') as HTMLDivElement | null;
 
 	if (!messageDiv) {
@@ -52,6 +21,29 @@ export async function signUp(e: Event) {
 		messageDiv.className = 'text-red-600 mt-2 text-sm';
 		form.append(messageDiv);
 	}
+
+	// Check whitespaces
+	if (utils.hasWhitespace(nameInput.value)) {
+		messageDiv.textContent = "Display name cannot have whitespaces.";
+		return;
+	}
+
+	// check password length
+	if (!passwordInput.checkValidity()) {
+		messageDiv.textContent = "Password must be at least 6 characters long.";
+		return;
+	}
+
+	if (utils.hasWhitespace(passwordInput.value)) {
+		messageDiv.textContent = "Password cannot have whitespaces.";
+		return;
+	}
+	passwordInput.setCustomValidity('');
+
+	const formData = new FormData(form);
+	const email = formData.get('email');
+	const display_name = formData.get('name');
+	const password = formData.get('password');
 
 	try {
 		const response = await fetch('/register', {
@@ -72,7 +64,6 @@ export async function signUp(e: Event) {
 			return;
 		}
 		const message = data?.success || 'Register success';
-		emailInput.setCustomValidity('');
 		displayPage.signIn(workArea, message);
 	} catch (error) {
 		console.error('Error sending form data:', error);
@@ -197,102 +188,193 @@ export async function verify2FA(e: Event) {
 	}
 }
 
-export async function changeDisplayName(e: Event) {
-	e.preventDefault();
-
-	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
-	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
-	const form = e.target as HTMLFormElement;
-	const formData = new FormData(form);
-	const display_name = formData.get('name');
-	const userId = localStorage.getItem('userId');
-
-	let messageDiv = document.getElementById('loginError') as HTMLDivElement | null;
-	if (!messageDiv) {
-		messageDiv = document.createElement('div');
-		messageDiv.id = 'loginError';
-		messageDiv.className = 'text-red-600 mt-2 text-sm';
-		form.append(messageDiv);
-	}
-
-	try {
-		const response = await fetch(`/users/${userId}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ display_name }),
-			credentials: 'include'
-		})
-
-		const data = await response.json();
-		if (!response.ok) {
-			messageDiv.textContent = data?.message || 'Error changing display name';
-			return;
-		}
-		onlineUsers.delete(localStorage.getItem('displayName')!);
-		localStorage.setItem('displayName', display_name?.toString()!)
-		onlineUsers.add(localStorage.getItem('displayName')!)
-		window.dispatchEvent(new CustomEvent('global-presence-updated'));
-		if (globalSocket && globalSocket.readyState === WebSocket.OPEN) {
- 			globalSocket.send(JSON.stringify({
-    			type: 'identify',
-    			userId: localStorage.getItem('userId'),
-				display_name: localStorage.getItem('displayName')
-  			}));
-		}
-		window.dispatchEvent(new CustomEvent('global-presence-updated'));
-		messageDiv.textContent = '';
-		utils.showModal('Display name changed successfully!');
-		utils.initAppNav(menuArea, workArea);
-	} catch (error) {
-		console.error('Error sending form data:', error);
-		alert('Failed changing display name');
-	}
-}
-
 export async function changePassword(e: Event) {
 	e.preventDefault();
 
-	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
-	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 	const form = e.target as HTMLFormElement;
+	const oldPasswordInput = document.getElementById('oldPasswordInput') as HTMLInputElement;
+	const newPasswordInput = document.getElementById('newPasswordInput') as HTMLInputElement;
+	const confirmPasswordInput = document.getElementById('confirmPasswordInput') as HTMLInputElement;
+	const submitErrorMessage = document.getElementById('passwordButtonError') as HTMLSpanElement | null;
+	const oldErrorMessage = document.getElementById('oldPasswordError') as HTMLSpanElement | null;
+	const newErrorMessage = document.getElementById('newPasswordError') as HTMLSpanElement | null;
+	const confirmErrorMessage = document.getElementById('confirmPasswordError') as HTMLSpanElement | null;
+
+	if (oldErrorMessage) {
+		oldErrorMessage.textContent = "";
+	}
+	if (newErrorMessage) {
+		newErrorMessage.textContent = "";
+	}
+	if (confirmErrorMessage) {
+		confirmErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.textContent = "";
+	}
+
+	// check password length
+	if (!oldPasswordInput.checkValidity() || !newPasswordInput.checkValidity() || !confirmPasswordInput.checkValidity()) {
+		return;
+	}
+
+	// check if passwords have whitespaces
+	if (utils.hasWhitespace(oldPasswordInput.value)) {
+		if (oldErrorMessage) {
+			oldErrorMessage.textContent = "Password cannot have whitespaces.";
+		}
+		return;
+	}
+	if (utils.hasWhitespace(newPasswordInput.value)) {
+		if (newErrorMessage) {
+			newErrorMessage.textContent = "Password cannot have whitespaces.";
+		}
+		return;
+	}
+	if (utils.hasWhitespace(confirmPasswordInput.value)) {
+		if (confirmErrorMessage) {
+			confirmErrorMessage.textContent = "Password cannot have whitespaces.";
+		}
+		return;
+	}
+
+	// Check if confirm password is equal to the new password
+	if (confirmPasswordInput.value !== newPasswordInput.value) {
+		if (confirmErrorMessage) {
+			confirmErrorMessage.textContent = "Password confirmation do not match new password.";
+		}
+		return;
+	}
+
+	// Check if old password is equal to the new password
+	if (oldPasswordInput.value === newPasswordInput.value) {
+		if (newErrorMessage) {
+			newErrorMessage.textContent = "New password must be different from current one.";
+		}
+		return;
+	}
+
+	const id = localStorage.getItem('userId');
 	const formData = new FormData(form);
 	const oldPassword = formData.get('oldPassword');
 	const newPassword = formData.get('newPassword');
 	const confirmPassword = formData.get('confirmPassword');
-	const userId = localStorage.getItem('userId');
-
-	let messageDiv = document.getElementById('changeDetailsError') as HTMLDivElement | null;
-
-	if (!messageDiv) {
-		messageDiv = document.createElement('div');
-		messageDiv.id = 'changeDetailsError';
-		messageDiv.className = 'text-red-600 mt-2 text-sm';
-		form.append(messageDiv);
-	}
-
 	try {
-		const response = await fetch(`/users/${userId}`, {
+		const response = await fetch('/users/' + id, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify({ oldPassword, newPassword, confirmPassword }),
+			body: JSON.stringify({
+				oldPassword,
+				newPassword,
+				confirmPassword
+			}),
 			credentials: 'include'
 		});
 
 		const data = await response.json();
+		console.log('API response:', data);
 		if (!response.ok) {
-			messageDiv.textContent = data?.message || 'Error changing details';
+			let message = data?.error || 'Password change failed.';
+			if (data && data.message)
+				message += ': ' + data.message;
+			console.error('Error changing password: ', message);
+			if (submitErrorMessage) {
+				submitErrorMessage.className = "text-red-500 text-sm ml-2";
+				submitErrorMessage.textContent = message;
+			}
 			return;
 		}
-
-		messageDiv.textContent = '';
-		utils.showModal('Password changed successfully!');
-		utils.initAppNav(menuArea, workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
-		alert('Failed changing password');
+		alert('Login failed! Catched on Try');
+	}
+	form.reset();
+	if (oldErrorMessage) {
+		oldErrorMessage.textContent = "";
+	}
+	if (newErrorMessage) {
+		newErrorMessage.textContent = "";
+	}
+	if (confirmErrorMessage) {
+		confirmErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.className = "text-green-500 text-sm ml-2";
+		submitErrorMessage.textContent = "Password changed with success!";
+	}
+}
+
+export async function changeDisplayName(e: Event) {
+	e.preventDefault();
+
+	const form = e.target as HTMLFormElement;
+	const displayName = document.getElementById('nameInput') as HTMLInputElement;
+	const nameErrorMessage = document.getElementById('nameError') as HTMLSpanElement | null;
+	const submitErrorMessage = document.getElementById('nameButtonError') as HTMLSpanElement | null;
+
+	if (nameErrorMessage) {
+		nameErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.textContent = "";
+	}
+
+	// check if display name have whitespaces
+	if (utils.hasWhitespace(displayName.value)) {
+		if (nameErrorMessage) {
+			nameErrorMessage.textContent = "Display name cannot have whitespaces.";
+		}
+		return;
+	}
+
+	// Check if display name is equal to the current one
+	const curentDisplayName = localStorage.getItem('displayName');
+	if (curentDisplayName === displayName.value) {
+		if (nameErrorMessage) {
+			nameErrorMessage.textContent = "New display name must be different from current one.";
+		}
+		return;
+	}
+
+	const id = localStorage.getItem('userId');
+	const display_name: string = displayName.value;
+	try {
+		const response = await fetch('/users/' + id, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				display_name
+			}),
+			credentials: 'include'
+		});
+
+		const data = await response.json();
+		console.log('API response:', data);
+		if (!response.ok) {
+			let message = data?.error || 'Display name change failed.';
+			if (data && data.message)
+				message += ': ' + data.message;
+			console.error('Error changing display name: ', message);
+			if (submitErrorMessage) {
+				submitErrorMessage.className = "text-red-500 text-sm ml-2";
+				submitErrorMessage.textContent = message;
+			}
+			return;
+		}
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Login failed! Catched on Try');
+	}
+	form.reset();
+	if (nameErrorMessage) {
+		nameErrorMessage.textContent = "";
+	}
+	if (submitErrorMessage) {
+		submitErrorMessage.className = "text-green-500 text-sm ml-2";
+		submitErrorMessage.textContent = "Display name changed with success!";
 	}
 }
