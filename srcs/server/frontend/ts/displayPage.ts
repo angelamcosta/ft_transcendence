@@ -1163,7 +1163,7 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 		fetch(`/users/${viewerId}/history`, { credentials: 'include' }).then(r => r.json()),
 	]);
 
-	const wins = history.filter(m => m.winner_id === Number(userId)).length;
+	const wins = history.filter(m => m.winner_id === Number(viewerId)).length;
 	const losses = history.length - wins;
 	const winRate = history.length
 		? Math.round((wins / history.length) * 100)
