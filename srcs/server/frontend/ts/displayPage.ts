@@ -163,6 +163,12 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 	submitButton.textContent = 'Login';
 	submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
+	const resetButton = document.createElement('button');
+	resetButton.type = 'button';
+	resetButton.id = "resetButton";
+	resetButton.textContent = 'Forgot password?';
+	resetButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+
 	form.appendChild(emailInput);
 	form.appendChild(document.createElement('br'));
 	form.appendChild(passwordContainer);
@@ -177,9 +183,11 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 	}
 
 	workArea?.appendChild(form);
+	workArea?.appendChild(resetButton);
 
 	form.addEventListener('submit', formHandlers.signIn);
 	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
+	resetButton.addEventListener('click', () => buttonHandlers.resetButton());
 }
 
 export function verify2FA(workArea: HTMLDivElement | null) {
