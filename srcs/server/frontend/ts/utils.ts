@@ -11,6 +11,7 @@ export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivEle
 		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
 		document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
 		document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea));
+		document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea));
 }
 
 export const eyeIcon = `
@@ -73,6 +74,7 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function getUnreadMessages() {
+	unreadDM.clear();
 	try {
 		const res = await fetch('/users/dm/unread', {
 			method: 'GET',
@@ -82,11 +84,11 @@ export async function getUnreadMessages() {
 			credentials: 'include'
 		});
 
-		if (res.ok) {
-			const { unread } = await res.json();
-			unread.forEach((name: string) => unreadDM.add(name));
-			window.dispatchEvent(new CustomEvent('global-presence-updated'));
-		}
+		if (!res.ok) return;
+
+		const { unread } = await res.json();
+		unread.forEach((name: string) => unreadDM.add(name));
+		window.dispatchEvent(new CustomEvent('global-presence-updated'));
 	} catch (error) {
 		console.error('Error fetching unread messages', error);
 	}
@@ -101,6 +103,10 @@ export function getCookie(name: string): string | null {
 		}
 	}
 	return null;
+}
+
+export async function fetchFriendStatus(targetId: number) {
+	return fetch(`/users/friends/status/${targetId}`, { credentials: 'include'}).then(r => r.json());
 }
 
 export function sleep(ms: number): Promise<void> {
