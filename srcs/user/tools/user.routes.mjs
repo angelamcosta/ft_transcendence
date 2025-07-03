@@ -1,4 +1,4 @@
-import { db } from './utils.mjs'
+import { db , verifyPassword } from './utils.mjs'
 import { promises as fsp } from 'fs';
 import fs from 'fs';
 import path from 'path';
@@ -24,7 +24,7 @@ export default async function userRoutes(fastify) {
 		preValidation: fastify.authenticateRequest,
 	}, async (req) => {
 		try {
-			const user = await db.get('SELECT display_name, avatar, id FROM users WHERE id = ?', [req.params.id]);
+			const user = await db.get('SELECT email, display_name, avatar, id FROM users WHERE id = ?', [req.params.id]);
 			if (!user)
 				throw fastify.httpErrors.notFound('User not found');
 			return (user);
@@ -48,23 +48,30 @@ export default async function userRoutes(fastify) {
 		const row = await db.get('SELECT display_name, password FROM users WHERE id = ?', req.authUser.id);
 
 		if (newPassword !== undefined) {
-			const verify = await argon2.verify(row.password, oldPassword);
-			if (!verify)
-				throw fastify.httpErrors.badRequest('Old password is incorrect');
-			if (oldPassword === newPassword)
-				throw fastify.httpErrors.badRequest('New password must differ from current one');
+			if (/\s/.test(oldPassword) || /\s/.test(newPassword) ||  /\s/.test(confirmPassword))
+				throw fastify.httpErrors.badRequest('Password cannot have whitespaces');
 			if (newPassword !== confirmPassword)
 				throw fastify.httpErrors.badRequest('Confirm password and new password dont match');
-
-			const password = newPassword;
-			const hashedPassword = await argon2.hash(password);
+			if (oldPassword === newPassword)
+				throw fastify.httpErrors.badRequest('New password must differ from current one');
+			if (newPassword.length < 6)
+				throw fastify.httpErrors.badRequest('Password must be at least 6 characters');
+			const verify = await argon2.verify(row.password, oldPassword);
+			if (!verify)
+				throw fastify.httpErrors.unauthorized('Current password is incorrect');
+			const hashedPassword = await argon2.hash(newPassword);
 			updates.push('password = ?');
 			params.push(hashedPassword);
 		}
 
 		if (display_name !== undefined) {
+			if (/\s/.test(display_name))
+				throw fastify.httpErrors.badRequest('Display name cannot have whitespaces');
 			if (display_name === row.display_name)
 				throw fastify.httpErrors.badRequest('Display name must differ from current one');
+			const userDisplayName = await db.get('SELECT display_name FROM users WHERE display_name = ?', [display_name]);
+			if (userDisplayName)
+				throw fastify.httpErrors.conflict('Display name already in use!');
 			updates.push('display_name = ?');
 			params.push(display_name);
 		}
@@ -539,7 +546,12 @@ export default async function userRoutes(fastify) {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
 		try {
-			const match_history = await db.all(`SELECT player1_id, player2_id, winner_id, score FROM matches WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'`, [req.authUser.id, req.authUser.id]);
+			const userId = req.params.id;
+			const match_history = await db.all(`SELECT m.created_at, m.id, m.score, m.winner_id, CASE WHEN m.player1_id = $uid THEN m.player2_id 
+				ELSE m.player1_id END AS opp_id, u.display_name AS opp_name, CASE WHEN m.winner_id = $uid THEN 'Win' 
+				ELSE 'Defeat' END AS result FROM matches m JOIN users u ON u.id = (CASE WHEN m.player1_id = $uid THEN
+				m.player2_id ELSE m.player1_id END) WHERE (m.player1_id = $uid OR m.player2_id = $uid) 
+				AND m.status = 'finished' ORDER BY m.created_at DESC`, { $uid: userId });
 			return res.send(match_history);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);

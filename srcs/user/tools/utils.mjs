@@ -1,5 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import argon2 from 'argon2';
 
 export const idRegex = /^\d+$/;
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,4 +35,8 @@ export async function fetchInviteById(id) {
 		fastify.log.error(`Database error: ${err.message}`);
 		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 	}
+}
+
+export async function verifyPassword(password, hash) {
+  return argon2.verify(hash, password);
 }

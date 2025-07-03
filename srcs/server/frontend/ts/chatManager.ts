@@ -99,7 +99,7 @@ export function buildDmCard(targetName: string, headerArea: HTMLDivElement) {
 
 export function buildControls(
 	onAddFriend: () => void,
-	onViewProfile: () => void,
+	viewProfileBtn: HTMLButtonElement,
 	inviteBtn: HTMLButtonElement,
 	blockBtn: HTMLButtonElement
 ) {
@@ -128,10 +128,8 @@ export function buildControls(
 	};
 
 	const addFriendBtn = make('Add Friend', '#28a745');
-	const viewProfileBtn = make('View Profile', '#17a2b8');
 
 	addFriendBtn.addEventListener('click', onAddFriend);
-	viewProfileBtn.addEventListener('click', onViewProfile);
 
 	ctr.append(addFriendBtn, viewProfileBtn, inviteBtn, blockBtn);
 	return ctr;
