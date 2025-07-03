@@ -136,6 +136,56 @@ export async function set2FA(e: Event, checkbox: HTMLInputElement | null, span: 
     }
 }
 
+export async function resetButton() {
+    const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+
+    if (!workArea)
+        return;
+
+    const formExists = document.getElementById('resetPassword');
+    if (formExists)
+        return;
+    
+    const resetForm = document.createElement('form');
+	resetForm.id = 'resetPassword';
+	resetForm.classList.add('flex', 'flex-col', 'items-center', 'w-60', 'mx-auto');
+    // Creates a heading
+	const resetHeading = document.createElement("p");
+	resetHeading.textContent = "A link will be sent to reset your password.";
+	resetHeading.classList.add("text-1xl", "font-bold", "text-blue-600");
+    resetForm.appendChild(resetHeading);
+
+    const resetEmailInput = document.createElement('input');
+	resetEmailInput.type = 'resetEmail';
+	resetEmailInput.id = "resetEmailInput";
+	resetEmailInput.name = 'resetEmail';
+	resetEmailInput.placeholder = 'Enter your email';
+	resetEmailInput.willValidate;
+	resetEmailInput.required = true;
+	resetEmailInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+    resetForm.appendChild(resetEmailInput);
+
+    const resetSubmitButton = document.createElement('button');
+	resetSubmitButton.type = 'submit';
+	resetSubmitButton.textContent = 'Send link';
+	resetSubmitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+    resetForm.appendChild(resetSubmitButton);
+
+    resetForm.appendChild(document.createElement('br'));
+
+    const resetCancelButton = document.createElement('button');
+	resetCancelButton.type = 'submit';
+	resetCancelButton.textContent = 'Cancel';
+	resetCancelButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700');
+    resetForm.appendChild(resetCancelButton);
+
+    workArea.appendChild(resetForm);
+
+    resetCancelButton.addEventListener("click", () => {
+		workArea.removeChild(resetForm);
+	});
+}
+
 export function showPassword(e: Event, passwordInput: HTMLInputElement | null, toggleButton: HTMLButtonElement | null) {
     if (!passwordInput || !toggleButton) {
         return;
@@ -145,4 +195,5 @@ export function showPassword(e: Event, passwordInput: HTMLInputElement | null, t
     const isHidden = passwordInput.type === 'password';
     passwordInput.type = isHidden ? 'text' : 'password';
     toggleButton.innerHTML = isHidden ? utils.eyeSlashIcon : utils.eyeIcon;
+
 }
