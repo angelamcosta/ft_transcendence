@@ -177,21 +177,6 @@ export async function initPong(canvas: HTMLCanvasElement) {
           canvas.width / 2 - 120,
           canvas.height / 2
         );
-        setTimeout(() => {
-          const newSocket = new WebSocket(
-            `wss://${window.location.hostname}:${window.location.port}/api/game/wss`
-          );
-        activeSocket = newSocket;
-        newSocket.addEventListener('open', () => {
-          newSocket.send(JSON.stringify({ type: 'start' }));
-          state!.scores = [0, 0];
-          const loop = () => {
-            draw();
-            animationId = requestAnimationFrame(loop);
-          };
-          loop();
-        });
-      }, 2000);
       }
     }
   }
