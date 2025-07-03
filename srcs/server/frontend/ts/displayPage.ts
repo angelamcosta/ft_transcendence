@@ -1106,6 +1106,8 @@ export async function directMessagePage(
 			alert('Couldn’t update block status: ' + err);
 		} finally {
 			blockBtn.disabled = false;
+			refreshFriendUI();
+			refreshInviteStatus();
 			await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
 		}
 	});
