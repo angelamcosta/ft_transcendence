@@ -14,7 +14,7 @@ export class GameService extends EventEmitter {
                 x: 300,
                 y: 300,
                 vx: 5,
-                vy: 5,
+                vy: 3,
                 radius: 10
             },
             players: [
@@ -66,6 +66,14 @@ export class GameService extends EventEmitter {
                     // Calcula nova direção
                     const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy) * 1.1; // Aumenta velocidade
                     b.vx = (i === 0 ? 1 : -1) * Math.cos(angle) * speed;
+                    if (b.vx < 3 && b.vx > -3) {
+                        if (b.vx >= 0) {
+                            b.vx = 3;
+                        }
+                        else {
+                            b.vx = -3;
+                        }
+                    }
                     b.vy = Math.sin(angle) * speed;
                 }
             }

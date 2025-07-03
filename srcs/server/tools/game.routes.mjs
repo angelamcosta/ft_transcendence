@@ -6,7 +6,7 @@ import { authenticateRequest } from './chat.utils.mjs';
 const GAME_URL = process.env.GAME_URL;
 if (!GAME_URL) throw new Error('⛔️ Missing env GAME_URL');
 
-const GAME_WS = `${GAME_URL.replace(/^https/, 'wss')}/api/game/ws`;
+const GAME_WS = `${GAME_URL.replace(/^https/, 'wss')}/api/game/wss`;
 const wsAgent = new HttpsAgent({ rejectUnauthorized: false });
 
 export default async function gameRoutes(app) {
@@ -29,7 +29,7 @@ export default async function gameRoutes(app) {
         return reply.code(res.status).send(data);
     });
 
-    app.get('/api/game/ws', { websocket: true, onRequest: authenticateRequest(app) }, (connection, req) => {
+    app.get('/api/game/wss', { websocket: true, onRequest: authenticateRequest(app) }, (connection, req) => {
         console.log('➡️ Novo WebSocket do front conectado ao proxy');
 
         console.log('Conectando ao WebSocket do jogo:', GAME_WS);
