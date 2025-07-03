@@ -1,7 +1,7 @@
 import * as displayPage from './displayPage.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initGlobalChat } from './chatManager.js';
-import { getUnreadMessages } from './utils.js';
+import { getUnreadMessages, initAppNav } from './utils.js';
 
 async function isSignedIn() {
 	try {
@@ -13,8 +13,6 @@ async function isSignedIn() {
 			credentials: 'include'
 		});
 
-		const data = await response.json();
-		console.log('API response:', data);
 		if (!response.ok) {
 			displayPage.header(menuArea);
 			displayPage.landingPage(workArea, menuArea);
@@ -27,15 +25,9 @@ async function isSignedIn() {
 			getUnreadMessages();
 			const userId = localStorage.getItem('userId')!;
 			const displayName = localStorage.getItem('displayName')!;
-			displayPage.menu(menuArea, workArea);
-			displayPage.dashboard(workArea);
-			buttonHandlers.initThemeToggle();
 			initGlobalChat(userId, displayName);
-			document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-			document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-			document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-			document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
-			document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, userId, displayName));
+			initAppNav(menuArea, workArea);
+			buttonHandlers.initThemeToggle();
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);

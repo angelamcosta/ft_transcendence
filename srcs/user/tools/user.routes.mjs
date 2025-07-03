@@ -24,7 +24,7 @@ export default async function userRoutes(fastify) {
 		preValidation: fastify.authenticateRequest,
 	}, async (req) => {
 		try {
-			const user = await db.get('SELECT display_name, avatar, id FROM users WHERE id = ?', [req.params.id]);
+			const user = await db.get('SELECT email, display_name, avatar, id FROM users WHERE id = ?', [req.params.id]);
 			if (!user)
 				throw fastify.httpErrors.notFound('User not found');
 			return (user);
@@ -546,7 +546,12 @@ export default async function userRoutes(fastify) {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
 		try {
-			const match_history = await db.all(`SELECT player1_id, player2_id, winner_id, score FROM matches WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'`, [req.authUser.id, req.authUser.id]);
+			const userId = req.params.id;
+			const match_history = await db.all(`SELECT m.created_at, m.id, m.score, m.winner_id, CASE WHEN m.player1_id = $uid THEN m.player2_id 
+				ELSE m.player1_id END AS opp_id, u.display_name AS opp_name, CASE WHEN m.winner_id = $uid THEN 'Win' 
+				ELSE 'Defeat' END AS result FROM matches m JOIN users u ON u.id = (CASE WHEN m.player1_id = $uid THEN
+				m.player2_id ELSE m.player1_id END) WHERE (m.player1_id = $uid OR m.player2_id = $uid) 
+				AND m.status = 'finished' ORDER BY m.created_at DESC`, { $uid: userId });
 			return res.send(match_history);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);

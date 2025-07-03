@@ -39,3 +39,31 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
 }
+
+@layer components {
+  .history-table {
+    @apply w-full border-separate border-spacing-0;
+  }
+  .history-table thead {
+    @apply border-b-2 border-gray-300;
+  }
+  .history-table thead th {
+    @apply bg-gray-100 px-4 py-2 text-gray-800 font-semibold border border-gray-300 border-b-0 -mr-px;
+  }
+  .history-table thead th + th {
+    @apply border-l-0;
+  }
+  .history-table thead th:first-child {
+    @apply rounded-l-md;
+  }
+  .history-table thead th:last-child {
+    @apply rounded-r-md mr-0;
+  }
+
+  .history-table tbody td {
+    @apply px-4 py-2 text-gray-700 border border-gray-200 bg-white;
+  }
+  .history-table tbody tr:nth-child(even) td {
+    @apply bg-gray-50;
+  }
+}
