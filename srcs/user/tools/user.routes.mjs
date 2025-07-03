@@ -1,4 +1,4 @@
-import { db , verifyPassword } from './utils.mjs'
+import { db, verifyPassword } from './utils.mjs'
 import { promises as fsp } from 'fs';
 import fs from 'fs';
 import path from 'path';
@@ -43,12 +43,12 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.forbidden('You cannot modify another user');
 
 		const updates = [];
-		const params = [];		
+		const params = [];
 		const { oldPassword, newPassword, confirmPassword, display_name } = req.body;
 		const row = await db.get('SELECT display_name, password FROM users WHERE id = ?', req.authUser.id);
 
 		if (newPassword !== undefined) {
-			if (/\s/.test(oldPassword) || /\s/.test(newPassword) ||  /\s/.test(confirmPassword))
+			if (/\s/.test(oldPassword) || /\s/.test(newPassword) || /\s/.test(confirmPassword))
 				throw fastify.httpErrors.badRequest('Password cannot have whitespaces');
 			if (newPassword !== confirmPassword)
 				throw fastify.httpErrors.badRequest('Confirm password and new password dont match');
@@ -106,9 +106,25 @@ export default async function userRoutes(fastify) {
 
 	// ! block / unblock
 
-	fastify.get('/users/block/relationship/:id', { 
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers] 
-	}, async (req, reply) => {
+	fastify.get('/users/block', {
+		preValidation: fastify.authenticateRequest,
+	}, async (req, res) => {
+		try {
+			const userId = req.authUser.id;
+ 
+			const row = await db.all(`SELECT u.id, u.display_name FROM blocked_users b JOIN users u 
+				ON u.id = b.blocked_id WHERE b.blocker_id = ?`, userId);
+
+			return res.send(row);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
+		}
+	})
+
+	fastify.get('/users/block/relationship/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers]
+	}, async (req, res) => {
 		try {
 			const userId = req.authUser.id;
 			const paramId = req.params.id;
@@ -117,28 +133,28 @@ export default async function userRoutes(fastify) {
 				`SELECT EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blocked_by_me,
 				EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blocked_by_target`,
 				[userId, paramId, paramId, userId]);
-			
-			return reply.send({
+
+			return res.send({
 				blockedByMe: Boolean(row.blocked_by_me),
 				blockedByTarget: Boolean(row.blocked_by_target)
 			})
 		} catch (e) {
-			console.error('Proxy /users/block/status/:id error:', e);
-			return reply.code(500).send({ error: 'Error fetching blocked status' });
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
 		}
 	})
 
-	fastify.get('/users/block/status/:id',  {
+	fastify.get('/users/block/status/:id', {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers]
 	}, async (req) => {
 		try {
 			const userId = req.authUser.id;
 			const paramId = Number(req.params.id);
-	
+
 			const row = await db.get('SELECT status FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?)', [userId, paramId]);
 
 			const blocked = row ? Boolean(row.status) : false;
-			return ({ blocked} );
+			return ({ blocked });
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
@@ -146,15 +162,14 @@ export default async function userRoutes(fastify) {
 	})
 
 	fastify.post('/users/block/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship, fastify.loadMatchInvites],
 	}, async (req) => {
 		try {
 			const userId = req.authUser.id;
 			const paramId = Number(req.params.id);
 
-			if (userId === paramId)
-				throw fastify.httpErrors.forbidden('You cannot perform this operation on yourself');
-
+			if (req.invite?.invite_status === 'pending')
+				await db.run(`DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
 			if (req.friendship)
 				await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
 			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id, status) VALUES (?, ?, ?)`, [userId, paramId, true]);
@@ -238,17 +253,17 @@ export default async function userRoutes(fastify) {
 			if (data.file.truncated) {
 				await fsp.unlink(uploadPath);
 				return reply.status(413).send({ error: 'Image exceeds 2MB limit.' });
-    		}
+			}
 			const row = await db.get('SELECT avatar FROM users WHERE id = ?', [paramId]);
 			if (row && row.avatar && row.avatar !== 'default.png') {
 				const oldPath = path.join(process.env.UPLOAD_DIR, row.avatar);
-			try {
-				await fsp.unlink(oldPath);
-			} catch (err) {
-				if (err.code !== 'ENOENT')
-					throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+				try {
+					await fsp.unlink(oldPath);
+				} catch (err) {
+					if (err.code !== 'ENOENT')
+						throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+				}
 			}
-		}
 			await db.run('UPDATE users SET avatar = ? WHERE id = ?', [uniqueName, req.authUser.id]);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -397,6 +412,29 @@ export default async function userRoutes(fastify) {
 		}
 	});
 
+	fastify.delete('/users/friends/cancel/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship]
+	}, async (req, res) => {
+		const userId = req.authUser.id;
+		const paramId = Number(req.params.id);
+
+		if (req.friendship?.friendship_status !== 'pending')
+			throw fastify.httpErrors.badRequest('There is no pending invite');
+
+		try {
+			const res = await db.get(`SELECT user_id FROM friends WHERE (user_id = ? AND friend_id = ?) AND friendship_status = 'pending'`, [userId, paramId]);
+
+			if (res) {
+				await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) AND friendship_status = 'pending'`, [userId, paramId]);
+				return ({ message: 'Friend request canceled' })
+			} else
+				return ({ message: 'No pending friend request' })
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	})
+
 	fastify.delete('/users/friends/:id', {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
 	}, async (req) => {
@@ -404,7 +442,7 @@ export default async function userRoutes(fastify) {
 		const paramId = Number(req.params.id);
 
 		if (!req.friendship)
-			throw fastify.httpErrors.notFound('Friend request not found');
+			throw fastify.httpErrors.notFound('You are not friends with this user');
 
 		if (req.friendship?.friendship_status !== 'accepted')
 			throw fastify.httpErrors.badRequest('Friendship does not exist');
@@ -418,8 +456,62 @@ export default async function userRoutes(fastify) {
 		}
 	});
 
-	fastify.get('/users/invite/received', { 
-		preValidation: fastify.authenticateRequest 
+	fastify.get('/users/friends/requests/received', {
+		preValidation: fastify.authenticateRequest,
+	}, async (req, res) => {
+		try {
+			const received = await db.all(`SELECT f.user_id AS id, u.display_name AS display_name
+				FROM friends f JOIN users u ON u.id = f.user_id WHERE f.friend_id = ?
+				AND f.friendship_status = 'pending'`, req.authUser.id);
+			return res.send(received);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	});
+
+	fastify.get('/users/friends/requests/sent', {
+		preValidation: fastify.authenticateRequest,
+	}, async (req, res) => {
+		try {
+			const sent = await db.all(`SELECT f.friend_id AS id, u.display_name AS display_name
+				FROM friends f JOIN users u ON u.id = f.friend_id WHERE f.user_id = ?
+				AND f.friendship_status = 'pending'`, req.authUser.id);
+			return res.send(sent);
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
+	});
+
+	fastify.get('/users/friends/status/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers],
+	}, async (req, res) => {
+		try {
+			const userId = req.authUser.id;
+			const friendId = Number(req.params.id);
+
+			const friendRow = await db.get(`SELECT 1 FROM friends WHERE ((user_id = ? AND friend_id = ?)
+				OR (user_id = ? AND friend_id = ?)) AND friendship_status = 'accepted'`, [userId, friendId, friendId, userId]);
+			const areFriends = !!friendRow;
+
+			const sentRow = await db.get(`SELECT 1 FROM friends WHERE user_id = ? 
+				AND friend_id = ? AND friendship_status = 'pending'`, [userId, friendId]);
+			const requestSent = !!sentRow;
+
+			const recvRow = await db.get(`SELECT 1 FROM friends WHERE user_id = ? 
+				AND friend_id = ? AND friendship_status = 'pending'`, [friendId, userId]);
+			const requestReceived = !!recvRow;
+
+			return res.send({ areFriends, requestSent, requestReceived });
+		} catch (err) {
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
+		}
+	})
+
+	fastify.get('/users/invite/received', {
+		preValidation: fastify.authenticateRequest
 	}, async (req, res) => {
 		try {
 			const received = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE friend_id = ? AND invite_status = 'pending'`, req.authUser.id);
@@ -430,8 +522,8 @@ export default async function userRoutes(fastify) {
 		}
 	})
 
-	fastify.get('/users/invite/sent', { 
-		preValidation: fastify.authenticateRequest 
+	fastify.get('/users/invite/sent', {
+		preValidation: fastify.authenticateRequest
 	}, async (req, res) => {
 		try {
 			const sent = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE user_id = ? AND invite_status = 'pending'`, req.authUser.id);
@@ -442,20 +534,23 @@ export default async function userRoutes(fastify) {
 		}
 	})
 
-	fastify.put('/users/invite/cancel/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers]
+	fastify.delete('/users/invite/cancel/:id', {
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadMatchInvites]
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
 
-		const pending = await db.get('SELECT user_id FROM match_invites WHERE user_id = ? AND friend_id = ?', [userId, paramId]);
-
-		if (!pending)
+		if (req.invite?.invite_status !== 'pending')
 			throw fastify.httpErrors.badRequest('There is no pending invite');
 
 		try {
-			await db.run('DELETE FROM match_invites WHERE user_id = ? AND friend_id = ?', [userId, paramId]);
-			return({ message: 'Invite canceled' })
+			const res = await db.get(`SELECT user_id FROM match_invites WHERE (user_id = ? AND friend_id = ?) AND invite_status = 'pending'`, [userId, paramId]);
+
+			if (res) {
+				await db.run(`DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) AND invite_status = 'pending'`, [userId, paramId]);
+				return ({ message: 'Match invite canceled' });
+			} else
+				return ({ message: 'Match invite not found' })
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
@@ -467,6 +562,12 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
+
+		const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) 
+			OR (blocker_id = ?AND blocked_id = ?)`, [userId, paramId, paramId, userId]);
+
+		if (blocked)
+			throw fastify.httpErrors.badRequest('User cannot be invited to a match');
 
 		if (req.invite?.invite_status === 'pending')
 			throw fastify.httpErrors.badRequest('There is already a pending match invite');
@@ -529,18 +630,6 @@ export default async function userRoutes(fastify) {
 		}
 	})
 
-	fastify.get('/users/friends/requests', {
-		preValidation: fastify.authenticateRequest,
-	}, async (req, res) => {
-		try {
-			const requests = await db.all(`SELECT user_id, friend_id, friendship_status FROM friends WHERE (user_id = ? OR friend_id = ?) AND friendship_status = 'pending'`, [req.authUser.id, req.authUser.id]);
-			return res.send(requests);
-		} catch (err) {
-			fastify.log.error(`Database error: ${err.message}`);
-			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
-		}
-	});
-
 	// ! match history
 	fastify.get('/users/:id/history', {
 		preValidation: fastify.authenticateRequest,
@@ -564,12 +653,11 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const userId = req.authUser.id;
-			const rows = await db.all(
-				`SELECT DISTINCT m.sender_id, u.display_name FROM dm_messages AS m
-				LEFT JOIN dm_reads AS r ON m.room_key = r.room_key AND
-				r.user_id  = ? JOIN users AS u ON u.id = m.sender_id
-				WHERE m.timestamp > COALESCE(r.last_read, 0) AND m.sender_id != ?`, [userId, userId]
-			);
+
+			const rows = await db.all(`SELECT DISTINCT m.sender_id, u.display_name FROM dm_messages AS m
+				LEFT JOIN dm_reads   AS r ON m.room_key = r.room_key AND r.user_id = ? JOIN users AS u
+				ON u.id = m.sender_id WHERE m.timestamp > COALESCE(r.last_read, 0) AND m.sender_id != ?
+				AND m.room_key LIKE '%' || ? || '%'`, [userId, userId, userId]);
 
 			const unread = rows.map(r => r.display_name);
 			return res.send({ unread });

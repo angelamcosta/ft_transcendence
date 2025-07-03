@@ -100,6 +100,24 @@ export default async function userRoutes(app) {
 		}
 	})
 
+	app.get('/users/block', async (req, reply) => {
+		try {
+			const res = await fetch(`${USER_URL}/api/users/block/`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/block/ error:', e);
+			return reply.code(500).send({ error: 'Error fetching blocked users' });
+		}
+	})
+	
 	app.get('/users/block/relationship/:id', async (req, reply) => {
 		try {
 			const userId = req.params.id;
@@ -134,7 +152,7 @@ export default async function userRoutes(app) {
 			return reply.code(res.status).send(data);
 		} catch (e) {
 			console.error('Proxy /users/block/status/:id error:', e);
-			return reply.code(500).send({ error: 'Error fetching blockked status' });
+			return reply.code(500).send({ error: 'Error fetching blocked status' });
 		}
 	})
 
@@ -322,12 +340,12 @@ export default async function userRoutes(app) {
 		}
 	})
 
-	app.put('/users/invite/cancel/:id', async (req, reply) => {
+	app.delete('/users/invite/cancel/:id', async (req, reply) => {
 		try {
 			const userId = req.params.id;
 			const res = await fetch(`${USER_URL}/api/users/invite/cancel/${userId}`, {
 				dispatcher: tlsAgent,
-				method: 'PUT',
+				method: 'DELETE',
 				headers: {
 					cookie: req.headers.cookie,
 				},
@@ -402,10 +420,8 @@ export default async function userRoutes(app) {
 				dispatcher: tlsAgent,
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
 					cookie: req.headers.cookie,
 				},
-				body: JSON.stringify(req.body),
 			});
 			const data = await res.json();
 			return reply.code(res.status).send(data);
@@ -422,10 +438,8 @@ export default async function userRoutes(app) {
 				dispatcher: tlsAgent,
 				method: 'PUT',
 				headers: {
-					'Content-Type': 'application/json',
 					cookie: req.headers.cookie,
 				},
-				body: JSON.stringify(req.body),
 			});
 			const data = await res.json();
 			return reply.code(res.status).send(data);
@@ -442,16 +456,32 @@ export default async function userRoutes(app) {
 				dispatcher: tlsAgent,
 				method: 'PUT',
 				headers: {
-					'Content-Type': 'application/json',
 					cookie: req.headers.cookie,
 				},
-				body: JSON.stringify(req.body),
 			});
 			const data = await res.json();
 			return reply.code(res.status).send(data);
 		} catch (e) {
 			console.error('Proxy /users/friends/reject/:id:', e);
 			return reply.code(500).send({ error: 'Error rejecting friendship' });
+		}
+	})
+
+	app.delete('/users/friends/cancel/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/friends/cancel/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'DELETE',
+				headers: {
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/friends/cancel/:id error:', e);
+			return reply.code(500).send({ error: 'Error canceling friend request' });
 		}
 	})
 
@@ -473,9 +503,9 @@ export default async function userRoutes(app) {
 		}
 	})
 
-	app.get('/users/friends/requests', async (req, reply) => {
+	app.get('/users/friends/requests/sent', async (req, reply) => {
 		try {
-			const res = await fetch(`${USER_URL}/api/users/friends/requests`, {
+			const res = await fetch(`${USER_URL}/api/users/friends/requests/sent`, {
 				dispatcher: tlsAgent,
 				method: 'GET',
 				headers: {
@@ -486,8 +516,45 @@ export default async function userRoutes(app) {
 			const data = await res.json();
 			return reply.code(res.status).send(data);
 		} catch (e) {
-			console.error('Proxy /users/friends/requests', e);
-			return reply.code(500).send({ error: 'Error fetching friend requests' });
+			console.error('Proxy /users/friends/requests/sent', e);
+			return reply.code(500).send({ error: 'Error fetching friend requests sent' });
+		}
+	})
+
+	app.get('/users/friends/requests/received', async (req, reply) => {
+		try {
+			const res = await fetch(`${USER_URL}/api/users/friends/requests/received`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				}
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/friends/requests/received', e);
+			return reply.code(500).send({ error: 'Error fetching friend requests received' });
+		}
+	})
+
+	app.get('/users/friends/status/:id', async (req, reply) => {
+		try {
+			const userId = req.params.id;
+			const res = await fetch(`${USER_URL}/api/users/friends/status/${userId}`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /users/friends/status/:id error:', e);
+			return reply.code(500).send({ error: 'Error fetching friends status' });
 		}
 	})
 
