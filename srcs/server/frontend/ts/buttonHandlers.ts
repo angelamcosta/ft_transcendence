@@ -56,6 +56,10 @@ export async function signOut(workArea: HTMLDivElement | null) {
     }
 }
 
+export async function profile(workArea: HTMLDivElement | null) {
+	displayPage.profile(workArea, null);
+}
+
 export async function accountSettings(workArea: HTMLDivElement | null) {
     displayPage.accountSettings(workArea);
 }

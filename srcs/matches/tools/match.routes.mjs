@@ -107,7 +107,14 @@ export default async function matchRoutes(fastify) {
 		{ preValidation: fastify.loadMatch },
 		async (req) => {
 			try {
-				const match = await db.get('SELECT m.*, p1.id AS player1_id, u1.display_name AS player1_name, p2.id AS player2_id, u2.display_name AS player2_name, w.id AS winner_id, uw.display_name AS winner_name FROM matches m LEFT JOIN players p1 ON m.player1_id = p1.id LEFT JOIN users u1 ON p1.user_id = u1.id LEFT JOIN players p2 ON m.player2_id = p2.id LEFT JOIN users u2 ON p2.user_id = u2.id LEFT JOIN players w ON m.winner_id = w.id LEFT JOIN users uw ON w.user_id = uw.id WHERE m.id = ?', [req.params.id]);
+				const match = await db.get(`SELECT m.id, m.tournament_id, m.player1_id, m.player2_id, m.winner_id, 
+					m.status, m.score, m.created_at, m.updated_at, m.round, 
+					u1.display_name AS player1_name, u2.display_name AS player2_name,
+					uw.display_name AS winner_name FROM matches m
+					LEFT JOIN users u1 ON m.player1_id = u1.id
+					LEFT JOIN users u2 ON m.player2_id = u2.id
+					LEFT JOIN users uw ON m.winner_id    = uw.id
+					WHERE m.id = ?`, [req.params.id]);
 				return { match };
 			} catch (err) {
 				fastify.log.error(`Database error: ${err.message}`);

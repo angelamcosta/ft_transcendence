@@ -240,7 +240,7 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	oldPasswordInput.type = 'password';
 	oldPasswordInput.id = "oldPasswordInput";
 	oldPasswordInput.name = 'oldPassword';
-	oldPasswordInput.placeholder = 'Enter your current pasword';
+	oldPasswordInput.placeholder = 'Enter your current password';
 	oldPasswordInput.minLength = 6;
 	oldPasswordInput.required = true;
 	oldPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
@@ -264,7 +264,7 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	newPasswordInput.type = 'password';
 	newPasswordInput.id = "newPasswordInput";
 	newPasswordInput.name = 'newPassword';
-	newPasswordInput.placeholder = 'Enter new pasword';
+	newPasswordInput.placeholder = 'Enter new password';
 	newPasswordInput.minLength = 6;
 	newPasswordInput.required = true;
 	newPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
@@ -288,7 +288,7 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	confirmPasswordInput.type = 'password';
 	confirmPasswordInput.id = "confirmPasswordInput";
 	confirmPasswordInput.name = 'confirmPassword';
-	confirmPasswordInput.placeholder = 'Confirm new pasword';
+	confirmPasswordInput.placeholder = 'Confirm new password';
 	confirmPasswordInput.minLength = 6;
 	confirmPasswordInput.required = true;
 	confirmPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
@@ -583,14 +583,17 @@ export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement |
 	const friendsButton = document.createElement("button");
 	friendsButton.type = "button";
 	friendsButton.title = "My friends";
-	friendsButton.innerHTML += '<svg vg class="fill-current w-8 h-8 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">\
-    <path d="M11 8.5C11 9.88071 9.88071 11 8.5 11C7.11929 11 6 9.88071 6 8.5C6 7.11929 7.11929 6 8.5 6C9.88071 6 11 7.11929 11 8.5Z"/>\
-    <path d="M18 5.5C18 6.88071 16.8807 8 15.5 8C14.1193 8 13 6.88071 13 5.5C13 4.11929 14.1193 3 15.5 3C16.8807 3 18 4.11929 18 5.5Z"/>\
-    <path d="M15.5 20C14.5 21 3.00002 20.5 2.00001 20C1 19.5 5.41016 15 9.00001 15C12.5899 15 16.076 19.424 15.5 20Z"/>\
-    <path d="M15.3522 16.2905C16.0024 16.991 16.5501 17.7108 16.9695 18.3146C17.4791 18.3176 18.1122 18.3174 18.7714 18.3075C19.5445 18.296 20.365 18.2711 21.0682 18.2214C21.4193 18.1965 21.7527 18.1647 22.0422 18.1231C22.3138 18.0841 22.6125 18.028 22.8585 17.9335C23.0969 17.8419 23.3323 17.6857 23.5095 17.4429C23.6862 17.2007 23.7604 16.9334 23.7757 16.6907C23.8039 16.2435 23.6381 15.8272 23.4749 15.5192C23.1328 14.8736 22.5127 14.1722 21.7887 13.5408C20.3574 12.2925 18.1471 11 16 11C14.8369 11 13.97 11.1477 13.192 11.5887C12.4902 11.9866 11.9357 12.5909 11.3341 13.2466L11.2634 13.3236L11.1127 13.4877C11.8057 13.6622 12.4547 13.9653 13.0499 14.337C13.5471 13.8034 13.845 13.5176 14.1784 13.3285C14.5278 13.1305 14.998 13 16 13C17.4427 13 19.196 13.9334 20.4741 15.048C20.9492 15.4624 21.3053 15.8565 21.5299 16.1724C21.3524 16.1926 21.15 16.2106 20.927 16.2263C20.2775 16.2723 19.4991 16.2964 18.7416 16.3077C17.9864 16.319 17.2635 16.3174 16.7285 16.3129C16.4612 16.3106 16.2416 16.3077 16.089 16.3053C16.0127 16.3041 15.9533 16.303 15.9131 16.3023L15.8676 16.3014L15.8562 16.3012L15.8535 16.3011L15.8529 16.3011L15.8528 16.3011L15.8528 16.3011L15.3522 16.2905Z"/>\
-    </svg>';
+	friendsButton.innerHTML += '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>';
 	friendsButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
 	menu.appendChild(friendsButton);
+
+	const profileButton = document.createElement("button");
+	profileButton.type = "button";
+	profileButton.id = "profileButton";
+	profileButton.title = "Profile";
+	profileButton.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+	profileButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
+	menu.appendChild(profileButton);
 
 	const settingsButton = document.createElement("button");
 	settingsButton.type = "button";
@@ -950,6 +953,10 @@ export async function directMessagePage(
 		cursor: 'pointer',
 	});
 
+	viewProfileBtn.addEventListener('click', async () => {
+		profile(workArea, targetId.toString());
+	})
+
 	let invitePending = false;
 	async function refreshInviteStatus() {
 		let sentData: unknown;
@@ -1032,7 +1039,7 @@ export async function directMessagePage(
 
 	const controls = buildControls(
 		() => console.log('add friend'),
-		() => console.log('view profile'),
+		viewProfileBtn,
 		inviteBtn,
 		blockBtn
 	);
@@ -1127,6 +1134,331 @@ export async function directMessagePage(
 			e.preventDefault();
 			sendMessage();
 		}
+	});
+}
+
+interface Match {
+	score: string;
+	created_at: string
+	opp_name: string,
+	opp_id: number,
+	winner_id: number;
+	result: 'Win' | 'Defeat'
+}
+
+export async function profile(workArea: HTMLDivElement | null, targetId: string | null) {
+	if (!workArea)
+		return;
+	utils.cleanDiv(workArea);
+
+	const userId = localStorage.getItem('userId')!;
+	const viewerId = targetId ?? userId;
+	const isSelf = viewerId === userId;
+
+	const [{ display_name, email }, history]: [
+		{ display_name: string; email: string },
+		Match[],
+	] = await Promise.all([
+		fetch(`/users/${viewerId}`, { credentials: 'include' }).then(r => r.json()),
+		fetch(`/users/${viewerId}/history`, { credentials: 'include' }).then(r => r.json()),
+	]);
+
+	const wins = history.filter(m => m.winner_id === Number(viewerId)).length;
+	const losses = history.length - wins;
+	const winRate = history.length
+		? Math.round((wins / history.length) * 100)
+		: 0;
+
+	const container = document.createElement('div');
+	Object.assign(container.style, {
+		display: 'flex',
+		gap: '24px',
+		padding: '24px',
+		maxWidth: '1080px',
+		margin: '0 auto'
+	});
+
+	const left = document.createElement('div');
+	Object.assign(left.style, {
+		flex: '0 0 280px',
+		background: '#fff',
+		borderRadius: '8px',
+		padding: '16px',
+		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+	});
+
+	const infoCard = document.createElement('div');
+	Object.assign(infoCard.style, {
+		background: '#fff',
+		borderRadius: '8px',
+		padding: '16px',
+		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+		display: 'grid',
+		gridTemplateColumns: 'max-content 1fr',
+		rowGap: '8px',
+		columnGap: '12px',
+		alignItems: 'center',
+	});
+
+	const avatarCard = document.createElement('div');
+	Object.assign(avatarCard.style, {
+		background: '#fff',
+		borderRadius: '8px',
+		padding: '24px 16px',
+		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center',
+		justifyContent: 'center',
+		gap: '16px',
+		marginTop: '24px'
+	});
+
+	function makeInfoRow(labelText: string, valueText: string) {
+		const label = document.createElement('div');
+		label.textContent = labelText;
+		Object.assign(label.style, {
+			fontSize: '0.875rem',
+			fontWeight: '600',
+			color: '#555',
+			whiteSpace: 'nowrap',
+			justifySelf: 'start',
+		});
+
+		const value = document.createElement('div');
+		value.textContent = valueText;
+		Object.assign(value.style, {
+			fontSize: '1rem',
+			color: '#222',
+			justifySelf: 'center',
+		});
+
+		infoCard.append(label, value);
+	}
+
+	makeInfoRow('Display Name', display_name);
+	if (isSelf)
+		makeInfoRow('Email', email);
+
+	const avatarEl = document.createElement('img');
+	Object.assign(avatarEl.style, {
+		width: '200px',
+		height: '200px',
+		objectFit: 'cover',
+		padding: '8px',
+		border: '2px solid #ccc',
+		borderRadius: '4px',
+		margin: '0',
+	});
+
+	const avatarWrapper = document.createElement('div');
+	Object.assign(avatarWrapper.style, {
+		display: 'flex',
+		flexDirection: 'column',
+		justifyContent: 'center',
+		alignItems: 'center',
+		padding: '16px 0',
+		flex: '1',
+	});
+
+	avatarWrapper.appendChild(avatarEl);
+
+	const avatarControls = document.createElement('div');
+	Object.assign(avatarControls.style, {
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center',
+		gap: '4px',
+		marginBottom: '0px',
+	});
+
+	async function loadAvatar() {
+		const res = await fetch(`/users/${viewerId}/avatar`, { credentials: 'include' });
+		if (res.ok) {
+			const blob = await res.blob();
+			avatarEl.src = URL.createObjectURL(blob);
+		} else
+			avatarEl.src = '/avatars/default.png';
+	}
+
+	await loadAvatar();
+
+	const uploadInput = document.createElement('input');
+	uploadInput.type = 'file';
+	uploadInput.accept = 'image/*';
+	uploadInput.style.display = 'none';
+
+	const browseBtn = document.createElement('button');
+	browseBtn.textContent = 'Browse…';
+	Object.assign(browseBtn.style, {
+		padding: '6px 12px',
+		background: '#007bff',
+		color: '#fff',
+		border: 'none',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+	browseBtn.addEventListener('click', () => uploadInput.click());
+
+	const fileNameEl = document.createElement('span');
+	Object.assign(fileNameEl.style, {
+		maxWidth: '160px',
+		overflow: 'hidden',
+		whiteSpace: 'nowrap',
+		textOverflow: 'ellipsis',
+		display: 'block',
+		textAlign: 'middle',
+		fontSize: '0.9rem',
+		color: '#333',
+	});
+
+	const uploadBtn = document.createElement('button');
+	uploadBtn.textContent = 'Upload';
+	uploadBtn.disabled = true;
+	Object.assign(uploadBtn.style, {
+		padding: '6px 12px',
+		background: '#28a745',
+		color: '#fff',
+		border: 'none',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+	uploadBtn.addEventListener('click', async () => {
+		const file = uploadInput.files?.[0];
+		if (!file) return;
+		const fd = new FormData();
+		fd.append('avatar', file);
+		const res = await fetch(`/users/${viewerId}/avatar`, {
+			method: 'PUT',
+			body: fd,
+			credentials: 'include'
+		});
+		const data = await res.json();
+		if (res.ok) {
+			await loadAvatar();
+			fileNameEl.textContent = '';
+			uploadBtn.disabled = true;
+			uploadInput.value = '';
+			utils.showModal('Avatar uploaded succesfully!');
+		} else
+			utils.showModal(data?.error);
+	});
+
+	uploadInput.addEventListener('change', () => {
+		const file = uploadInput.files?.[0];
+		if (file) {
+			fileNameEl.textContent = file.name;
+			uploadBtn.disabled = false;
+		} else {
+			fileNameEl.textContent = '';
+			uploadBtn.disabled = true;
+		}
+	});
+
+	const deleteBtn = document.createElement('button');
+	deleteBtn.textContent = 'Delete Avatar';
+	Object.assign(deleteBtn.style, {
+		width: 'auto',
+		padding: '6px 12px',
+		background: '#dc3545',
+		color: '#fff',
+		border: 'none',
+		borderRadius: '4px',
+		cursor: 'pointer',
+	});
+	deleteBtn.addEventListener('click', async () => {
+		const res = await fetch(`/users/${viewerId}/avatar`, {
+			method: 'DELETE',
+			credentials: 'include'
+		});
+		const data = await res.json();
+		if (res.ok) {
+			utils.showModal('Avatar deleted succesfully!');
+			avatarEl.src = '/avatars/default.png';
+		} else
+			utils.showModal(data?.error);
+	});
+
+	const row = document.createElement('div');
+	Object.assign(row.style, {
+		display: 'flex',
+		justifyContent: 'space-between',
+		width: '200px'
+	});
+
+	row.append(browseBtn, uploadBtn);
+	avatarControls.append(uploadInput, row, fileNameEl, deleteBtn);
+	avatarCard.append(avatarWrapper);
+	if (isSelf)
+		avatarCard.append(avatarControls);
+	left.append(infoCard, avatarCard);
+
+	const right = document.createElement('div');
+	Object.assign(right.style, {
+		flex: '1 1 auto',
+		background: '#fff',
+		borderRadius: '8px',
+		padding: '16px',
+		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+	});
+
+	const stats = document.createElement('div');
+	stats.innerHTML = `<strong>Wins:</strong> ${wins} &nbsp;&nbsp;
+					<strong>Losses:</strong> ${losses} &nbsp;&nbsp;
+					<strong>Win Rate:</strong> ${winRate}%`;
+	stats.style.marginBottom = '16px';
+
+	const table = document.createElement('table');
+	Object.assign(table.style, {
+		width: '100%',
+		borderCollapse: 'collapse',
+	});
+	table.classList.add('history-table');
+	table.innerHTML = `
+	<thead>
+		<tr>
+			<th style="text-align:center;padding:80x;border-bottom:1px solid #ddd">Date</th>
+			<th style="text-align:center;padding:8px;border-bottom:1px solid #ddd">Opponent</th>
+			<th style="text-align:center;padding:8px;border-bottom:1px solid #ddd">Result</th>
+			<th style="text-align:center;padding:8px;border-bottom:1px solid #ddd">Score</th>
+		</tr>
+	</thead>
+	<tbody>
+		${history.map(m => {
+		const dt = new Date(m.created_at.replace(' ', 'T') + 'Z');
+		const lisbonOpts = {
+			timeZone: 'Europe/Lisbon',
+			year: 'numeric',
+			month: 'short',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit'
+		} as const;
+		const date = dt.toLocaleString('pt-PT', lisbonOpts);
+		return `
+		<tr>
+			<td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${date}</td>
+			<td class="text-center px-4 py-2 border-b">
+				<a href="#" class="text-blue-600 hover:underline opp-link" data-opp="${m.opp_id}">
+					${m.opp_name}
+				</a>
+			</td>
+			<td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${m.result}</td>
+			<td style="text-align:center;padding:8px;border-bottom:1px solid #eee">${m.score || ''}</td>
+		</tr>`;
+	}).join('')}
+	</tbody>`;
+
+	right.append(stats, table);
+	container.append(left, right);
+	workArea.appendChild(container);
+	container.querySelectorAll<HTMLAnchorElement>('.opp-link').forEach(a => {
+		a.addEventListener('click', e => {
+			e.preventDefault();
+			const oppId = (e.currentTarget as HTMLAnchorElement).dataset.opp!;
+			profile(workArea, oppId);
+		});
 	});
 }
 

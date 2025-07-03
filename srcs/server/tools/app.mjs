@@ -94,8 +94,8 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 		if (incoming.type === 'identify') {
 			const oldName = nameBySock.get(socket);
 			const newName = incoming.display_name;
-      		if (oldName && newName && oldName !== newName) {
-        		nameBySock.set(socket, newName);
+			if (oldName && newName && oldName !== newName) {
+				nameBySock.set(socket, newName);
 				const renameMsg = JSON.stringify({
 					type: 'rename',
 					old: oldName,
@@ -105,8 +105,8 @@ app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async
 					if (client.readyState === ws.OPEN)
 						client.send(renameMsg);
 				}
-      		}
-      		return;
+			}
+			return;
 		}
 		if (incoming.type === 'message') {
 			const broadcast = JSON.stringify({
@@ -199,7 +199,7 @@ app.get('/dm', { websocket: true, onRequest: authenticateRequest(app) },
 						message: 'Cannot send: you are blocked or you have blocked this user'
 					}));
 				}
-				
+
 				const ts = Date.now();
 				await db.run('INSERT INTO dm_messages (room_key, sender_id, content, timestamp) VALUES (?, ?, ?, ?)', [roomKey, userId, msg.content, ts]);
 
@@ -231,6 +231,12 @@ await app.register(fastifyStatic, {
 	root: path.join(__dirname, 'public'),
 	prefix: '/',
 });
+
+await app.register(fastifyStatic, {
+	root: path.join(__dirname, 'data', 'public', 'avatars'),
+	prefix: '/avatars',
+	decorateReply: false
+})
 
 await app.register(cors, {
 	origin: true,
