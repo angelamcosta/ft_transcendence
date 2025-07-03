@@ -71,12 +71,12 @@ export function buildDmCard(targetName: string, headerArea: HTMLDivElement) {
 
 	const dmCard = document.createElement('div');
 	Object.assign(dmCard.style, {
-		width: '400px',
+		width: '420px',
 		maxWidth: '90vw',
 		height: '500px',
 		background: '#fff',
 		border: '1px solid #ccc',
-		borderRadius: '8px',
+		borderRadius: '12px',
 		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
 		display: 'flex',
 		flexDirection: 'column',
@@ -98,7 +98,7 @@ export function buildDmCard(targetName: string, headerArea: HTMLDivElement) {
 }
 
 export function buildControls(
-	onAddFriend: () => void,
+	addFriendBtn: HTMLButtonElement,
 	viewProfileBtn: HTMLButtonElement,
 	inviteBtn: HTMLButtonElement,
 	blockBtn: HTMLButtonElement
@@ -106,30 +106,22 @@ export function buildControls(
 	const ctr = document.createElement('div');
 	Object.assign(ctr.style, {
 		display: 'flex',
-		gap: '8px',
-		padding: '2px 3px',
+		gap: '6px',
+		justifyContent: 'center',
+		padding: '8px 0',
 		width: 'fit-content',
 		margin: '0 auto',
 	});
 
-	const make = (text: string, color: string) => {
-		const b = document.createElement('button');
-		b.textContent = text;
+	const all = [addFriendBtn, viewProfileBtn, inviteBtn, blockBtn]
+	all.forEach(b => {
 		Object.assign(b.style, {
-			background: color,
-			color: '#fff',
-			border: `1px solid ${color}`,
-			padding: '2px 3px',
-			fontSize: '0.875rem',
-			borderRadius: '4px',
-			cursor: 'pointer',
-		});
-		return b;
-	};
-
-	const addFriendBtn = make('Add Friend', '#28a745');
-
-	addFriendBtn.addEventListener('click', onAddFriend);
+			flex: '0 0 auto',
+			whiteSpace: 'nowrap',
+			textAlign: 'center',
+			minWidth: '90px',
+		})
+	})
 
 	ctr.append(addFriendBtn, viewProfileBtn, inviteBtn, blockBtn);
 	return ctr;
@@ -204,7 +196,7 @@ export function buildGlobalChatCard() {
 		height: '500px',
 		background: '#fff',
 		border: '1px solid #ccc',
-		borderRadius: '8px',
+		borderRadius: '12px',
 		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
 		display: 'flex',
 		flexDirection: 'column',
@@ -259,7 +251,7 @@ export function buildUserListPanel() {
 		height: '500px',
 		background: '#fafafa',
 		border: '1px solid #ccc',
-		borderRadius: '8px',
+		borderRadius: '12px',
 		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
 		display: 'flex',
 		flexDirection: 'column',

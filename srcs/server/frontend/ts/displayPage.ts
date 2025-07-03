@@ -427,7 +427,7 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	nameErrorMessage.className = "text-red-500 text-sm ml-2";
 	nameErrorMessage.style.minWidth = "1rem";
 	nameErrorMessage.textContent = "";
-	
+
 	// Create an error message span
 	const nameButtonErrorMessage = document.createElement("span");
 	nameButtonErrorMessage.id = "nameButtonError";
@@ -582,6 +582,7 @@ export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement |
 
 	const friendsButton = document.createElement("button");
 	friendsButton.type = "button";
+	friendsButton.id = "friendsButton";
 	friendsButton.title = "My friends";
 	friendsButton.innerHTML += '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>';
 	friendsButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
@@ -873,7 +874,6 @@ export async function directMessagePage(
 	if (!workArea || !headerArea) return;
 	utils.cleanDiv(workArea);
 
-
 	const { wrapper, dmCard } = buildDmCard(targetName, headerArea);
 
 	const banner = document.createElement('div');
@@ -953,6 +953,59 @@ export async function directMessagePage(
 		cursor: 'pointer',
 	});
 
+	let friendPending = false;
+	let friendReceived = false;
+	let alreadyFriends = false;
+
+	async function refreshFriendUI() {
+		const { areFriends, requestSent, requestReceived } =
+			await utils.fetchFriendStatus(targetId);
+
+		alreadyFriends = areFriends;
+		friendPending = requestSent;
+		friendReceived = requestReceived;
+
+		if (alreadyFriends) {
+			addFriendBtn.style.display = 'none';
+		} else {
+			addFriendBtn.style.display = 'inline-block';
+			if (friendPending) {
+				addFriendBtn.textContent = 'Cancel Request';
+				addFriendBtn.onclick = async () => {
+					const res = await fetch(`/users/friends/cancel/${targetId}`, {
+						method: 'DELETE',
+						credentials: 'include'
+					});
+					const data = await res.json();
+					utils.showModal(data?.message);
+					await refreshFriendUI();
+				};
+			} else if (friendReceived) {
+				addFriendBtn.textContent = 'Accept Friend';
+				addFriendBtn.onclick = async () => {
+					const res = await fetch(`/users/friends/accept/${targetId}`, {
+						method: 'PUT',
+						credentials: 'include'
+					});
+					const data = await res.json();
+					utils.showModal(data?.message);
+					await refreshFriendUI();
+				};
+			} else {
+				addFriendBtn.textContent = 'Add Friend';
+				addFriendBtn.onclick = async () => {
+					const res = await fetch(`/users/friends/add/${targetId}`, {
+						method: 'POST',
+						credentials: 'include'
+					});
+					const data = await res.json();
+					utils.showModal(data?.message);
+					await refreshFriendUI();
+				};
+			}
+		}
+	}
+
 	viewProfileBtn.addEventListener('click', async () => {
 		profile(workArea, targetId.toString());
 	})
@@ -982,13 +1035,25 @@ export async function directMessagePage(
 					method: 'POST',
 					credentials: 'include'
 				});
-				if (!res.ok) throw new Error(await res.text());
+				const data = await res.json();
+				if (!res.ok) {
+					utils.showModal(data?.message);
+					refreshInviteStatus();
+					return;
+				}
+				utils.showModal(data?.message);
 			} else {
 				const res = await fetch(`/users/invite/cancel/${targetId}`, {
-					method: 'PUT',
+					method: 'DELETE',
 					credentials: 'include'
 				});
-				if (!res.ok) throw new Error(await res.text());
+				const data = await res.json();
+				if (!res.ok) {
+					utils.showModal(data?.message);
+					refreshInviteStatus();
+					return;
+				}
+				utils.showModal(data?.message);
 			}
 			invitePending = !invitePending;
 			inviteBtn.textContent = invitePending ? 'Cancel Invite' : 'Invite to Game';
@@ -1018,13 +1083,21 @@ export async function directMessagePage(
 					method: 'POST',
 					credentials: 'include'
 				});
-				if (!res.ok) throw new Error(await res.text());
+				const data = await res.json();
+				if (!res.ok) {
+					utils.showModal(data?.message);
+					await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
+				}
 			} else {
 				const res = await fetch(`/users/unblock/${targetId}`, {
 					method: 'DELETE',
 					credentials: 'include'
 				});
-				if (!res.ok) throw new Error(await res.text());
+				const data = await res.json();
+				if (!res.ok) {
+					utils.showModal(data?.message);
+					await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
+				}
 			}
 			isBlocked = !isBlocked;
 			blockBtn.textContent = isBlocked ? 'Unblock User' : 'Block User';
@@ -1033,12 +1106,14 @@ export async function directMessagePage(
 			alert('Couldn’t update block status: ' + err);
 		} finally {
 			blockBtn.disabled = false;
+			refreshFriendUI();
+			refreshInviteStatus();
 			await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
 		}
 	});
 
 	const controls = buildControls(
-		() => console.log('add friend'),
+		addFriendBtn,
 		viewProfileBtn,
 		inviteBtn,
 		blockBtn
@@ -1047,7 +1122,7 @@ export async function directMessagePage(
 	wrapper.append(dmCard);
 	workArea.append(wrapper);
 
-	await Promise.all([refreshInviteStatus(), refreshBlockStatus(), updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner)]);
+	await Promise.all([refreshInviteStatus(), refreshBlockStatus(), updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner), refreshFriendUI()]);
 
 	const wsUrl = `wss://localhost:9000/dm`;
 	const ws = new WebSocket(wsUrl);
@@ -1182,7 +1257,7 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 	Object.assign(left.style, {
 		flex: '0 0 280px',
 		background: '#fff',
-		borderRadius: '8px',
+		borderRadius: '12px',
 		padding: '16px',
 		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
 	});
@@ -1190,7 +1265,7 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 	const infoCard = document.createElement('div');
 	Object.assign(infoCard.style, {
 		background: '#fff',
-		borderRadius: '8px',
+		borderRadius: '12px',
 		padding: '16px',
 		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
 		display: 'grid',
@@ -1203,7 +1278,7 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 	const avatarCard = document.createElement('div');
 	Object.assign(avatarCard.style, {
 		background: '#fff',
-		borderRadius: '8px',
+		borderRadius: '12px',
 		padding: '24px 16px',
 		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
 		display: 'flex',
@@ -1397,7 +1472,7 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 	Object.assign(right.style, {
 		flex: '1 1 auto',
 		background: '#fff',
-		borderRadius: '8px',
+		borderRadius: '12px',
 		padding: '16px',
 		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
 	});
@@ -1460,6 +1535,328 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 			profile(workArea, oppId);
 		});
 	});
+}
+
+export async function friendsList(workArea: HTMLDivElement | null) {
+	if (!workArea)
+		return;
+	utils.cleanDiv(workArea);
+
+	const userId = localStorage.getItem('userId')!;
+	const displayName = localStorage.getItem('displayName')!;
+	const [friends, blocked, received, sent]: [
+		{ id: number; display_name: string }[],
+		{ id: number; display_name: string }[],
+		{ id: number; display_name: string }[],
+		{ id: number; display_name: string }[]
+	] = await Promise.all([
+		fetch(`/users/friends`, { credentials: 'include' }).then(r => r.json()),
+		fetch(`/users/block`, { credentials: 'include' }).then(r => r.json()),
+		fetch(`/users/friends/requests/received`, { credentials: 'include' }).then(r => r.json()),
+		fetch(`/users/friends/requests/sent`, { credentials: 'include' }).then(r => r.json()),
+	]);
+
+	const container = document.createElement('div');
+	Object.assign(container.style, {
+		display: 'flex',
+		gap: '24px',
+		padding: '24px',
+		maxWidth: '1050px',
+		margin: '0 auto',
+	});
+
+	const left = document.createElement('div');
+	Object.assign(left.style, {
+		flex: '0 0 300px',
+		background: '#fff',
+		borderRadius: '12px',
+		padding: '16px',
+		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+	});
+	const friendsTitle = document.createElement('h3');
+	friendsTitle.textContent = 'Your Friends';
+	friendsTitle.style.marginBottom = '12px';
+	left.append(friendsTitle);
+
+	if (friends.length === 0) {
+		const none = document.createElement('p');
+		none.textContent = "You don't have any friends yet";
+		none.style.color = '#666';
+		left.append(none);
+	} else {
+		friends.forEach(f => {
+			const row = document.createElement('div');
+			Object.assign(row.style, {
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between',
+				padding: '6px 0',
+				borderBottom: '1px solid #eee',
+				position: 'relative'
+			});
+
+			const name = document.createElement('span');
+			name.textContent = f.display_name;
+
+			const menuContainer = document.createElement('div');
+			Object.assign(menuContainer.style, {
+				position: 'relative',
+				display: 'inline-block',
+			});
+
+			const menuBtn = document.createElement('button');
+			menuBtn.innerHTML = '⋮';
+			Object.assign(menuBtn.style, {
+				background: 'transparent',
+				border: 'none',
+				borderRadius: '4px',
+				cursor: 'pointer',
+				padding: '2px 3px',
+				fontSize: '0.875rem',
+			});
+
+			const menuList = document.createElement('div');
+			Object.assign(menuList.style, {
+				display: 'none',
+				position: 'absolute',
+				right: '0',
+				top: '100%',
+				background: '#fff',
+				boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+				borderRadius: '4px',
+				overflow: 'hidden',
+				zIndex: '10'
+			});
+
+			function makeItem(text: string, onClick: () => void) {
+				const it = document.createElement('div');
+				it.textContent = text;
+				Object.assign(it.style, {
+					padding: '8px 12px',
+					whiteSpace: 'nowrap',
+					cursor: 'pointer'
+				});
+				it.addEventListener('mouseover', () => it.style.background = '#f0f0f0');
+				it.addEventListener('mouseout', () => it.style.background = '#fff');
+				it.addEventListener('click', () => {
+					onClick();
+					menuList.style.display = 'none';
+				});
+				return it;
+			}
+
+			menuList.append(
+				makeItem('Message', () => directMessagePage(workArea, displayName, f.display_name, userId, f.id)),
+				makeItem('View Profile', () => profile(workArea, String(f.id))),
+				makeItem('Remove Friend', async () => {
+					const res = await fetch(`/users/friends/${f.id}`, { method: 'DELETE', credentials: 'include' });
+					const data = await res.json();
+					utils.showModal(data?.message);
+					friendsList(workArea);
+				}),
+				makeItem('Block', async () => {
+					const res = await fetch(`/users/block/${f.id}`, { method: 'POST', credentials: 'include' });
+					const data = await res.json();
+					utils.showModal(data?.message);
+					friendsList(workArea);
+				})
+			);
+
+			menuBtn.addEventListener('click', e => {
+				e.stopPropagation();
+				menuList.style.display = menuList.style.display === 'block' ? 'none' : 'block';
+			});
+
+			document.addEventListener('click', () => menuList.style.display = 'none');
+
+			menuContainer.append(menuBtn, menuList);
+			row.append(name, menuContainer);
+			left.append(row);
+		});
+	}
+
+	const middle = document.createElement('div');
+	Object.assign(middle.style, {
+		flex: '0 0 300px',
+		background: '#fff',
+		borderRadius: '12px',
+		padding: '16px',
+		boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+	});
+
+	const blockedUsersTitle = document.createElement('h3');
+	blockedUsersTitle.textContent = 'Blocked Users';
+	blockedUsersTitle.style.marginBottom = '12px';
+	middle.append(blockedUsersTitle);
+
+	if (blocked.length === 0) {
+		const none = document.createElement('p');
+		none.textContent = "You don't have any blocked users";
+		none.style.color = '#666';
+		middle.append(none);
+	} else {
+		blocked.forEach(b => {
+			const row = document.createElement('div');
+			Object.assign(row.style, {
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between',
+				padding: '6px 0',
+				borderBottom: '1px solid #eee',
+				position: 'relative',
+			});
+
+			const name = document.createElement('span');
+			name.textContent = b.display_name;
+
+			const btnContainer = document.createElement('div');
+			btnContainer.style.display = 'flex';
+			btnContainer.style.gap = '8px';
+
+			const unblock = document.createElement('button');
+			unblock.textContent = 'Unblock';
+			Object.assign(unblock.style, {
+				padding: '2px 3px',
+				fontSize: '0.875rem',
+				background: '#dc3545',
+				color: '#fff',
+				border: 'none',
+				borderRadius: '4px',
+				cursor: 'pointer'
+			});
+
+			unblock.addEventListener('click', async () => {
+				const res = await fetch(`/users/unblock/${b.id}`, { method: 'DELETE', credentials: 'include' });
+				const data = await res.json();
+				utils.showModal(data?.message);
+				friendsList(workArea);
+			});
+
+			btnContainer.append(unblock);
+			row.append(name, btnContainer);
+			middle.append(row);
+		})
+	}
+
+	const right = document.createElement('div');
+	Object.assign(right.style, {
+		flex: '1 1 auto',
+		display: 'flex',
+		flexDirection: 'column',
+		gap: '24px',
+	});
+
+	function makeInviteCard(titleText: string, list: { id: number; display_name: string }[], type: 'received' | 'sent') {
+		const card = document.createElement('div');
+		Object.assign(card.style, {
+			background: '#fff',
+			borderRadius: '12px',
+			padding: '16px',
+			boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+		});
+		const h = document.createElement('h4');
+		h.textContent = titleText;
+		h.style.marginBottom = '12px';
+		card.append(h);
+
+		if (list.length === 0) {
+			const none = document.createElement('p');
+			none.textContent = `No ${titleText.toLowerCase()}`;
+			none.style.color = '#666';
+			card.append(none);
+		} else {
+			list.forEach(inv => {
+				const row = document.createElement('div');
+				Object.assign(row.style, {
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'space-between',
+					padding: '6px 0',
+					borderBottom: '1px solid #eee'
+				});
+
+				const name = document.createElement('span');
+				name.textContent = inv.display_name;
+
+				const btnContainer = document.createElement('div');
+				btnContainer.style.display = 'flex';
+				btnContainer.style.gap = '8px';
+
+				if (type === 'received') {
+					const accept = document.createElement('button');
+					accept.textContent = 'Accept';
+					Object.assign(accept.style, {
+						padding: '2px 3px',
+						fontSize: '0.875rem',
+						background: '#28a745',
+						color: '#fff',
+						border: 'none',
+						borderRadius: '4px',
+						cursor: 'pointer'
+					});
+					accept.addEventListener('click', async () => {
+						const res = await fetch(`/users/friends/accept/${inv.id}`, { method: 'PUT', credentials: 'include' });
+						const data = await res.json();
+						utils.showModal(data?.message);
+						friendsList(workArea);
+					});
+
+					const reject = document.createElement('button');
+					reject.textContent = 'Reject';
+					Object.assign(reject.style, {
+						padding: '2px 3px',
+						fontSize: '0.875rem',
+						background: '#dc3545',
+						color: '#fff',
+						border: 'none',
+						borderRadius: '4px',
+						cursor: 'pointer'
+					});
+					reject.addEventListener('click', async () => {
+						const res = await fetch(`/users/friends/reject/${inv.id}`, { method: 'PUT', credentials: 'include' });
+						const data = await res.json();
+						utils.showModal(data?.message);
+						friendsList(workArea);
+					});
+
+					btnContainer.append(accept, reject);
+
+				} else {
+					const cancel = document.createElement('button');
+					cancel.textContent = 'Cancel';
+					Object.assign(cancel.style, {
+						padding: '2px 3px',
+						fontSize: '0.875rem',
+						background: '#ffc107',
+						color: '#000',
+						border: 'none',
+						borderRadius: '4px',
+						cursor: 'pointer'
+					});
+					cancel.addEventListener('click', async () => {
+						const res = await fetch(`users/friends/cancel/${inv.id}`, { method: 'DELETE', credentials: 'include' });
+						const data = await res.json();
+						utils.showModal(data?.message);
+						friendsList(workArea);
+					});
+					btnContainer.append(cancel);
+				}
+
+				row.append(name, btnContainer);
+				card.append(row);
+			});
+		}
+
+		return card;
+	}
+
+	right.append(
+		makeInviteCard('Invitations Received', received, 'received'),
+		makeInviteCard('Invitations Sent', sent, 'sent')
+	);
+
+	container.append(left, middle, right);
+	workArea.appendChild(container);
 }
 
 // TODO : - game won't present errors, but won't start

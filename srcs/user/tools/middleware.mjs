@@ -73,6 +73,11 @@ export function loadFriendship(fastify) {
 	return async (req) => {
 		const { userId, targetId } = req;
 
+		const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
+
+		if (blocked)
+			throw fastify.httpErrors.badRequest('You cannot add this user');
+
 		try {
 			const friendship = await db.get(`SELECT * FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, targetId, targetId, userId]);
 
@@ -102,13 +107,13 @@ export function loadMatchInvites(fastify) {
 	return async (req) => {
 		const { userId, targetId } = req;
 
+		const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) 
+			OR (blocker_id = ?AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
+
+		if (blocked)
+			throw fastify.httpErrors.badRequest(`Can't invite blocked users to a match`);
+
 		try {
-			const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) 
-				OR (blocker_id = ?AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
-
-			if (blocked)
-				throw fastify.httpErrors.badRequest('User cannot be invited to a match');
-
 			const invite = await db.get(`SELECT * FROM match_invites WHERE (user_id = ? AND friend_id = ?) 
 				OR (user_id = ? AND friend_id = ?)`, [userId, targetId, targetId, userId]);
 
@@ -166,6 +171,6 @@ export function isBlocked(fastify) {
 			[userId, targetId]
 		);
 		if (!isBlocked)
-			throw fastify.httpErrors.conflict('Block does not exist');
+			throw fastify.httpErrors.conflict('User is not blocked');
 	}
 }
