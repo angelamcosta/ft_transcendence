@@ -342,11 +342,6 @@ export default async function userRoutes(fastify) {
 	}, async (req) => {
 		const { userId, targetId } = req;
 
-		const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)`, [userId, targetId, targetId, userId]);
-
-		if (blocked)
-			throw fastify.httpErrors.forbidden('You cannot add this user');
-
 		if (req.friendship?.friendship_status === "accepted")
 			throw fastify.httpErrors.conflict('Friendship is already accepted');
 
@@ -562,12 +557,6 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
-
-		const blocked = await db.get(`SELECT 1 FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?) 
-			OR (blocker_id = ?AND blocked_id = ?)`, [userId, paramId, paramId, userId]);
-
-		if (blocked)
-			throw fastify.httpErrors.badRequest('User cannot be invited to a match');
 
 		if (req.invite?.invite_status === 'pending')
 			throw fastify.httpErrors.badRequest('There is already a pending match invite');
