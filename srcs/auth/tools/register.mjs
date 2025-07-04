@@ -13,6 +13,12 @@ export async function registerUser(db, {email, password, display_name}) {
 		throw error
 	}
 
+	if (email.length > 128 || password.length > 128 || display_name > 128) {
+		const error = new Error(`Fields can't contain more than 128 characters`)
+		error.statusCode = 400
+		throw error
+	}
+
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 	if (!emailRegex.test(email)) {
 		const error = new Error('Invalid email format')
