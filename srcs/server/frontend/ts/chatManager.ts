@@ -1,6 +1,28 @@
+import { getUsers, User } from './utils.js';
+import { directMessagePage } from './displayPage.js';
+
 export let globalSocket: WebSocket | null = null;
 export const onlineUsers = new Set<string>();
 export const unreadDM = new Set<string>();
+
+export interface ChatMessage {
+	display_name: string;
+	content: string;
+	timestamp: number;
+}
+
+let activeDM: string | null = null
+
+export function getActiveDM() {
+	return activeDM;
+}
+
+export function setActiveDM(name: string | null) {
+	if (name)
+		activeDM = name;
+	else
+		activeDM = null;
+}
 
 export function initGlobalChat(userId: string, display_name: string) {
 	if (globalSocket) return;
@@ -59,93 +81,29 @@ export function cleanGlobalChat() {
 	onlineUsers.clear();
 }
 
-export function buildDmCard(targetName: string, headerArea: HTMLDivElement) {
-	const wrapper = document.createElement('div');
-	Object.assign(wrapper.style, {
-		position: 'relative',
-		display: 'flex',
-		justifyContent: 'center',
-		alignItems: 'center',
-		height: `calc(85vh - ${headerArea.offsetHeight}px)`,
-	});
+export async function getUnreadMessages() {
+	unreadDM.clear();
+	try {
+		const res = await fetch('/users/dm/unread', {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+			},
+			credentials: 'include'
+		});
 
-	const dmCard = document.createElement('div');
-	Object.assign(dmCard.style, {
-		width: '420px',
-		maxWidth: '90vw',
-		height: '500px',
-		background: '#fff',
-		border: '1px solid #ccc',
-		borderRadius: '12px',
-		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-		display: 'flex',
-		flexDirection: 'column',
-		overflow: 'hidden',
-	});
+		if (!res.ok) return;
 
-	const title = document.createElement('div');
-	title.textContent = targetName;
-	Object.assign(title.style, {
-		padding: '12px 16px',
-		borderBottom: '1px solid #eee',
-		fontWeight: 'bold',
-		background: '#f7f7f7',
-	});
-
-	wrapper.append(dmCard);
-	dmCard.append(title);
-	return { wrapper, dmCard };
+		const { unread } = await res.json();
+		unread.forEach((name: string) => unreadDM.add(name));
+		window.dispatchEvent(new CustomEvent('global-presence-updated'));
+	} catch (error) {
+		console.error('Error fetching unread messages', error);
+	}
 }
 
-export function buildControls(
-	addFriendBtn: HTMLButtonElement,
-	viewProfileBtn: HTMLButtonElement,
-	inviteBtn: HTMLButtonElement,
-	blockBtn: HTMLButtonElement
-) {
-	const ctr = document.createElement('div');
-	Object.assign(ctr.style, {
-		display: 'flex',
-		gap: '6px',
-		justifyContent: 'center',
-		padding: '8px 0',
-		width: 'fit-content',
-		margin: '0 auto',
-	});
-
-	const all = [addFriendBtn, viewProfileBtn, inviteBtn, blockBtn]
-	all.forEach(b => {
-		Object.assign(b.style, {
-			flex: '0 0 auto',
-			whiteSpace: 'nowrap',
-			textAlign: 'center',
-			minWidth: '90px',
-		})
-	})
-
-	ctr.append(addFriendBtn, viewProfileBtn, inviteBtn, blockBtn);
-	return ctr;
-}
-
-export function buildDMChatContainer() {
-	const c = document.createElement('div');
-	Object.assign(c.style, {
-		flex: '1 1 auto',
-		padding: '8px',
-		overflowY: 'auto',
-	});
-	return c;
-}
-
-export function buildDMInputWrapper(sendBtn: HTMLButtonElement, messageInput: HTMLInputElement) {
-	const w = document.createElement('div');
-	Object.assign(w.style, {
-		display: 'flex',
-		borderTop: '1px solid #eee',
-		padding: '8px',
-	});
-	w.append(messageInput, sendBtn);
-	return w;
+export async function fetchFriendStatus(targetId: number) {
+	return fetch(`/users/friends/status/${targetId}`, { credentials: 'include' }).then(r => r.json());
 }
 
 export async function updateBlockUI(targetId: number,
@@ -171,110 +129,188 @@ export async function updateBlockUI(targetId: number,
 			banner.remove();
 	}
 	const disabled = blockedByMe || blockedByTarget;
-	chatContainer.style.opacity = disabled ? '0.5' : '1';
+	chatContainer.classList.toggle('opacity-50', blockedByMe || blockedByTarget);
 	messageInput.disabled = disabled;
 	sendBtn.disabled = disabled;
 }
 
-export function buildGlobalWrapper(headerArea: HTMLDivElement) {
-	const wrapper = document.createElement('div');
-	Object.assign(wrapper.style, {
-		position: 'relative',
-		display: 'flex',
-		justifyContent: 'center',
-		alignItems: 'center',
-		height: `calc(85vh - ${headerArea.offsetHeight}px)`
-	});
-	return wrapper;
+export function renderUserList(
+	users: User[],
+	userListContainer: HTMLDivElement,
+	display_name: string
+) {
+	userListContainer.innerHTML = '';
+	const online = users.filter(u => onlineUsers.has(u.display_name));
+	const offline = users.filter(u => !onlineUsers.has(u.display_name));
+
+	const render = (u: User) => {
+		const el = document.createElement('div');
+		el.classList.add(
+			'flex',
+			'items-center',
+			'justify-start',
+			'py-1',
+			'px-2',
+			u.display_name === display_name ? 'cursor-default' : 'cursor-pointer'
+		);
+		const dot = document.createElement('span');
+		dot.classList.add(
+			'w-2',
+			'h-2',
+			'rounded-full',
+			onlineUsers.has(u.display_name) ? 'bg-green-500' : 'bg-transparent',
+			'mr-2',
+			'flex-shrink-0',
+		);
+		el.append(dot);
+
+		const nameEl = document.createElement('span');
+		nameEl.textContent = u.display_name;
+		nameEl.classList.add(
+			u.display_name === display_name ? 'font-bold' : 'font-normal'
+		);
+		if (unreadDM.has(u.display_name))
+			nameEl.classList.add('animate-[blink-color_1s_infinite]');
+		el.append(nameEl);
+
+		if (u.display_name !== display_name) {
+			el.addEventListener('click', () =>
+				openDirectMessage(display_name, u.display_name, u.id)
+			);
+		}
+
+		userListContainer.append(el);
+	};
+
+	online.forEach(render);
+	offline.forEach(render);
 }
 
-export function buildGlobalChatCard() {
-	const chatCard = document.createElement('div');
-	Object.assign(chatCard.style, {
-		width: '400px',
-		maxWidth: '90vw',
-		height: '500px',
-		background: '#fff',
-		border: '1px solid #ccc',
-		borderRadius: '12px',
-		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-		display: 'flex',
-		flexDirection: 'column',
-		overflow: 'hidden'
+export function setupChatSocket(
+	users: User[],
+	userListContainer: HTMLDivElement,
+	chatContainer: HTMLDivElement,
+	userId: string,
+	display_name: string
+) {
+	globalSocket!.addEventListener('open', () => {
+		globalSocket!.send(JSON.stringify({ type: 'identify', userId: userId }));
 	});
 
-	const chatContainer = document.createElement('div');
-	Object.assign(chatContainer.style, {
-		flex: '1 1 auto',
-		padding: '8px',
-		overflowY: 'auto'
+	globalSocket!.addEventListener('message', async evt => {
+		let dataStr: string;
+		if (typeof evt.data === 'string')
+			dataStr = evt.data;
+		else if (evt.data instanceof Blob)
+			dataStr = await evt.data.text();
+		else
+			dataStr = new TextDecoder().decode(evt.data);
+
+		const msg = JSON.parse(dataStr);
+		switch (msg.type) {
+			case 'rename':
+				users.splice(0, users.length, ...(await getUsers()))
+				onlineUsers.delete(msg.old);
+				onlineUsers.add(msg._new);
+				renderUserList(users, userListContainer, display_name);
+				appendSystemMessage(chatContainer, `${msg.old} is now known as ${msg._new}`);
+				break;
+			case 'identify':
+				renderUserList(users, userListContainer, display_name);
+				break;
+			case 'join':
+				renderUserList(users, userListContainer, display_name);
+				appendSystemMessage(chatContainer, `${msg.display_name} joined the chat`);
+				break;
+			case 'leave':
+				renderUserList(users, userListContainer, display_name);
+				appendSystemMessage(chatContainer, `${msg.display_name} left the chat`);
+				break;
+			case 'dm-notification':
+				if (msg.from !== getActiveDM()) {
+					unreadDM.add(msg.from);
+					renderUserList(users, userListContainer, display_name);
+				}
+				break;
+			case 'message':
+				appendMessage(chatContainer, {
+					display_name: msg.display_name,
+					content: msg.content,
+					timestamp: msg.timestamp,
+				}, display_name);
+				break;
+		}
 	});
 
-	const inputWrapper = document.createElement('div');
-	Object.assign(inputWrapper.style, {
-		display: 'flex',
-		borderTop: '1px solid #eee',
-		padding: '8px'
-	});
-
-	const messageInput = document.createElement('input');
-	messageInput.placeholder = 'Type a message…';
-	Object.assign(messageInput.style, {
-		flex: '1 1 auto',
-		padding: '4px 8px',
-		border: '1px solid #ccc',
-		borderRadius: '4px'
-	});
-
-	const sendBtn = document.createElement('button');
-	sendBtn.textContent = 'Send';
-	Object.assign(sendBtn.style, {
-		marginLeft: '8px',
-		padding: '4px 12px',
-		border: '1px solid #007bff',
-		background: '#007bff',
-		color: '#fff',
-		borderRadius: '4px',
-		cursor: 'pointer'
-	});
-
-	inputWrapper.append(messageInput, sendBtn);
-	chatCard.append(chatContainer, inputWrapper);
-
-	return { chatCard, chatContainer, messageInput, sendBtn };
+	globalSocket!.addEventListener('error', e => console.error('Chat error', e));
 }
 
-export function buildUserListPanel() {
-	const userListCard = document.createElement('div');
-	Object.assign(userListCard.style, {
-		width: '200px',
-		height: '500px',
-		background: '#fafafa',
-		border: '1px solid #ccc',
-		borderRadius: '12px',
-		boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-		display: 'flex',
-		flexDirection: 'column',
-		overflow: 'hidden',
-		marginLeft: '16px'
-	});
+export function sendMessage(
+	input: HTMLInputElement,
+	chatContainer: HTMLDivElement,
+	name: string
+) {
+	const content = input.value.trim();
+	if (!content) return;
+	globalSocket!.send(JSON.stringify({ type: 'message', content }));
+	appendMessage(chatContainer, {
+		display_name: name,
+		content,
+		timestamp: Date.now()
+	}, name);
+	input.value = '';
+}
 
-	const userListHeader = document.createElement('div');
-	userListHeader.textContent = 'Users';
-	Object.assign(userListHeader.style, {
-		padding: '8px',
-		borderBottom: '1px solid #eee',
-		fontWeight: 'bold',
-		textAlign: 'center'
-	});
+export function appendMessage(
+	chatContainer: HTMLDivElement,
+	msg: ChatMessage,
+	name: string
+) {
+	const wrap = document.createElement('div');
+	wrap.className = 'mb-2';
 
-	const userListContainer = document.createElement('div');
-	Object.assign(userListContainer.style, {
-		flex: '1 1 auto',
-		padding: '8px',
-		overflowY: 'auto'
-	});
+	const isMine = msg.display_name === name;
+	const alignClass = isMine ? 'text-right' : 'text-left';
 
-	userListCard.append(userListHeader, userListContainer);
-	return { userListCard, userListContainer };
+	const line = document.createElement('div');
+	line.className = alignClass;
+	line.textContent = `${msg.display_name}: ${msg.content}`;
+	wrap.append(line);
+
+	const time = document.createElement('div');
+	time.className = `${alignClass} mt-0.5 text-xs text-gray-600`;
+	time.textContent = new Date(msg.timestamp).toLocaleTimeString([], {
+		hour: '2-digit', minute: '2-digit'
+	});
+	wrap.append(time);
+
+	chatContainer.append(wrap);
+	chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+export function appendSystemMessage(
+	chatContainer: HTMLDivElement,
+	text: string
+) {
+	const line = document.createElement('div');
+	line.className = 'text-center italic';
+	line.textContent = text;
+	chatContainer.append(line);
+	chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+export function openDirectMessage(
+	display_name: string,
+	targetName: string,
+	targetId: number
+) {
+	setActiveDM(targetName);
+	if (unreadDM.has(targetName)) {
+		unreadDM.delete(targetName);
+	}
+	directMessagePage(
+		document.getElementById('appArea') as HTMLDivElement,
+		display_name, targetName,
+		localStorage.getItem('userId')!, targetId
+	);
 }

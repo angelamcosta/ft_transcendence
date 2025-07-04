@@ -2,10 +2,10 @@ import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
-import { buildDMChatContainer, buildControls, buildDmCard, buildDMInputWrapper, globalSocket, onlineUsers, unreadDM, updateBlockUI, buildGlobalWrapper, buildGlobalChatCard, buildUserListPanel } from './chatManager.js';
-import { getUsers, User } from './utils.js';
-
-let activeDM: string | null = null;
+import { updateBlockUI, fetchFriendStatus, setActiveDM, renderUserList, setupChatSocket, sendMessage } from './chatManager.js';
+import { buildChatUI } from './globalChatUi.js'
+import { buildDMChatContainer, buildControls, buildDmCard, buildDMInputWrapper } from './dmChatUi.js'
+import { getUsers } from './utils.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
@@ -681,7 +681,7 @@ export function header(headerArea: HTMLDivElement | null) {
 }
 
 export async function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
-	activeDM = null;
+	setActiveDM(null);
 	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
 	if (!workArea || !headerArea)
@@ -689,179 +689,29 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 
 	utils.cleanDiv(workArea);
 
-	const wrapper = buildGlobalWrapper(headerArea);
+	const { userListContainer, chatContainer, messageInput, sendBtn } =
+		buildChatUI(workArea, headerArea);
 
-	const { chatCard, chatContainer, messageInput, sendBtn } = buildGlobalChatCard();
-	const { userListCard, userListContainer } = buildUserListPanel();
+	const users = await getUsers();
 
-	wrapper.append(chatCard, userListCard);
-	workArea.appendChild(wrapper);
 
-	const registeredUsers: User[] = await getUsers();
+	renderUserList(users, userListContainer, display_name);
+	window.addEventListener('global-presence-updated', () =>
+		renderUserList(users, userListContainer, display_name)
+	);
 
-	function renderUserList() {
-		userListContainer.innerHTML = '';
+	setupChatSocket(users, userListContainer, chatContainer, userId, display_name);
 
-		const onlineList = registeredUsers.filter(user => onlineUsers.has(user.display_name));
-		const offlineList = registeredUsers.filter(user => !onlineUsers.has(user.display_name));
+	sendBtn.addEventListener('click', () =>
+		sendMessage(messageInput, chatContainer, display_name)
+	);
 
-		const render = (user: User) => {
-			const el = document.createElement('div');
-			Object.assign(el.style, {
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'flex-start',
-				padding: '4px 8px',
-				cursor: user.display_name !== display_name ? 'pointer' : 'default'
-			});
-
-			const dot = document.createElement('span');
-			Object.assign(dot.style, {
-				width: '8px',
-				height: '8px',
-				borderRadius: '50%',
-				background: onlineUsers.has(user.display_name) ? 'green' : 'transparent',
-				marginRight: '8px',
-				flexShrink: '0',
-			});
-			el.appendChild(dot);
-
-			const nameEl = document.createElement('span');
-			nameEl.textContent = user.display_name;
-			if (user.display_name === display_name)
-				nameEl.style.fontWeight = 'bold';
-			el.appendChild(nameEl);
-
-			if (unreadDM.has(user.display_name))
-				nameEl.style.animation = 'blink-color 1s infinite';
-
-			if (user.display_name !== display_name)
-				el.addEventListener('click', () => openDirectMessage(user.display_name, user.id));
-			userListContainer.appendChild(el);
-		};
-		onlineList.forEach(render);
-		offlineList.forEach(render);
-	}
-
-	renderUserList();
-	window.addEventListener('global-presence-updated', renderUserList);
-
-	globalSocket!.addEventListener('open', () => {
-		globalSocket!.send(JSON.stringify({ type: 'identify', userId }));
-	});
-	globalSocket!.addEventListener('message', async evt => {
-		let dataStr: string;
-		if (typeof evt.data === 'string')
-			dataStr = evt.data;
-		else if (evt.data instanceof Blob)
-			dataStr = await evt.data.text();
-		else
-			dataStr = new TextDecoder().decode(evt.data);
-
-		const msg = JSON.parse(dataStr);
-
-		switch (msg.type) {
-			case 'rename':
-				registeredUsers.splice(0, registeredUsers.length, ...(await getUsers()))
-				onlineUsers.delete(msg.old);
-				onlineUsers.add(msg._new);
-				renderUserList();
-				appendSystemMessage(`${msg.old} is now known as ${msg._new}`);
-				break;
-			case 'identify':
-				renderUserList();
-				break;
-			case 'join':
-				renderUserList();
-				appendSystemMessage(`${msg.display_name} joined the chat`);
-				break;
-			case 'leave':
-				renderUserList();
-				appendSystemMessage(`${msg.display_name} left the chat`);
-				break;
-			case 'dm-notification':
-				if (msg.from !== activeDM) {
-					unreadDM.add(msg.from);
-					renderUserList();
-				}
-				break;
-			case 'message':
-				appendMessage({
-					display_name: msg.display_name,
-					content: msg.content,
-					timestamp: msg.timestamp,
-				});
-				break;
-		}
-	});
-	globalSocket!.addEventListener('error', err => console.error('Global chat error', err));
-
-	function sendMessage() {
-		const content = messageInput.value.trim();
-		if (!content)
-			return;
-
-		const payload = JSON.stringify({ type: 'message', content });
-		globalSocket!.send(payload);
-		appendMessage({ display_name, content, timestamp: Date.now() });
-		messageInput.value = '';
-	}
-	sendBtn.addEventListener('click', sendMessage);
-
-	messageInput.addEventListener('keydown', (e) => {
-		if (e.key == 'Enter' && !e.shiftKey) {
+	messageInput.addEventListener('keydown', e => {
+		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
-			sendMessage();
+			sendMessage(messageInput, chatContainer, display_name);
 		}
-	})
-
-	function appendMessage(msg: {
-		display_name: string;
-		content: string;
-		timestamp: number;
-	}) {
-		const messageWrapper = document.createElement('div');
-		messageWrapper.style.marginBottom = '8px';
-
-		const line = document.createElement('div');
-		line.style.textAlign = msg.display_name === display_name ? 'right' : 'left';
-		line.textContent = `${msg.display_name}: ${msg.content}`;
-		messageWrapper.appendChild(line);
-
-		const time = document.createElement('div');
-		time.style.fontSize = '0.7em';
-		time.style.color = '#666';
-		time.style.marginTop = '2px';
-		time.style.textAlign = line.style.textAlign;
-
-		time.textContent = new Date(msg.timestamp).toLocaleTimeString([], {
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-		messageWrapper.appendChild(time);
-
-		chatContainer.appendChild(messageWrapper);
-		chatContainer.scrollTop = chatContainer.scrollHeight;
-	}
-
-	function appendSystemMessage(text: string) {
-		const line = document.createElement('div');
-		line.style.textAlign = 'center';
-		line.style.fontStyle = 'italic';
-		line.textContent = text;
-		chatContainer.appendChild(line);
-		chatContainer.scrollTop = chatContainer.scrollHeight;
-	}
-
-	function openDirectMessage(targetName: string, targetId: number) {
-		utils.cleanDiv(workArea);
-		activeDM = targetName;
-		if (unreadDM.has(targetName)) {
-			unreadDM.delete(targetName);
-			renderUserList();
-		}
-		directMessagePage(workArea, display_name, targetName, userId, targetId);
-	}
+	});
 }
 
 export async function directMessagePage(
@@ -959,7 +809,7 @@ export async function directMessagePage(
 
 	async function refreshFriendUI() {
 		const { areFriends, requestSent, requestReceived } =
-			await utils.fetchFriendStatus(targetId);
+			await fetchFriendStatus(targetId);
 
 		alreadyFriends = areFriends;
 		friendPending = requestSent;

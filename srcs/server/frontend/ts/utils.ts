@@ -1,4 +1,3 @@
-import { unreadDM } from './chatManager.js';
 import * as displayPage from './displayPage.js'
 import * as buttonHandlers from './buttonHandlers.js'
 
@@ -73,27 +72,6 @@ export async function getUsers(): Promise<User[]> {
 	return [];
 }
 
-export async function getUnreadMessages() {
-	unreadDM.clear();
-	try {
-		const res = await fetch('/users/dm/unread', {
-			method: 'GET',
-			headers: {
-				'Accept': 'application/json',
-			},
-			credentials: 'include'
-		});
-
-		if (!res.ok) return;
-
-		const { unread } = await res.json();
-		unread.forEach((name: string) => unreadDM.add(name));
-		window.dispatchEvent(new CustomEvent('global-presence-updated'));
-	} catch (error) {
-		console.error('Error fetching unread messages', error);
-	}
-}
-
 export function getCookie(name: string): string | null {
 	const cookies = document.cookie.split(';');
 	for (let cookie of cookies) {
@@ -103,10 +81,6 @@ export function getCookie(name: string): string | null {
 		}
 	}
 	return null;
-}
-
-export async function fetchFriendStatus(targetId: number) {
-	return fetch(`/users/friends/status/${targetId}`, { credentials: 'include'}).then(r => r.json());
 }
 
 export function sleep(ms: number): Promise<void> {

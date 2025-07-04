@@ -66,4 +66,17 @@ h1, h2, h3, h4, h5, h6 {
   .history-table tbody tr:nth-child(even) td {
     @apply bg-gray-50;
   }
+
+  .card {
+    @apply
+      bg-gray-50
+      border
+      border-gray-300
+      border-solid
+      rounded-xl
+      shadow-lg
+      flex
+      flex-col
+      overflow-hidden;
+  }
 }
