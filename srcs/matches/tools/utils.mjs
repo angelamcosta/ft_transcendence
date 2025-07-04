@@ -64,7 +64,7 @@ export async function autoPairPlayers(fastify) {
 export async function generateSixPlayerBracket(tournamentId) {
   try {
     const players = await db.all(
-      'SELECT p.id AS player_id FROM   players p WHERE  (p.tournament_id = ?) AND (p.status = `accepted`) ORDER  BY p.id LIMIT  6;',
+      "SELECT p.id AS player_id FROM   players p WHERE  (p.tournament_id = ?) AND (p.status = 'accepted') ORDER  BY p.id LIMIT  6;",
       tournamentId
     );
 
@@ -142,3 +142,72 @@ export async function generateSixPlayerBracket(tournamentId) {
     await db.close();
   }
 }
+
+export async function startTournament(fastify, tournamentId) {
+  const db = fastify.db;
+  await db.run(
+    `UPDATE tournaments SET status = 'in_progress' WHERE id = ?`,
+    [tournamentId]
+  );
+
+  const players = await db.all(
+    `SELECT id FROM players WHERE tournament_id = ?`,
+    [tournamentId]
+  );
+
+  for (let i = players.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [players[i], players[j]] = [players[j], players[i]];
+  }
+
+  const stmt = await db.prepare(
+    `INSERT INTO matches (tournament_id, player1_id, player2_id, round)
+     VALUES (?, ?, ?, 1)`
+  );
+  for (let i = 0; i < players.length; i += 2) {
+    const p1 = players[i].id;
+    const p2 = players[i + 1].id;
+    await stmt.run(tournamentId, p1, p2);
+  }
+  await stmt.finalize();
+}
+
+
+export async function advanceTournamentRound(fastify, tournamentId, currentRound) {
+  const db = fastify.db;
+
+  const { pending } = await db.get(
+    `SELECT COUNT(*) AS pending
+     FROM matches
+     WHERE tournament_id = ? AND round = ? AND status <> 'finished'`,
+    [tournamentId, currentRound]
+  );
+  if (pending > 0) return;
+
+  const winners = await db.all(
+    `SELECT winner_id AS id
+     FROM matches
+     WHERE tournament_id = ? AND round = ?`,
+    [tournamentId, currentRound]
+  );
+
+  if (winners.length === 1) {
+    await db.run(
+      `UPDATE tournaments SET status = 'finished' WHERE id = ?`,
+      [tournamentId]
+    );
+    return;
+  }
+
+  const nextRound = currentRound + 1;
+  for (let i = 0; i < winners.length; i += 2) {
+    const p1 = winners[i].id;
+    const p2 = winners[i + 1].id;
+    await db.run(
+      `INSERT INTO matches (tournament_id, player1_id, player2_id, round)
+       VALUES (?, ?, ?, ?)`,
+      [tournamentId, p1, p2, nextRound]
+    );
+  }
+}
+

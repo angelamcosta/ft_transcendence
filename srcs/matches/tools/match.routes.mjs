@@ -1,7 +1,30 @@
-import { db, autoPairPlayers } from './utils.mjs'
+import { autoPairPlayers, advanceTournamentRound, startTournament, db } from './utils.mjs'
+
+const GAME_URL = process.env.GAME_URL;
+if (!GAME_URL) throw new Error('⛔️ Missing env GAME_URL');
 
 export default async function matchRoutes(fastify) {
 	const interval = setInterval(() => { autoPairPlayers(fastify); }, 15000);
+
+	fastify.addHook('onReady', async () => {
+		fastify.on('match:finished', async ({ tournamentId, round }) => {
+			try {
+				await advanceTournamentRound(fastify, tournamentId, round);
+				const nextRound = round + 1;
+				const newMatches = await db.all(
+					'SELECT id FROM matches WHERE tournament_id = ? AND round = ?',
+					[tournamentId, nextRound]
+				);
+				for (const { id } of newMatches) {
+					await fetch(`${GAME_URL}/api/game/${id}`, { method: 'POST' });
+					await fetch(`${GAME_URL}/api/game/${id}/init`, { method: 'POST' });
+					await fetch(`${GAME_URL}/api/game/${id}/start`, { method: 'POST' });
+				}
+			} catch (err) {
+				fastify.log.error(`Falha ao avançar torneio ${tournamentId}: ${err.message}`);
+			}
+		})
+	})
 
 	fastify.addHook('onClose', async (_instance, done) => {
 		clearInterval(interval);
@@ -14,7 +37,7 @@ export default async function matchRoutes(fastify) {
 			return res.send(matches);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw fastify.httpErrors.internalServerError('Failed to fetch matches: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Failed to fetch matches: ', err.message);
 		}
 	});
 
@@ -24,7 +47,7 @@ export default async function matchRoutes(fastify) {
 			return res.send(tournaments);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw fastify.httpErrors.internalServerError('Failed to fetch tournaments: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Failed to fetch tournaments: ', err.message);
 		}
 	});
 
@@ -42,7 +65,7 @@ export default async function matchRoutes(fastify) {
 			return { message: 'Tournament created successfully' };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 		}
 	});
 
@@ -66,8 +89,22 @@ export default async function matchRoutes(fastify) {
 		await db.run('INSERT INTO players (tournament_id, user_id) VALUES (?, ?)', [tour.id, user_id]);
 		const { count } = await db.get('SELECT COUNT(*) AS count FROM players WHERE tournament_id = ?', [tour.id]);
 
-		if (count === tour.capacity)
-			// TODO : - start tounament
+		if (count === tour.capacity) {
+			await db.run(
+				'UPDATE tournaments SET status = ? WHERE id = ?',
+				['in_progress', tour.id]
+			)
+			await startTournament(fastify, tour.id)
+			const created = await db.all(
+				'SELECT id FROM matches WHERE tournament_id = ?',
+				[tour.id]
+			)
+			for (const { id } of created) {
+				await fetch(`${GAME_URL}/api/game/${id}`, { method: 'POST' })
+				await fetch(`${GAME_URL}/api/game/${id}/init`, { method: 'POST' })
+				await fetch(`${GAME_URL}/api/game/${id}/start`, { method: 'POST' })
+			}
+		}
 		return { message: 'Joined tournament', players: count };
 	});
 
@@ -98,8 +135,10 @@ export default async function matchRoutes(fastify) {
 		await db.run('UPDATE players SET status=? WHERE id IN (?, ?)', ['winner', winnerId, loser]);
 		await db.run('UPDATE players SET status=? WHERE id=?', ['loser', loser]);
 
-		// TODO : - advance round if in tournament
+		fastify.log.info(`Match ${match.id} finished, winner ${winnerId}`)
 
+		if (match.tournament_id)
+			fastify.emit('match:finished', { tournamentId: match.tournament_id, round: match.round })
 		return { success: true };
 	});
 
@@ -118,7 +157,7 @@ export default async function matchRoutes(fastify) {
 				return { match };
 			} catch (err) {
 				fastify.log.error(`Database error: ${err.message}`);
-				throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+				throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 			}
 		});
 
@@ -133,7 +172,7 @@ export default async function matchRoutes(fastify) {
 			return { "left": result.changes > 0 };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 		}
 	});
 
@@ -147,7 +186,7 @@ export default async function matchRoutes(fastify) {
 			return { "queued": true };
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
-			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 		}
 	});
 }

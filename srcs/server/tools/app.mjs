@@ -4,10 +4,9 @@ import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import websocket from '@fastify/websocket'
+import websocket from '@fastify/websocket';
 import fastifyStatic from '@fastify/static';
 import fastifyCookie from '@fastify/cookie';
-import { WebSocket as ws } from 'ws';
 import authRoutes from './auth.routes.mjs';
 import userRoutes from './user.routes.mjs';
 import matchRoutes from './match.routes.mjs';
@@ -19,12 +18,12 @@ const KEY_PATH = process.env.SERVER_KEY || 'key.pem';
 const CERT_PATH = process.env.SERVER_CERT || 'cert.pem';
 const PORT = process.env.SERVER_PORT || 9000;
 
-
 const db = await open({
 	filename: process.env.DB_PATH,
 	driver: sqlite3.Database
 });
 
+const games = new Map();
 
 const app = Fastify({
 	logger: true,
@@ -52,7 +51,6 @@ const idBySock = new Map();
 app.get('/chat', { websocket: true, onRequest: authenticateRequest(app) }, async (socket, req) => {
 	const userId = req.authUser.id;
 	const row = await db.get('SELECT display_name FROM users WHERE id = ?', userId);
-
 
 	let displayName = 'unknown';
 	if (row && row.display_name)
@@ -266,8 +264,13 @@ app.get('/', async (req, res) => {
 });
 
 await app.register(authRoutes);
-await app.register(gameRoutes);
-await app.register(matchRoutes);
+await app.register(gameRoutes, {
+	prefix: '/api/game',
+	games
+});
+await app.register(matchRoutes, {
+	prefix: '/api/matches'
+});
 await app.register(userRoutes);
 
 app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {

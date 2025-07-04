@@ -1,38 +1,46 @@
 import { WebSocketServer } from 'ws';
 
-export function attachWebSocket(server, game) {
-    const wss = new WebSocketServer({ server });
-    wss.on('connection', ws => {
-        console.log('🟢 Cliente conectado ao WebSocket do jogo');
+export function attachWebSocket(server, games) {
+  const wss = new WebSocketServer({ noServer: true });
 
-        const sendState = state => { if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'state', data: state })); };
-
-        sendState(game.state);
-
-        game.on('state', sendState);
-
-        ws.on('message', msg => {
-            console.log('📥 Mensagem recebida do proxy:', msg.toString());
-
-            let data;
-            try {
-                if (msg instanceof Buffer) data = JSON.parse(msg.toString());
-                else if (typeof msg === 'string') data = JSON.parse(msg);
-                else return;
-
-                console.log('Dados parseados:', data);
-            } catch (err) {
-                console.error('Erro ao parsear mensagem:', err);
-                return;
-            }
-
-            const { type, data: payload } = data;
-            if (type === 'control') game.control(payload.player, payload.action);
-            else if (type === 'start') game.start();
-        });
-
-        ws.on('close', () => {
-            game.removeListener('state', sendState);
-        });
+  server.server.on('upgrade', (req, socket, head) => {
+    if (!req.url.startsWith('/ws/')) return;
+    wss.handleUpgrade(req, socket, head, ws => {
+      wss.emit('connection', ws, req);
     });
+  });
+
+  wss.on('connection', (ws, req) => {
+    const match = req.url.match(/^\/ws\/([^\/]+)$/);
+    const gameId = match && match[1];
+    if (!gameId || !games.has(gameId)) {
+      ws.send(JSON.stringify({ error: 'Match not found' }));
+      return ws.close();
+    }
+
+    const game = games.get(gameId);
+
+    ws.send(JSON.stringify({ gameId, state: game.state }));
+
+    const sendState = state => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({ gameId, state }));
+      }
+    };
+    game.on('state', sendState);
+
+    ws.on('message', msg => {
+      try {
+        const { action, payload } = JSON.parse(msg);
+        if (action === 'move') {
+          game.control(payload.player, payload.direction);
+        }
+      } catch (e) {
+      }
+    });
+
+    ws.on('close', () => {
+      game.off('state', sendState);
+    });
+  });
 }

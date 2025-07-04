@@ -1,41 +1,45 @@
-import fs from 'fs';
-import path from 'path';
 import Fastify from 'fastify';
+import fastifyWebsocket from '@fastify/websocket';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
 import gameRoutes from './game.routes.mjs';
-import { GameService } from './service.mjs';
 import { attachWebSocket } from './middleware.mjs';
 
-const game = new GameService();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const __dirname = new URL('.', import.meta.url).pathname;
-const PORT = process.env.GAME_PORT || 9002;
-
-const app = Fastify({
-  logger: true,
-  ignoreTrailingSlash: true,
-  https: {
-    key: fs.readFileSync(path.join(__dirname, process.env.GAME_KEY || 'key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, process.env.GAME_CERT || 'cert.pem'))
-  }
-});
-
-const shutdown = async () => {
-	await app.close();
-	process.exit(0);
+const httpsOptions = {
+  key: readFileSync(path.join(__dirname, process.env.GAME_KEY || 'key.pem')),
+  cert: readFileSync(path.join(__dirname, process.env.GAME_CERT || 'cert.pem')),
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+const server = Fastify({
+  logger: true,
+  https: httpsOptions,
+  ignoreTrailingSlash: true,
+});
 
-await app.register(gameRoutes, { prefix: '/api' });
+const games = new Map();
 
-const server = app.server;
-attachWebSocket(server, game);
+await server.register(fastifyWebsocket);
 
-app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
-  if (err) {
-    app.log.error(err);
+attachWebSocket(server, games);
+
+await server.register(gameRoutes, {
+  prefix: '/api/game',
+  games
+});
+
+const start = async () => {
+  try {
+    const port = Number(process.env.GAME_PORT) || 9002;
+    await server.listen({ port, host: '0.0.0.0' });
+    console.log(`Game service running on https://0.0.0.0:${port}`);
+  } catch (err) {
+    server.log.error(err);
     process.exit(1);
   }
-  app.log.info(`Server running at ${address}`);
-});
+};
+
+start();

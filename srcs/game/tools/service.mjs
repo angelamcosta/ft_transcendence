@@ -1,122 +1,70 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from 'events';
 
 export class GameService extends EventEmitter {
     constructor() {
         super();
-        this.reset();
-        this.width = 600;
-        this.height = 600;
+        this.state = {
+            ball: { x: 300, y: 200, vx: 0, vy: 0 },
+            paddles: [
+                { x: 10, y: 150 },
+                { x: 580, y: 150 },
+            ],
+            score: [0, 0],
+        };
+        this.intervalId = null;
+        this.timeoutId = null;
     }
 
     reset() {
+        clearInterval(this.intervalId);
+        clearTimeout(this.timeoutId);
         this.state = {
-            ball: {
-                x: 300,
-                y: 300,
-                vx: 5,
-                vy: 3,
-                radius: 10
-            },
-            players: [
-                { y: 250, up: false, down: false, width: 10, height: 100 },
-                { y: 250, up: false, down: false, width: 10, height: 100 }
+            ball: { x: 300, y: 200, vx: 0, vy: 0 },
+            paddles: [
+                { x: 10, y: 150 },
+                { x: 580, y: 150 },
             ],
-            scores: [0, 0]
+            score: [0, 0],
         };
-        this.emit("state", this.state);
+        this.emit('state', this.state);
     }
 
     start() {
-        if (this.intervalId) return;
-        this.emit("state", this.state);
-        this.intervalId = setInterval(() => this.step(), 16);
+        const angle = Math.random() * Math.PI * 2;
+        this.state.ball.vx = 200 * Math.cos(angle);
+        this.state.ball.vy = 200 * Math.sin(angle);
+        this.timeoutId = setTimeout(() => {
+            this.intervalId = setInterval(() => this.tick(), 1000 / 60);
+        }, 1000);
     }
 
-    step() {
-        this.state.players.forEach(p => {
-            if (p.up) p.y -= 4;
-            if (p.down) p.y += 4;
-            p.y = Math.max(0, Math.min(this.height - p.height, p.y));
-        });
+    control(playerIndex, direction) {
+        const paddle = this.state.paddles[playerIndex];
+        if (direction === 'up') paddle.y = Math.max(0, paddle.y - 10);
+        if (direction === 'down') paddle.y = Math.min(400, paddle.y + 10);
+        this.emit('state', this.state);
+    }
 
-        let b = this.state.ball;
-
-        b.x += b.vx;
-        b.y += b.vy;
-
-        if (b.y <= 0 || b.y >= this.height)
-            b.vy *= -1;
-
-        // Colisão com jogadores
-        this.state.players.forEach((p, i) => {
-            const playerX = i === 0 ? 0 : this.width - 10;
-            const playerWidth = 10;
-            const playerHeight = 100;
-
-            // Verifica se a bola está na zona horizontal da raquete
-            if ((i === 0 && b.x < playerX + playerWidth) ||
-                (i === 1 && b.x > playerX)) {
-
-                // Verifica colisão vertical
-                if (b.y > p.y && b.y < p.y + playerHeight) {
-                    // Calcula o ângulo de rebatimento baseado no local do impacto
-                    const hitPosition = (b.y - p.y) / playerHeight;
-                    const angle = hitPosition * Math.PI - Math.PI / 2; // -45° a +45°
-
-                    // Calcula nova direção
-                    const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy) * 1.1; // Aumenta velocidade
-                    b.vx = (i === 0 ? 1 : -1) * Math.cos(angle) * speed;
-                    if (b.vx < 3 && b.vx > -3) {
-                        if (b.vx >= 0) {
-                            b.vx = 3;
-                        }
-                        else {
-                            b.vx = -3;
-                        }
-                    }
-                    b.vy = Math.sin(angle) * speed;
-                }
+    tick() {
+        const b = this.state.ball;
+        b.x += b.vx / 60;
+        b.y += b.vy / 60;
+        if (b.y < 0 || b.y > 400) b.vy *= -1;
+        this.state.paddles.forEach((p, idx) => {
+            if (
+                b.x < p.x + 10 && b.x > p.x &&
+                b.y > p.y && b.y < p.y + 100
+            ) {
+                b.vx *= -1.05;
             }
         });
-
-        // Verifica pontuação
-        if (b.x < -10) {  // Saiu completamente pela esquerda
-            this.state.scores[1]++;
-            this.resetBall();
-        } else if (b.x > this.width + 10) {  // Saiu completamente pela direita
-            this.state.scores[0]++;
-            this.resetBall();
+        if (b.x < 0) {
+            this.state.score[1]++;
+            this.reset();
+        } else if (b.x > 600) {
+            this.state.score[0]++;
+            this.reset();
         }
-
-        this.emit("state", this.state);
-    }
-
-    resetBall() {
-        console.log("Resetting ball. Scores:", this.state.scores);
-
-        const b = this.state.ball;
-        b.x = this.width / 2;  // Centro horizontal
-        b.y = this.height / 2; // Centro vertical
-        b.vx = b.vx > 0 ? -5 : 5; // Inverte direção
-
-        // Adiciona um pequeno delay para dar tempo de ver o placar
-        clearInterval(this.intervalId);
-        this.intervalId = null;
-
-        setTimeout(() => {
-            this.start();
-        }, 1000); // 1 segundo de delay
-    }
-
-    control(playerIndex, action) {
-        console.log(`Controle: player=${playerIndex}, action=${action}`);
-        let p = this.state.players[playerIndex];
-        p.up = action === "up";
-        p.down = action === "down";
+        this.emit('state', this.state);
     }
 }
-
-// TODO : - check if the games is over (the socket connection must be closed!) (the frontend must make it very clear that the game is over, and who won, and add to the db)
-// TODO : - deal with multiplayer
-// TODO : - create private matches logic
-// TODO : - create tournament logic

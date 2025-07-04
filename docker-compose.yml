@@ -60,6 +60,7 @@ services:
     depends_on:
       - sqlite
       - user
+      - game
 
   auth:
     build:
