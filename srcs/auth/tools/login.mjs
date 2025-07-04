@@ -1,4 +1,4 @@
-import { generateJWT, verifyPassword } from "./utils.mjs"
+import { verifyPassword } from "./utils.mjs"
 import { sendEmail } from "./emailService.mjs"
 
 export async function loginUser(db, {email, password}) {
@@ -24,8 +24,10 @@ export async function loginUser(db, {email, password}) {
 	
 	if (user.twofa_status === 'enabled') {
 		await db.run(`UPDATE users SET otp = NULL, expire = NULL WHERE email = ?`, [email])
+
 		const otp_code = Math.floor(100000 + Math.random() * 900000)
 		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+
 		await db.run(`UPDATE users SET otp = ?, expire = ? WHERE email = ?`, [otp_code, expiresAt, email])
 		const emailSent = await sendEmail(email, otp_code)
 		if (!emailSent) {
@@ -35,13 +37,15 @@ export async function loginUser(db, {email, password}) {
 		return ({
 			message: 'Verification code sent',
 			twofa: 'enabled',
-			user: {id: user.id, displayName: user.display_name, email: user.email}
+			user: {
+				id: user.id, 
+				displayName: user.display_name, 
+				email: user.email
+			}
 		 })
 	}
 
-	const token = generateJWT({ userId: user.id, email: user.email })
 	return ({ 
-		cookie: `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`, 
 		twofa: 'disabled', 
 		user: {id: user.id, displayName: user.display_name, email: user.email}
 	})

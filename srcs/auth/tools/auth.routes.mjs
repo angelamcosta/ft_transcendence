@@ -1,22 +1,8 @@
 import { loginUser } from './login.mjs'
 import { registerUser } from './register.mjs'
-import { generateJWT, db } from './utils.mjs'
-import { jwtMiddleware } from './middleware.mjs'
+import { db } from './utils.mjs'
 
 export default async function authRoutes(fastify) {
-	fastify.addHook('onRequest', (req, reply, done) => {
-		req.cookies = {}
-		const cookieHeader = req.headers.cookie
-
-		if (cookieHeader) {
-			cookieHeader.split(';').forEach(pair => {
-				const [key, value] = pair.trim().split('=');
-				req.cookies[key] = decodeURIComponent(value)
-			})
-		}
-		done()
-	})
-
 	fastify.post('/register', async (req, reply) => {
 		try {
 			const result = await registerUser(db, req.body)
@@ -29,15 +15,27 @@ export default async function authRoutes(fastify) {
 	fastify.post('/login', async (req, reply) => {
 		try {
 			const result = await loginUser(db, req.body)
+			const { user, twofa, message} = result;
 
 			if (result.twofa === 'failed')
-				return reply.code(500).send({ error: result.message })
-			else if (result.twofa === 'disabled')
-				return reply.header('set-cookie', result.cookie).code(200).send({ success: "Login successful", user: result.user,  twofa: result.twofa })
-			else if (result.twofa === 'enabled')
-				return reply.code(200).send({ success: result.message, user: result.user, twofa: result.twofa })
+				return reply.code(500).send({ error: message })
+			if (result.twofa === 'enabled')
+				return reply.code(200).send({ success: message, user, twofa })
+
+			const token = await reply.jwtSign(
+				{ userId: user.id, email: user.email },
+				{ expiresIn: '1h' }
+			)
+
+			return reply.code(200).setCookie('auth', token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'Strict',
+				path: '/',
+				maxAge: 3600
+			}).send({ success: 'Login successful', user, twofa})
 		} catch (error) {
-			return reply.code(error.statusCode).send({ error: error.message })
+			return reply.code(500).send({ error: error.message })
 		}
 	})
 
@@ -81,9 +79,17 @@ export default async function authRoutes(fastify) {
 			}
 			await db.run(`UPDATE users SET otp = NULL, expire = NULL WHERE email = ?`, [email])
 
-			const token = generateJWT({ userId: user.id, email: user.email })
-			const cookie = `auth=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`
-			return reply.header('set-cookie', cookie).code(200).send({ success: 'Login successful' })
+			const token = await reply.jwtSign(
+				{ userId: user.id, email: user.email },
+				{ expiresIn: '1h' }
+			)
+			return reply.code(200).setCookie('auth', token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'Strict',
+				path: '/',
+				maxAge: 3600
+			}).send({ success: 'Login successful'})
 		}
 		catch (error) {
 			console.error('2FA verification error:', error)
@@ -91,7 +97,7 @@ export default async function authRoutes(fastify) {
 		}
 	})
 
-	fastify.post('/set-2fa', { preHandler: jwtMiddleware }, async (req, reply) => {
+	fastify.post('/set-2fa', { preValidation: fastify.authenticate }, async (req, reply) => {
 		const userId = req.user.userId
 		const { status } = req.body
 		const user = await db.get('SELECT twofa_status FROM users WHERE id = ?', [userId])
@@ -106,7 +112,7 @@ export default async function authRoutes(fastify) {
 		reply.send({ success: `2FA ${status}` })
 	});
 
-	fastify.get('/verify', { preHandler: jwtMiddleware }, async (req, reply) => {
+	fastify.get('/verify', { preValidation: fastify.authenticate }, async (req, reply) => {
 		return reply.code(200).send({
 			success: 'Token is valid',
 			user: {
