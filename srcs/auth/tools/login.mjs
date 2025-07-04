@@ -2,6 +2,8 @@ import { verifyPassword } from "./utils.mjs"
 import { sendEmail } from "./emailService.mjs"
 
 export async function loginUser(db, {email, password}) {
+	email = email.toLowerCase();
+	
 	if (!email || !password) {
 		const error = new Error('Missing fields')
 		error.statusCode = 400
@@ -10,21 +12,19 @@ export async function loginUser(db, {email, password}) {
 
 	const user = await db.get('SELECT * FROM users where email = ?', [email])
 	if (!user) {
-		const error = new Error('User does not exist')
+		const error = new Error('Invalid email or password')
 		error.statusCode = 401
 		throw error
 	}
-	
+
 	const validPassword = await verifyPassword(password, user.password);
 	if (!validPassword) {
-		const error = new Error('Invalid credentials')
+		const error = new Error('Invalid email or password')
 		error.statusCode = 401
 		throw error
 	}
-	
-	if (user.twofa_status === 'enabled') {
-		await db.run(`UPDATE users SET otp = NULL, expire = NULL WHERE email = ?`, [email])
 
+	if (user.twofa_status === 'enabled') {
 		const otp_code = Math.floor(100000 + Math.random() * 900000)
 		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 

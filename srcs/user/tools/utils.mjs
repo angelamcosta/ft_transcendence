@@ -10,9 +10,9 @@ export const db = await open({
 	driver: sqlite3.Database
 });
 
-export async function fetchUserById(id) {
-	if (!id) throw new Error('fetchUserById: missing id');
-
+export async function fetchUserById(id, fastify) {
+	if (!Number.isInteger(id) || id < 1)
+			throw fastify.httpErrors.badRequest('Invalid ID')
 	const sql = idRegex.test(id) ? 'SELECT * FROM users WHERE id = ?' : 'SELECT * FROM users WHERE display_name = ?';
 	try {
 		return await db.get(sql, [id]);
@@ -22,9 +22,7 @@ export async function fetchUserById(id) {
 	}
 }
 
-export async function fetchInviteById(id) {
-	if (!id) throw new Error('fetchInviteById: missing id');
-
+export async function fetchInviteById(id, fastify) {
 	try {
 		const invite = await db.get('SELECT * FROM match_invites WHERE id = ?', id);
 

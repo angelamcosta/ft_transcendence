@@ -1416,7 +1416,7 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 			uploadInput.value = '';
 			utils.showModal('Avatar uploaded succesfully!');
 		} else
-			utils.showModal(data?.error);
+			utils.showModal(data?.message);
 	});
 
 	uploadInput.addEventListener('change', () => {
