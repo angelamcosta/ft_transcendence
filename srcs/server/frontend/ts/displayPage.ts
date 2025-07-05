@@ -1097,7 +1097,7 @@ export function gamePage(workArea: HTMLDivElement | null) {
 	const canvas = document.createElement('canvas');
 
 	canvas.id = 'pong';
-	canvas.width = 600;
+	canvas.width = 1000;
 	canvas.height = 600;
 
 	workArea.appendChild(canvas);

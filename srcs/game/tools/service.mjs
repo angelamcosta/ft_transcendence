@@ -4,17 +4,17 @@ export class GameService extends EventEmitter {
     constructor() {
         super();
         this.reset();
-        this.width = 600;
+        this.width = 1000;
         this.height = 600;
     }
 
     reset() {
         this.state = {
             ball: {
-                x: 300,
+                x: 500,
                 y: 300,
                 vx: 5,
-                vy: 3,
+                vy: Math.floor(Math.random() * 11) - 5,
                 radius: 10
             },
             players: [
@@ -34,8 +34,8 @@ export class GameService extends EventEmitter {
 
     step() {
         this.state.players.forEach(p => {
-            if (p.up) p.y -= 4;
-            if (p.down) p.y += 4;
+            if (p.up) p.y -= 8;
+            if (p.down) p.y += 8;
             p.y = Math.max(0, Math.min(this.height - p.height, p.y));
         });
 
