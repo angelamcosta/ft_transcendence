@@ -34,7 +34,3 @@ export async function fetchInviteById(id, fastify) {
 		throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 	}
 }
-
-export async function verifyPassword(password, hash) {
-  return argon2.verify(hash, password);
-}

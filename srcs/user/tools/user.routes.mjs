@@ -1,4 +1,4 @@
-import { db, verifyPassword } from './utils.mjs'
+import { db } from './utils.mjs'
 import { promises as fsp } from 'fs';
 import fs from 'fs';
 import path from 'path';
@@ -178,16 +178,16 @@ export default async function userRoutes(fastify) {
 	})
 
 	fastify.post('/users/block/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship, fastify.loadMatchInvites],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked],
 	}, async (req) => {
 		try {
 			const userId = req.authUser.id;
 			const paramId = Number(req.params.id);
 
-			if (req.invite?.invite_status === 'pending')
-				await db.run(`DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
-			if (req.friendship)
-				await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
+			await db.run(`DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) 
+				OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
+			await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) 
+				OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
 			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id, status) VALUES (?, ?, ?)`, [userId, paramId, true]);
 			return { message: 'User blocked successfully' };
 		} catch (err) {
