@@ -145,6 +145,36 @@ export async function signIn(e: Event) {
 	}
 }
 
+export async function sendLink(e: Event) {
+	e.preventDefault();
+
+	const form = e.target as HTMLFormElement;
+	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const loginForm = (document.getElementById('login') as HTMLFormElement | null);
+	const resetButton = (document.getElementById('resetButton') as HTMLButtonElement | null);
+
+	let messageDiv = document.getElementById('sendLinkError') as HTMLDivElement | null;
+	if (!messageDiv) {
+		messageDiv = document.createElement('div');
+		messageDiv.id = 'sendLinkError';
+		messageDiv.className = 'text-red-600 mt-2 text-sm';
+		form.append(messageDiv);
+	}
+	messageDiv.textContent = "Testing error";
+
+	let successDiv = document.getElementById('successMessage') as HTMLDivElement | null;
+	if (!successDiv) {
+		successDiv = document.createElement('div');
+		successDiv.id = 'successMessage';
+		successDiv.className = 'text-green-600 mt-4 text-sm text-center';
+		loginForm?.append(successDiv);
+	}
+	resetButton?.classList.add("hidden");
+	successDiv.textContent = "A link to reset your password was sento to your e-mail";
+
+	workArea?.removeChild(form);
+}
+
 export async function verify2FA(e: Event) {
 	e.preventDefault();
 
