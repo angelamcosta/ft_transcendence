@@ -1,5 +1,9 @@
 export default {
   content: ["./public/*.html", "./public/*.js"],
+  safelist: [
+    'bg-red-500','border-red-500',
+    'bg-sky-500','border-sky-500',
+  ],
   darkMode: 'class',
   theme: {
     extend: {

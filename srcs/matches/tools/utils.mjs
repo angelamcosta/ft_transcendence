@@ -63,51 +63,33 @@ export async function autoPairPlayers(fastify) {
 
 export async function generateSixPlayerBracket(tournamentId) {
   try {
+    // Buscar exatamente 4 jogadores com status “accepted”
     const players = await db.all(
-      'SELECT p.id AS player_id FROM   players p WHERE  (p.tournament_id = ?) AND (p.status = `accepted`) ORDER  BY p.id LIMIT  6;',
+      `SELECT p.id AS player_id
+         FROM players p
+        WHERE (p.tournament_id = ?)
+          AND (p.status = 'accepted')
+        ORDER BY p.id
+        LIMIT 4;`,
       tournamentId
     );
 
-    if (players.length !== 6) {
+    if (players.length !== 4) {
       throw new Error(
-        `Bracket expects exactly 6 accepted players, found ${players.length}`
+        `Bracket expects exactly 4 accepted players, found ${players.length}`
       );
     }
 
-    const [seed1, seed2, seed3, seed4, seed5, seed6] = players.map(
-      (p) => p.player_id
-    );
+    // Seed dos 4 jogadores
+    const [seed1, seed2, seed3, seed4] = players.map(p => p.player_id);
 
     const now = Date.now();
     const matches = [
-      // ---------- Round 1 -------------
-      {
-        round: 1,
-        player1_id: seed3,
-        player2_id: seed6
-      },
-      {
-        round: 1,
-        player1_id: seed4,
-        player2_id: seed5
-      },
-      // ---------- Round 2 -------------
-      {
-        round: 2,
-        player1_id: null,
-        player2_id: seed1
-      },
-      {
-        round: 2,
-        player1_id: null,
-        player2_id: seed2
-      },
-      // ---------- Round 3 -------------
-      {
-        round: 3,
-        player1_id: null,
-        player2_id: null
-      }
+      // Semifinais (round 1)
+      { round: 1, player1_id: seed1, player2_id: seed4 },
+      { round: 1, player1_id: seed2, player2_id: seed3 },
+      // Final (round 2), aguardando vencedores
+      { round: 2, player1_id: null, player2_id: null }
     ];
 
     const stmt = await db.prepare(`
@@ -122,7 +104,7 @@ export async function generateSixPlayerBracket(tournamentId) {
          created_at,
          updated_at)
       VALUES
-        (?, ?, ?, NULL, 'pending', NULL, ?, ?, ?)
+        (?, ?, ?, NULL, 'pending', NULL, ?, ?, ?);
     `);
 
     for (const m of matches) {
@@ -137,7 +119,7 @@ export async function generateSixPlayerBracket(tournamentId) {
     }
 
     await stmt.finalize();
-    console.log("Bracket generated and stored!");
+    console.log("4-player bracket generated and stored!");
   } finally {
     await db.close();
   }

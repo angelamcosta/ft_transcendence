@@ -1,4 +1,4 @@
-import { db, verifyPassword } from './utils.mjs'
+import { db } from './utils.mjs'
 import { promises as fsp } from 'fs';
 import fs from 'fs';
 import path from 'path';
@@ -15,6 +15,8 @@ export default async function userRoutes(fastify) {
 			const users = await db.all('SELECT id, display_name FROM users');
 			return res.send(users);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Failed to fetch users: ' + err.message);
 		}
@@ -29,6 +31,8 @@ export default async function userRoutes(fastify) {
 				throw fastify.httpErrors.notFound('User not found');
 			return (user);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Failed to fetch user: ' + err.message);
 		}
@@ -82,6 +86,8 @@ export default async function userRoutes(fastify) {
 			await db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
 			return { message: 'User updated successfully' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -96,9 +102,13 @@ export default async function userRoutes(fastify) {
 			if (req.authUser.id !== paramId)
 				throw fastify.httpErrors.forbidden('You cannot modify another user');
 
-			await db.run('DELETE FROM users WHERE id = ?', [req.authUser.id]);
+			const user = await db.run('DELETE FROM users WHERE id = ?', [req.authUser.id]);
+			if (user.changes === 0)
+				throw fastify.httpErrors.notFound('User not found')
 			return { message: 'User deleted successfully' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -111,12 +121,14 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const userId = req.authUser.id;
- 
+
 			const row = await db.all(`SELECT u.id, u.display_name FROM blocked_users b JOIN users u 
 				ON u.id = b.blocked_id WHERE b.blocker_id = ?`, userId);
 
 			return res.send(row);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
 		}
@@ -127,7 +139,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const userId = req.authUser.id;
-			const paramId = req.params.id;
+			const paramId = Number(req.params.id);
 
 			const row = await db.get(
 				`SELECT EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blocked_by_me,
@@ -138,7 +150,9 @@ export default async function userRoutes(fastify) {
 				blockedByMe: Boolean(row.blocked_by_me),
 				blockedByTarget: Boolean(row.blocked_by_target)
 			})
-		} catch (e) {
+		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
 		}
@@ -156,25 +170,29 @@ export default async function userRoutes(fastify) {
 			const blocked = row ? Boolean(row.status) : false;
 			return ({ blocked });
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
 		}
 	})
 
 	fastify.post('/users/block/:id', {
-		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked, fastify.loadFriendship, fastify.loadMatchInvites],
+		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.notBlocked],
 	}, async (req) => {
 		try {
 			const userId = req.authUser.id;
 			const paramId = Number(req.params.id);
 
-			if (req.invite?.invite_status === 'pending')
-				await db.run(`DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
-			if (req.friendship)
-				await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
+			await db.run(`DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) 
+				OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
+			await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) 
+				OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
 			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id, status) VALUES (?, ?, ?)`, [userId, paramId, true]);
 			return { message: 'User blocked successfully' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -193,6 +211,8 @@ export default async function userRoutes(fastify) {
 			await db.run(`DELETE FROM blocked_users WHERE blocker_id = ? and blocked_id = ?`, [userId, paramId]);
 			return { message: 'User unblocked successfully' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -221,6 +241,10 @@ export default async function userRoutes(fastify) {
 			reply.header('Cache-Control', 'no-cache');
 			return reply.send(buffer);
 		} catch (err) {
+			if (err.code === 'ENOENT')
+				throw fastify.httpErrors.notFound('Avatar not found');
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Failed to fetch avatar: ' + err.message);
 		}
@@ -240,11 +264,22 @@ export default async function userRoutes(fastify) {
 		if (!data)
 			throw fastify.httpErrors.badRequest('No file uploaded');
 
-		const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-		if (!allowedMimeTypes.includes(data.mimetype))
+		const extMap = {
+			'image/jpeg': '.jpg',
+			'image/jpg': '.jpg',
+			'image/png': '.png'
+		}
+		if (!(data.mimetype in extMap))
 			throw fastify.httpErrors.unsupportedMediaType('Only JPEG, JPG and PNG images are allowed');
 
-		const fileExt = path.extname(data.filename);
+		const expectedExt = extMap[data.mimetype]
+		const actualExt = path.extname(data.filename).toLowerCase()
+
+		if (actualExt !== expectedExt)
+			throw fastify.httpErrors.unsupportedMediaType(`File extension "${actualExt}" does not match expected "${expectedExt}"`)
+
+
+		const fileExt = extMap[data.mimetype];
 		const uniqueName = crypto.randomUUID() + fileExt;
 		const uploadPath = path.join(process.env.UPLOAD_DIR, uniqueName);
 		try {
@@ -266,6 +301,8 @@ export default async function userRoutes(fastify) {
 			}
 			await db.run('UPDATE users SET avatar = ? WHERE id = ?', [uniqueName, req.authUser.id]);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -309,6 +346,8 @@ export default async function userRoutes(fastify) {
 
 			return { message: 'Avatar deleted successfully' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database delete failed: ' + err.message);
 		}
@@ -323,6 +362,8 @@ export default async function userRoutes(fastify) {
 
 			return res.send(friends);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Failed to fetch user: ' + err.message);
 		}
@@ -352,6 +393,8 @@ export default async function userRoutes(fastify) {
 			await db.run(`INSERT INTO friends (user_id, friend_id, friendship_status) VALUES (?, ?, ?)`, [userId, targetId, 'pending']);
 			return { message: 'Friend request sent' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -377,6 +420,8 @@ export default async function userRoutes(fastify) {
 				AND friend_id = ? AND friendship_status = 'pending'`, [paramId, userId]);
 			return { message: 'Friend request accepted' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -402,6 +447,8 @@ export default async function userRoutes(fastify) {
 				AND friend_id = ?)`, [paramId, userId]);
 			return { message: 'Friend request rejected' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -425,6 +472,8 @@ export default async function userRoutes(fastify) {
 			} else
 				return ({ message: 'No pending friend request' })
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -446,6 +495,8 @@ export default async function userRoutes(fastify) {
 			await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
 			return { message: 'Friend removed' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -460,6 +511,8 @@ export default async function userRoutes(fastify) {
 				AND f.friendship_status = 'pending'`, req.authUser.id);
 			return res.send(received);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -474,6 +527,8 @@ export default async function userRoutes(fastify) {
 				AND f.friendship_status = 'pending'`, req.authUser.id);
 			return res.send(sent);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -500,6 +555,8 @@ export default async function userRoutes(fastify) {
 
 			return res.send({ areFriends, requestSent, requestReceived });
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database fetch failed: ' + err.message);
 		}
@@ -512,6 +569,8 @@ export default async function userRoutes(fastify) {
 			const received = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE friend_id = ? AND invite_status = 'pending'`, req.authUser.id);
 			return res.send(received);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -524,6 +583,8 @@ export default async function userRoutes(fastify) {
 			const sent = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE user_id = ? AND invite_status = 'pending'`, req.authUser.id);
 			return res.send(sent);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -547,6 +608,8 @@ export default async function userRoutes(fastify) {
 			} else
 				return ({ message: 'Match invite not found' })
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -565,6 +628,8 @@ export default async function userRoutes(fastify) {
 			await db.run(`INSERT INTO match_invites (user_id, friend_id) VALUES (?, ?)`, [userId, paramId]);
 			return { message: 'Match invite sent' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -590,6 +655,8 @@ export default async function userRoutes(fastify) {
 			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [userId, paramId, paramId, userId]);
 			return { message: 'Match invite accepted' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -614,6 +681,8 @@ export default async function userRoutes(fastify) {
 			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?', [userId, paramId, paramId, userId]);
 			return { message: 'Match invite rejected' };
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -632,6 +701,8 @@ export default async function userRoutes(fastify) {
 				AND m.status = 'finished' ORDER BY m.created_at DESC`, { $uid: userId });
 			return res.send(match_history);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
@@ -651,6 +722,8 @@ export default async function userRoutes(fastify) {
 			const unread = rows.map(r => r.display_name);
 			return res.send({ unread });
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database feth failed: ' + err.message);
 		}

@@ -61,7 +61,7 @@ export function authenticateRequest(fastify) {
 			req.authUser = data.user;
 		} catch (err) {
 			if (err.name === 'AbortError')
-				console.error('Auth request timed out');
+				throw fastify.httpErrors.serviceUnavailable('Auth request timed out');
 			else
 				console.error('Auth request failed:', err);
 			throw fastify.httpErrors.unauthorized('Auth failed');
@@ -134,8 +134,8 @@ export function validateUsers(fastify) {
 
 		try {
 			const [user, target] = await Promise.all([
-				fetchUserById(req.authUser.id),
-				fetchUserById(target_id)
+				fetchUserById(req.authUser.id, fastify),
+				fetchUserById(target_id, fastify)
 			]);
 
 			if (!user || !target)
@@ -143,6 +143,8 @@ export function validateUsers(fastify) {
 			req.userId = req.authUser.id;
 			req.targetId = target.id;
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}

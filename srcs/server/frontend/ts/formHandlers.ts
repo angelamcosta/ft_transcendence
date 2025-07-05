@@ -1,8 +1,8 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
 import * as buttonHandlers from './buttonHandlers.js';
-import { globalSocket, initGlobalChat, onlineUsers } from './chatManager.js';
-import { getUnreadMessages } from './utils.js';
+import { globalSocket, initGlobalChat, onlineUsers } from './globalChatManager.js';
+import { getUnreadMessages } from './globalChatManager.js';
 
 export async function signUp(e: Event) {
 	e.preventDefault();
