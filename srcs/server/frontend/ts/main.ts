@@ -1,8 +1,8 @@
 import * as displayPage from './displayPage.js';
 import * as buttonHandlers from './buttonHandlers.js';
-import { initGlobalChat } from './chatManager.js';
+import { initGlobalChat } from './globalChatManager.js';
 import { initAppNav } from './utils.js';
-import { getUnreadMessages } from './chatManager.js';
+import { getUnreadMessages } from './globalChatManager.js';
 
 async function isSignedIn() {
 	try {

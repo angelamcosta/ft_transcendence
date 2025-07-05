@@ -2,10 +2,11 @@ import * as utils from './utils.js';
 import * as formHandlers from './formHandlers.js';
 import * as buttonHandlers from './buttonHandlers.js';
 import { initPong } from './pong.js';
-import { updateBlockUI, fetchFriendStatus, setActiveDM, renderUserList, setupChatSocket, sendMessage } from './chatManager.js';
-import { buildChatUI } from './globalChatUi.js'
-import { buildDMChatContainer, buildControls, buildDmCard, buildDMInputWrapper } from './dmChatUi.js'
+import { setActiveDM, renderUserList, setupGlobalChatSocket, sendMessage } from './globalChatManager.js';
+import { buildChatUI } from './globalChatUI.js'
+import { buildDmUI } from './dmChatUI.js'
 import { getUsers } from './utils.js';
+import { sendDmMessage, setupDmChatControls, setupDmChatSocket } from './dmChatManager.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
@@ -682,25 +683,23 @@ export function header(headerArea: HTMLDivElement | null) {
 
 export async function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
 	setActiveDM(null);
-	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
-	if (!workArea || !headerArea)
+	if (!workArea)
 		return;
 
 	utils.cleanDiv(workArea);
 
 	const { userListContainer, chatContainer, messageInput, sendBtn } =
-		buildChatUI(workArea, headerArea);
+		buildChatUI(workArea);
 
 	const users = await getUsers();
-
 
 	renderUserList(users, userListContainer, display_name);
 	window.addEventListener('global-presence-updated', () =>
 		renderUserList(users, userListContainer, display_name)
 	);
 
-	setupChatSocket(users, userListContainer, chatContainer, userId, display_name);
+	setupGlobalChatSocket(users, userListContainer, chatContainer, userId, display_name);
 
 	sendBtn.addEventListener('click', () =>
 		sendMessage(messageInput, chatContainer, display_name)
@@ -719,347 +718,45 @@ export async function directMessagePage(
 	displayName: string, targetName: string,
 	userId: string, targetId: number
 ) {
-	const headerArea = document.getElementById('headerArea')! as HTMLDivElement;
 
-	if (!workArea || !headerArea) return;
+	if (!workArea) return;
 	utils.cleanDiv(workArea);
 
-	const { wrapper, dmCard } = buildDmCard(targetName, headerArea);
+	const {
+		wrapper, banner, chatContainer,
+		messageInput, sendBtn,
+		addFriendBtn, viewProfileBtn,
+		inviteBtn, blockBtn
+	} = buildDmUI(targetName);
 
-	const banner = document.createElement('div');
-	banner.style.padding = '8px';
-	banner.style.textAlign = 'center';
-	banner.style.fontStyle = 'italic';
+	workArea.append(wrapper);
 
-	const chatContainer = buildDMChatContainer();
-
-	const messageInput = document.createElement('input');
-	messageInput.placeholder = 'Type a message…';
-	Object.assign(messageInput.style, {
-		flex: '1 1 auto',
-		padding: '4px 8px',
-		border: '1px solid #ccc',
-		borderRadius: '4px',
-	});
-
-	const sendBtn = document.createElement('button');
-	sendBtn.textContent = 'Send';
-	Object.assign(sendBtn.style, {
-		marginLeft: '8px',
-		padding: '4px 12px',
-		border: '1px solid #007bff',
-		background: '#007bff',
-		color: '#fff',
-		borderRadius: '4px',
-		cursor: 'pointer',
-	});
-	const inputWrapper = buildDMInputWrapper(sendBtn, messageInput);
-
-	const addFriendBtn = document.createElement('button');
-	addFriendBtn.textContent = 'Add Friend';
-	Object.assign(addFriendBtn.style, {
-		background: '#28a745',
-		color: '#fff',
-		border: '1px solid #28a745',
-		padding: '2px 3px',
-		fontSize: '0.875rem',
-		borderRadius: '4px',
-		cursor: 'pointer',
-	});
-
-	const viewProfileBtn = document.createElement('button');
-	viewProfileBtn.textContent = 'View Profile';
-	Object.assign(viewProfileBtn.style, {
-		background: '#17a2b8',
-		color: '#fff',
-		border: '1px solid #17a2b8',
-		padding: '2px 3px',
-		fontSize: '0.875rem',
-		borderRadius: '4px',
-		cursor: 'pointer',
-	});
-
-	const inviteBtn = document.createElement('button');
-	inviteBtn.textContent = 'Invite to Game';
-	Object.assign(inviteBtn.style, {
-		background: '#007bff',
-		color: '#fff',
-		border: '1px solid #007bff',
-		padding: '2px 3px',
-		fontSize: '0.875rem',
-		borderRadius: '4px',
-		cursor: 'pointer',
-	});
-
-	const blockBtn = document.createElement('button');
-	blockBtn.textContent = 'Block User';
-	Object.assign(blockBtn.style, {
-		background: '#dc3545',
-		color: '#fff',
-		border: '1px solid #dc3545',
-		padding: '2px 3px',
-		fontSize: '0.875rem',
-		borderRadius: '4px',
-		cursor: 'pointer',
-	});
-
-	let friendPending = false;
-	let friendReceived = false;
-	let alreadyFriends = false;
-
-	async function refreshFriendUI() {
-		const { areFriends, requestSent, requestReceived } =
-			await fetchFriendStatus(targetId);
-
-		alreadyFriends = areFriends;
-		friendPending = requestSent;
-		friendReceived = requestReceived;
-
-		if (alreadyFriends) {
-			addFriendBtn.style.display = 'none';
-		} else {
-			addFriendBtn.style.display = 'inline-block';
-			if (friendPending) {
-				addFriendBtn.textContent = 'Cancel Request';
-				addFriendBtn.onclick = async () => {
-					const res = await fetch(`/users/friends/cancel/${targetId}`, {
-						method: 'DELETE',
-						credentials: 'include'
-					});
-					const data = await res.json();
-					utils.showModal(data?.message);
-					await refreshFriendUI();
-				};
-			} else if (friendReceived) {
-				addFriendBtn.textContent = 'Accept Friend';
-				addFriendBtn.onclick = async () => {
-					const res = await fetch(`/users/friends/accept/${targetId}`, {
-						method: 'PUT',
-						credentials: 'include'
-					});
-					const data = await res.json();
-					utils.showModal(data?.message);
-					await refreshFriendUI();
-				};
-			} else {
-				addFriendBtn.textContent = 'Add Friend';
-				addFriendBtn.onclick = async () => {
-					const res = await fetch(`/users/friends/add/${targetId}`, {
-						method: 'POST',
-						credentials: 'include'
-					});
-					const data = await res.json();
-					utils.showModal(data?.message);
-					await refreshFriendUI();
-				};
-			}
-		}
-	}
-
-	viewProfileBtn.addEventListener('click', async () => {
-		profile(workArea, targetId.toString());
-	})
-
-	let invitePending = false;
-	async function refreshInviteStatus() {
-		let sentData: unknown;
-		try {
-			const res = await fetch('/users/invite/sent', { credentials: 'include' });
-			sentData = await res.json();
-		} catch (err) {
-			console.error('Error fetching sent invites', err);
-			sentData = [];
-		}
-
-		const sent = Array.isArray(sentData) ? sentData : [];
-
-		invitePending = sent.some((i: any) => i.friend_id === targetId);
-		inviteBtn.textContent = invitePending ? 'Cancel Invite' : 'Invite to Game';
-	}
-
-	inviteBtn.addEventListener('click', async () => {
-		inviteBtn.disabled = true;
-		try {
-			if (!invitePending) {
-				const res = await fetch(`/users/invite/${targetId}`, {
-					method: 'POST',
-					credentials: 'include'
-				});
-				const data = await res.json();
-				if (!res.ok) {
-					utils.showModal(data?.message);
-					refreshInviteStatus();
-					return;
-				}
-				utils.showModal(data?.message);
-			} else {
-				const res = await fetch(`/users/invite/cancel/${targetId}`, {
-					method: 'DELETE',
-					credentials: 'include'
-				});
-				const data = await res.json();
-				if (!res.ok) {
-					utils.showModal(data?.message);
-					refreshInviteStatus();
-					return;
-				}
-				utils.showModal(data?.message);
-			}
-			invitePending = !invitePending;
-			inviteBtn.textContent = invitePending ? 'Cancel Invite' : 'Invite to Game';
-		} catch (err) {
-			console.error('Invite error', err);
-			alert('Couldn’t update invite: ' + err);
-		} finally {
-			inviteBtn.disabled = false;
-		}
-	});
-
-	let isBlocked = false;
-	async function refreshBlockStatus() {
-		const res = await fetch(`/users/block/status/${targetId}`, {
-			credentials: 'include'
-		});
-		const { blocked } = await res.json();
-		isBlocked = blocked;
-		blockBtn.textContent = isBlocked ? 'Unblock User' : 'Block User';
-	}
-
-	blockBtn.addEventListener('click', async () => {
-		blockBtn.disabled = true;
-		try {
-			if (!isBlocked) {
-				const res = await fetch(`/users/block/${targetId}`, {
-					method: 'POST',
-					credentials: 'include'
-				});
-				const data = await res.json();
-				if (!res.ok) {
-					utils.showModal(data?.message);
-					await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
-				}
-			} else {
-				const res = await fetch(`/users/unblock/${targetId}`, {
-					method: 'DELETE',
-					credentials: 'include'
-				});
-				const data = await res.json();
-				if (!res.ok) {
-					utils.showModal(data?.message);
-					await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
-				}
-			}
-			isBlocked = !isBlocked;
-			blockBtn.textContent = isBlocked ? 'Unblock User' : 'Block User';
-		} catch (err) {
-			console.error('Block error', err);
-			alert('Couldn’t update block status: ' + err);
-		} finally {
-			blockBtn.disabled = false;
-			refreshFriendUI();
-			refreshInviteStatus();
-			await updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner);
-		}
-	});
-
-	const controls = buildControls(
+	await setupDmChatControls(
+		targetId,
+		workArea,
+		wrapper.querySelector('.card') as HTMLDivElement,
+		chatContainer,
+		messageInput,
+		sendBtn,
+		banner,
 		addFriendBtn,
 		viewProfileBtn,
 		inviteBtn,
 		blockBtn
-	);
-	dmCard.append(controls, chatContainer, inputWrapper);
-	wrapper.append(dmCard);
-	workArea.append(wrapper);
+	)
 
-	await Promise.all([refreshInviteStatus(), refreshBlockStatus(), updateBlockUI(targetId, dmCard, chatContainer, messageInput, sendBtn, banner), refreshFriendUI()]);
+	const dmSocket = setupDmChatSocket(targetName, userId, displayName, chatContainer);
 
-	const wsUrl = `wss://localhost:9000/dm`;
-	const ws = new WebSocket(wsUrl);
-	ws.binaryType = 'arraybuffer';
+	sendBtn.addEventListener('click', () =>
+		sendDmMessage(dmSocket, messageInput, chatContainer, displayName)
+	)
 
-	ws.onopen = () => {
-		ws.send(JSON.stringify({
-			type: 'direct-join',
-			targetName
-		}));
-	};
-
-	ws.onmessage = async evt => {
-		let dataStr: string;
-		if (typeof evt.data === 'string')
-			dataStr = evt.data;
-		else if (evt.data instanceof Blob)
-			dataStr = await evt.data.text();
-		else
-			dataStr = new TextDecoder().decode(evt.data);
-
-		const msg = JSON.parse(dataStr);
-		if (msg.type === 'history') {
-			msg.messages.forEach((m: { sender_id: number, content: string, timestamp: number }) => {
-				appendMessage({
-					displayName: m.sender_id.toString() === userId ? displayName : targetName,
-					content: m.content,
-					timestamp: m.timestamp
-				});
-			});
-		} else if (msg.type === 'message') {
-			if (msg.display_name === displayName) return;
-			appendMessage({
-				displayName: msg.display_name,
-				content: msg.content,
-				timestamp: msg.timestamp
-			});
-		}
-	};
-
-	function sendMessage() {
-		const content = messageInput.value.trim();
-		if (!content)
-			return;
-
-		const payload = JSON.stringify({ type: 'message', content });
-		ws.send(payload);
-		appendMessage({ displayName, content, timestamp: Date.now() });
-		messageInput.value = '';
-	}
-
-	function appendMessage(msg: {
-		displayName: string;
-		content: string;
-		timestamp: number;
-	}) {
-		const messageWrapper = document.createElement('div');
-		messageWrapper.style.marginBottom = '8px';
-
-		const line = document.createElement('div');
-		line.style.textAlign = msg.displayName === displayName ? 'right' : 'left';
-		line.textContent = `${msg.displayName}: ${msg.content}`;
-		messageWrapper.appendChild(line);
-
-		const time = document.createElement('div');
-		time.style.fontSize = '0.7em';
-		time.style.color = '#666';
-		time.style.marginTop = '2px';
-		time.style.textAlign = line.style.textAlign;
-
-		time.textContent = new Date(msg.timestamp).toLocaleTimeString([], {
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-		messageWrapper.appendChild(time);
-
-		chatContainer.appendChild(messageWrapper);
-		chatContainer.scrollTop = chatContainer.scrollHeight;
-	}
-
-	sendBtn.addEventListener('click', sendMessage);
 	messageInput.addEventListener('keydown', e => {
 		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault();
-			sendMessage();
+			e.preventDefault()
+			sendDmMessage(dmSocket, messageInput, chatContainer, displayName)
 		}
-	});
+	})
 }
 
 interface Match {

@@ -1,6 +1,6 @@
 import * as utils from './utils.js'
 
-export function buildGlobalWrapper(headerArea: HTMLDivElement) {
+export function buildGlobalWrapper() {
 	const wrapper = document.createElement('div');
 	wrapper.classList.add(
 		'relative',
@@ -16,7 +16,7 @@ export function buildGlobalChatCard() {
 	const chatCard = document.createElement('div');
 	chatCard.classList.add(
 		'card',
-		'w-[400px]',
+		'w-[480px]',
 		'max-w-[90vw]',
 		'h-[500px]'
 	);
@@ -100,7 +100,6 @@ export function buildUserListPanel() {
 
 export function buildChatUI(
 	workArea: HTMLDivElement,
-	headerArea: HTMLDivElement
 ): {
 	userListContainer: HTMLDivElement;
 	chatContainer: HTMLDivElement;
@@ -108,7 +107,7 @@ export function buildChatUI(
 	sendBtn: HTMLButtonElement;
 } {
 	utils.cleanDiv(workArea);
-	const wrapper = buildGlobalWrapper(headerArea);
+	const wrapper = buildGlobalWrapper();
 	const { chatCard, chatContainer, messageInput, sendBtn } = buildGlobalChatCard();
 	const { userListCard, userListContainer } = buildUserListPanel();
 	wrapper.append(chatCard, userListCard);

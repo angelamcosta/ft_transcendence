@@ -1,7 +1,7 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
 import { gamePage } from './displayPage.js';
-import { cleanGlobalChat } from './chatManager.js';
+import { cleanGlobalChat } from './globalChatManager.js';
 
 export function initThemeToggle() {
     const btn = document.getElementById('theme-toggle');

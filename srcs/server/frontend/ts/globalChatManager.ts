@@ -117,9 +117,9 @@ export async function updateBlockUI(targetId: number,
 		{ credentials: 'include' }).then(r => r.json());
 
 	if (blockedByMe)
-		banner.textContent = 'You have blocked this user.';
+		banner.textContent = 'You have blocked this user';
 	else if (blockedByTarget)
-		banner.textContent = 'You have been blocked by this user.';
+		banner.textContent = 'You have been blocked by this user';
 
 	if (blockedByMe || blockedByTarget) {
 		if (!banner.isConnected)
@@ -186,7 +186,7 @@ export function renderUserList(
 	offline.forEach(render);
 }
 
-export function setupChatSocket(
+export function setupGlobalChatSocket(
 	users: User[],
 	userListContainer: HTMLDivElement,
 	chatContainer: HTMLDivElement,
@@ -242,7 +242,7 @@ export function setupChatSocket(
 		}
 	});
 
-	globalSocket!.addEventListener('error', e => console.error('Chat error', e));
+	globalSocket!.addEventListener('error', e => console.error('Global Chat Socket error', e));
 }
 
 export function sendMessage(
