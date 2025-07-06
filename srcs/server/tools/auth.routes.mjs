@@ -102,6 +102,25 @@ export default async function authRoutes(app) {
 			return reply.code(500).send({ error: 'Error verifying 2FA' });
 		}
 	});
+
+	app.post('/send-link', async (req, reply) => {
+		try {
+			const res = await fetch(`${AUTH_URL}/api/send-link`, {
+				dispatcher: tlsAgent,
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				},
+				body: JSON.stringify(req.body),
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /send-link error:', e);
+			return reply.code(500).send({ error: 'Error sending link to reset password' });
+		}
+	});
 	
 	app.get('/verify', async (req, reply) => {
 		try {

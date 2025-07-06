@@ -149,30 +149,53 @@ export async function sendLink(e: Event) {
 	e.preventDefault();
 
 	const form = e.target as HTMLFormElement;
+	const formData = new FormData(form);
+	const email = formData.get('resetEmailInput');
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
 	const loginForm = (document.getElementById('login') as HTMLFormElement | null);
 	const resetButton = (document.getElementById('resetButton') as HTMLButtonElement | null);
 
 	let messageDiv = document.getElementById('sendLinkError') as HTMLDivElement | null;
-	if (!messageDiv) {
-		messageDiv = document.createElement('div');
-		messageDiv.id = 'sendLinkError';
-		messageDiv.className = 'text-red-600 mt-2 text-sm';
-		form.append(messageDiv);
+	if (messageDiv) {
+		form.removeChild(messageDiv);
 	}
-	messageDiv.textContent = "Testing error";
-
+	
 	let successDiv = document.getElementById('successMessage') as HTMLDivElement | null;
-	if (!successDiv) {
-		successDiv = document.createElement('div');
-		successDiv.id = 'successMessage';
-		successDiv.className = 'text-green-600 mt-4 text-sm text-center';
-		loginForm?.append(successDiv);
-	}
-	resetButton?.classList.add("hidden");
-	successDiv.textContent = "A link to reset your password was sento to your e-mail";
+	
+	try {
+		const response = await fetch('/send-link', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				email
+			}),
+			credentials: 'include'
+		});
 
-	workArea?.removeChild(form);
+		const data = await response.json();
+		if (!response.ok) {
+			messageDiv = document.createElement('div');
+			messageDiv.id = 'sendLinkError';
+			messageDiv.className = 'text-red-600 mt-2 text-sm';
+			messageDiv.textContent = data?.error || 'Send link failed.';
+			form.append(messageDiv);
+			return;
+		}
+		if (!successDiv) {
+			successDiv = document.createElement('div');
+			successDiv.id = 'successMessage';
+			successDiv.className = 'text-green-600 mt-4 text-sm text-center';
+			loginForm?.append(successDiv);
+		}
+		resetButton?.classList.add("hidden");
+		successDiv.textContent = "A link to reset your password was sento to your e-mail";
+		workArea?.removeChild(form);
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Login failed! Catched on Try');
+	}
 }
 
 export async function verify2FA(e: Event) {
