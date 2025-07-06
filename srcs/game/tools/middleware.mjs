@@ -29,10 +29,12 @@ export function attachWebSocket(server, game) {
             const { type, data: payload } = data;
             if (type === 'control') game.control(payload.player, payload.action);
             else if (type === 'start') game.start();
+            else if (type === 'stop') game.stop();
         });
 
         ws.on('close', () => {
             game.removeListener('state', sendState);
+            game.stop();
         });
     });
 }

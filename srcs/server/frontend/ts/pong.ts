@@ -9,6 +9,7 @@ const isDarkMode = window.matchMedia &&
 
 export async function initPong(canvas: HTMLCanvasElement) {
   const container = canvas.parentElement!;
+  container.style.position = 'relative';
   canvas.style.display = 'none';
   const overlay = document.createElement('div');
   overlay.style.cssText = `
@@ -62,6 +63,12 @@ export async function initPong(canvas: HTMLCanvasElement) {
     );
     activeSocket = socket;
 
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Escape' && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'stop' }));
+      }
+    });
+
     socket.addEventListener('open', () => {
       socket.send(JSON.stringify({ type: 'start' }));
       const loop = () => {
@@ -114,20 +121,29 @@ export async function initPong(canvas: HTMLCanvasElement) {
 
     if (!gameListenersAdded) {
       window.addEventListener('keydown', e => {
-        if (e.code === 'ArrowUp') sendControl(0, 'up');
-        if (e.code === 'ArrowDown') sendControl(0, 'down');
+        if (vsComputer) {
+          // vs CPU: usado apenas ↑ ↓ para o Player 1 (índice 0)
+          if (e.code === 'ArrowUp')    sendControl(0, 'up');
+          if (e.code === 'ArrowDown')  sendControl(0, 'down');
+        } else {
+          // PvP: W/S para Player 1 (índice 0); ↑/↓ para Player 2 (índice 1)
+          if (e.code === 'KeyW')       sendControl(0, 'up');
+          if (e.code === 'KeyS')       sendControl(0, 'down');
+          if (e.code === 'ArrowUp')    sendControl(1, 'up');
+          if (e.code === 'ArrowDown')  sendControl(1, 'down');
+        }
       });
+
       window.addEventListener('keyup', e => {
-        if (['ArrowUp', 'ArrowDown'].includes(e.code))
-          sendControl(0, '');
-      });
-      window.addEventListener('keydown', e => {
-        if (e.code === 'KeyW') sendControl(1, 'up');
-        if (e.code === 'KeyS') sendControl(1, 'down');
-      });
-      window.addEventListener('keyup', e => {
-        if (['KeyW', 'KeyS'].includes(e.code))
-          sendControl(1, '');
+        if (vsComputer) {
+          if (['ArrowUp', 'ArrowDown'].includes(e.code))
+            sendControl(0, '');
+        } else {
+          if (['KeyW', 'KeyS'].includes(e.code))
+            sendControl(0, '');
+          if (['ArrowUp', 'ArrowDown'].includes(e.code))
+            sendControl(1, '');
+        }
       });
       gameListenersAdded = true;
     }
@@ -162,7 +178,6 @@ export async function initPong(canvas: HTMLCanvasElement) {
         (canvas.width * 3) / 4, 50
       );
 
-      // vitória em 5 pontos
       const [s1, s2] = [state.scores[0] || 0, state.scores[1] || 0];
       if (s1 >= VICTORY_SCORE || s2 >= VICTORY_SCORE) {
         cancelAnimationFrame(animationId!);
@@ -177,6 +192,26 @@ export async function initPong(canvas: HTMLCanvasElement) {
           canvas.width / 2 - 120,
           canvas.height / 2
         );
+
+        if (!document.querySelector('#btn-restart')) {
+          const btn = document.createElement('button');
+          btn.id = 'btn-restart';
+          btn.textContent = 'Reiniciar Jogo';
+          btn.style.cssText = `
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            z-index: 100;
+          `;
+          btn.addEventListener('click', () => {
+            btn.remove();
+            launchGame(vsComputer);  // relança o mesmo modo
+          });
+          container.appendChild(btn);
+        }
       }
     }
   }

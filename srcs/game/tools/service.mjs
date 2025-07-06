@@ -6,6 +6,7 @@ export class GameService extends EventEmitter {
         this.reset();
         this.width = 1000;
         this.height = 600;
+        this.resetTimeout = null;
     }
 
     reset() {
@@ -94,6 +95,9 @@ export class GameService extends EventEmitter {
     resetBall() {
         console.log("Resetting ball. Scores:", this.state.scores);
 
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+
         const b = this.state.ball;
         b.x = this.width / 2;  // Centro horizontal
         b.y = this.height / 2; // Centro vertical
@@ -103,9 +107,27 @@ export class GameService extends EventEmitter {
         clearInterval(this.intervalId);
         this.intervalId = null;
 
-        setTimeout(() => {
+        this.resetTimeout = setTimeout(() => {
+            this.resetTimeout = null;
             this.start();
         }, 1000); // 1 segundo de delay
+    }
+
+    stop() {
+        // 1) cancelar loop
+        if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+        }
+        // 2) cancelar resetBall pendente
+        if (this.resetTimeout) {
+        clearTimeout(this.resetTimeout);
+        this.resetTimeout = null;
+        }
+        // 3) repor estado inicial
+        this.reset();
+        // opcional: emitir um evento específico de “ended”
+        this.emit("ended", this.state);
     }
 
     control(playerIndex, action) {
