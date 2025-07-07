@@ -11,7 +11,7 @@ export default async function gameRoutes(fastify, opts) {
     if (!games.has(id))
       games.set(id, new GameService());
 
-    return res(201).send({ gameId: id });
+    return res.code(201).send({ gameId: id });
   });
 
   fastify.post('/:id/init', async (req, res) => {
@@ -20,7 +20,7 @@ export default async function gameRoutes(fastify, opts) {
     if (!game) return reply.code(404).send({ error: 'Match not found' });
 
     game.reset();
-    return res(201).send({ ok: true });
+    return res.code(201).send({ ok: true });
   });
 
   fastify.post('/:id/start', async (req, res) => {
@@ -29,7 +29,7 @@ export default async function gameRoutes(fastify, opts) {
     if (!game) return reply.code(404).send({ error: 'Match not found' });
     
     game.start();
-    return res(201).send({ ok: true });
+    return res.code(201).send({ ok: true });
   });
 
   fastify.post('/:id/control/:player/:action', async (req, res) => {
@@ -41,6 +41,6 @@ export default async function gameRoutes(fastify, opts) {
     const game = games.get(req.params.id);
     if (!game) return reply.code(404).send({ error: 'Match not found' });
     game.control(Number(req.params.player), req.params.action);
-    return res(201).send({ ok: true });
+    return res.code(201).send({ ok: true });
   });
 }
