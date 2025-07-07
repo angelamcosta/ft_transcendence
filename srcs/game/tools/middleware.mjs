@@ -1,5 +1,14 @@
 import { WebSocketServer } from 'ws';
 
+export async function validateEmptyBody(res, rep) {
+    if (request.raw.method !== 'POST') return;
+
+    const body = res.body;
+
+    if (body === undefined || Object.keys(body).length === 0)
+        return rep.code(400).send({ error: 'JSON body is empty' });
+}
+
 export function attachWebSocket(server, game) {
     const wss = new WebSocketServer({ server });
     wss.on('connection', ws => {
