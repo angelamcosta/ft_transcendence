@@ -1,6 +1,6 @@
 import { loginUser } from './login.mjs'
 import { registerUser } from './register.mjs'
-import { db } from './utils.mjs'
+import { db, inSession } from './utils.mjs'
 
 export default async function authRoutes(fastify) {
 	fastify.post('/register', async (req, reply) => {
@@ -22,6 +22,7 @@ export default async function authRoutes(fastify) {
 			if (result.twofa === 'enabled')
 				return reply.code(200).send({ success: message, user, twofa })
 
+			await inSession(user.id);
 			const token = await reply.jwtSign(
 				{ userId: user.id, email: user.email },
 				{ expiresIn: '1h' }
@@ -35,11 +36,15 @@ export default async function authRoutes(fastify) {
 				maxAge: 3600
 			}).send({ success: 'Login successful', user, twofa })
 		} catch (error) {
-			return reply.code(500).send({ error: error.message })
+			return reply.code(error.statusCode || 500).send({ error: error.message })
 		}
 	})
 
-	fastify.post('/logout', async (req, reply) => {
+	fastify.post('/logout', { preValidation: fastify.authenticate }, async (req, reply) => {
+		await db.run(
+			'UPDATE users SET session_id = NULL WHERE id = ?',
+			[req.user.userId]
+		);
 		reply.clearCookie('auth', {
 			path: '/',
 			httpOnly: true,
@@ -79,7 +84,7 @@ export default async function authRoutes(fastify) {
 				return reply.code(401).send({ error: 'Invalid OTP' })
 			}
 			await db.run(`UPDATE users SET otp = NULL, expire = NULL, attempts = 0, temp_blocked = 0 WHERE email = ?`, [email])
-
+			
 			const token = await reply.jwtSign(
 				{ userId: user.id, email: user.email },
 				{ expiresIn: '1h' }
@@ -121,8 +126,16 @@ export default async function authRoutes(fastify) {
 				{ userId: req.user.userId, email: req.user.email },
 				{ expiresIn: '1h' }
 			)
-			reply.header('X-Refresh-Token', token);
+
+			reply.setCookie('auth', token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'Strict',
+				path: '/',
+				maxAge: 3600
+			})
 		}
+
 		return reply.code(200).send({
 			success: 'Token is valid',
 			user: {

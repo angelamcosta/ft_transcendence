@@ -1,4 +1,4 @@
-import { verifyPassword } from "./utils.mjs"
+import { inSession, verifyPassword } from "./utils.mjs"
 import { sendEmail } from "./emailService.mjs"
 
 export async function loginUser(db, {email, password}) {
@@ -25,6 +25,7 @@ export async function loginUser(db, {email, password}) {
 	}
 
 	if (user.twofa_status === 'enabled') {
+		await inSession(user.id);
 		const otp_code = Math.floor(100000 + Math.random() * 900000)
 		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
