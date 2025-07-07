@@ -32,7 +32,10 @@ export const eyeSlashIcon = `
   		</svg>`;
 
 export function cleanDiv(divArea: HTMLDivElement | null) {
-	divArea?.replaceChildren();
+  if (typeof (window as any).stopGame === 'function') {
+    (window as any).stopGame();
+  }
+  divArea?.replaceChildren();
 }
 
 export function cleanLocalStorage() {

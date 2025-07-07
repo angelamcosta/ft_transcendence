@@ -908,6 +908,8 @@ export function gamePage(workArea: HTMLDivElement | null) {
 	canvas.id = 'pong';
 	canvas.width = 1000;
 	canvas.height = 600;
+	canvas.style.display = 'block';
+	canvas.style.margin  = '0 auto';
 
 	workArea.appendChild(canvas);
 
