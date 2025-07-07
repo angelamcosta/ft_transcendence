@@ -7,14 +7,26 @@ const VICTORY_SCORE = 5;
 const isDarkMode = window.matchMedia &&
   window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+export function stopGame() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+  if (activeSocket) {
+    activeSocket.close();
+    activeSocket = null;
+  }
+}
+(window as any).stopGame = stopGame;
+
 export async function initPong(canvas: HTMLCanvasElement) {
   const container = canvas.parentElement!;
   container.style.position = 'relative';
   canvas.style.display = 'none';
   const overlay = document.createElement('div');
   overlay.style.cssText = `
-    position: absolute; top:0; left:0; 
-    width:100%; height:100%; 
+    position: fixed; top:0; left:0; 
+    width:100vw; height:100vh; 
     display:flex; align-items:center; justify-content:center;
     background: rgba(0,0,0,0.5);
   `;
@@ -30,12 +42,15 @@ export async function initPong(canvas: HTMLCanvasElement) {
 
   (overlay.querySelector('#btn-2p') as HTMLButtonElement)
     .addEventListener('click', () => {
-      overlay.remove(); canvas.style.display = 'block';
+      overlay.remove();
+      canvas.style.display = 'block';
+      gameListenersAdded = false;
       launchGame(false);
     });
   (overlay.querySelector('#btn-ai') as HTMLButtonElement)
     .addEventListener('click', () => {
       overlay.remove(); canvas.style.display = 'block';
+      gameListenersAdded = false;
       launchGame(true);
     });
 
