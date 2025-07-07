@@ -1,12 +1,16 @@
-import { startTournament, db } from './utils.mjs'
+import { db } from './utils.mjs'
+import { validateEmptyBody } from './middleware.mjs'
 
 const GAME_URL = process.env.GAME_URL;
 if (!GAME_URL) throw new Error('⛔️ Missing env GAME_URL');
 
 export default async function matchRoutes(fastify) {
+	fastify.addHook('preHandler', validateEmptyBody);
+
 	fastify.get('/matches', async (req, res) => {
 		try {
 			const matches = await db.all('SELECT player1_id, player2_id, status FROM matches');
+			
 			return res(200).send(matches);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -17,6 +21,7 @@ export default async function matchRoutes(fastify) {
 	fastify.get('/tournaments', async (req, res) => {
 		try {
 			const tournaments = await db.all('SELECT id, name, status, capacity FROM tournaments');
+
 			return res(200).send(tournaments);
 		} catch (err) {
 			fastify.log.error(`Database error: ${err.message}`);
@@ -26,10 +31,6 @@ export default async function matchRoutes(fastify) {
 
 	fastify.post('/tournaments', async (req, res) => {
 		try {
-			if (err.code === 'FST_ERR_CTP_EMPTY_JSON_BODY')
-				return reply.code(400).send({ error: 'JSON body is empty' });
-
-			reply.send(err);
 			const { name, capacity } = req.body;
 
 			if (!name || name === undefined || typeof (name) !== 'string')
@@ -49,11 +50,6 @@ export default async function matchRoutes(fastify) {
 	fastify.post('/tournaments/:id/players', {
 		preValidation: fastify.loadTournament
 	}, async (req, res) => {
-		if (err.code === 'FST_ERR_CTP_EMPTY_JSON_BODY')
-			return reply.code(400).send({ error: 'JSON body is empty' });
-
-		reply.send(err);
-
 		const { user_id } = req.body;
 		const tour = req.tournament;
 
@@ -101,11 +97,6 @@ export default async function matchRoutes(fastify) {
 	fastify.post('/matches/:id/result', {
 		preValidation: fastify.loadMatch
 	}, async (req, res) => {
-		if (err.code === 'FST_ERR_CTP_EMPTY_JSON_BODY')
-			return reply.code(400).send({ error: 'JSON body is empty' });
-
-		reply.send(err);
-
 		const winnerId = Number(req.body.winner_id);
 		const score = req.body.score;
 		const match = req.match;
@@ -150,11 +141,11 @@ export default async function matchRoutes(fastify) {
 
 	// ! matchmaking
 	fastify.delete('/matchmaking/leave', async (req, reply) => {
-		const { user_id } = req.body;
-
-		if (!user_id) throw fastify.httpErrors.unprocessableEntity('`user_id` is required');
-
 		try {
+			const { user_id } = req.body;
+
+			if (!user_id) throw fastify.httpErrors.unprocessableEntity('`user_id` is required');
+		
 			const result = await db.run(`DELETE FROM matchmaking_queue WHERE player_id = ?`, [user_id]);
 			return res(200).send({ "left": result.changes > 0 });
 		} catch (err) {
@@ -166,14 +157,11 @@ export default async function matchRoutes(fastify) {
 	fastify.post('/matchmaking/join', async (req, reply) => {
 		const user_id = req.body?.user_id;
 		try {
-			if (err.code === 'FST_ERR_CTP_EMPTY_JSON_BODY')
-				return reply.code(400).send({ error: 'JSON body is empty' });
+			const exists = await db.get('SELECT 1 FROM matchmaking_queue WHERE player_id = ?', [user_id]);
 
-			reply.send(err);
-
-			const exists = await db.get('SELECT 1 FROM matchmaking_queue WHERE player_id = ?', [user_id])
 			if (exists)
 				throw fastify.httpErrors.conflict('Player already in queue');
+
 			await db.run('INSERT INTO matchmaking_queue (player_id) VALUES (?)', [user_id]);
 			return res(201).send({ "queued": true });
 		} catch (err) {
