@@ -208,7 +208,8 @@ export async function initPong(canvas: HTMLCanvasElement) {
           `;
           btn.addEventListener('click', () => {
             btn.remove();
-            launchGame(vsComputer);  // relança o mesmo modo
+            gameListenersAdded = false;
+            launchGame(vsComputer);
           });
           container.appendChild(btn);
         }
