@@ -628,7 +628,7 @@ export default async function userRoutes(fastify) {
 
 		const row = await db.get('SELECT status FROM matches WHERE (player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?)', userId, paramId, paramId, userId);
 
-		if (row.status === 'pending')
+		if (row?.status === 'pending')
 			throw fastify.httpErrors.badRequest(`There's already a match taking place`);
 
 		try {
