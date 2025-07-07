@@ -1,6 +1,5 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import argon2 from 'argon2';
 
 export const idRegex = /^\d+$/;
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
