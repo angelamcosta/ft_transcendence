@@ -16,7 +16,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const users = await db.all('SELECT id, display_name FROM users');
-			return res(200).send(users);
+			return res.code(200).send(users);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -32,7 +32,7 @@ export default async function userRoutes(fastify) {
 			const user = await db.get('SELECT email, display_name, avatar, id FROM users WHERE id = ?', [req.params.id]);
 			if (!user)
 				throw fastify.httpErrors.notFound('User not found');
-			return res(200).send(user);
+			return res.code(200).send(user);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -87,7 +87,7 @@ export default async function userRoutes(fastify) {
 
 		try {
 			await db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
-			return res(200).send({ message: 'User updated successfully' });
+			return res.code(200).send({ message: 'User updated successfully' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -108,7 +108,7 @@ export default async function userRoutes(fastify) {
 			const user = await db.run('DELETE FROM users WHERE id = ?', [req.authUser.id]);
 			if (user.changes === 0)
 				throw fastify.httpErrors.notFound('User not found')
-			return res(200).res({ message: 'User deleted successfully' });
+			return res.code(200).send({ message: 'User deleted successfully' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -127,7 +127,7 @@ export default async function userRoutes(fastify) {
 			const row = await db.all(`SELECT u.id, u.display_name FROM blocked_users b JOIN users u 
 				ON u.id = b.blocked_id WHERE b.blocker_id = ?`, userId);
 
-			return res(200).send(row);
+			return res.code(200).send(row);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -148,7 +148,7 @@ export default async function userRoutes(fastify) {
 				EXISTS(SELECT 1 FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?) AS blocked_by_target`,
 				[userId, paramId, paramId, userId]);
 
-			return res(200).send({
+			return res.code(200).send({
 				blockedByMe: Boolean(row.blocked_by_me),
 				blockedByTarget: Boolean(row.blocked_by_target)
 			})
@@ -170,7 +170,7 @@ export default async function userRoutes(fastify) {
 			const row = await db.get('SELECT status FROM blocked_users WHERE (blocker_id = ? AND blocked_id = ?)', [userId, paramId]);
 
 			const blocked = row ? Boolean(row.status) : false;
-			return res(200).send({ blocked });
+			return res.code(200).send({ blocked });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -191,7 +191,7 @@ export default async function userRoutes(fastify) {
 			await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) 
 				OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
 			await db.run(`INSERT INTO blocked_users (blocker_id, blocked_id, status) VALUES (?, ?, ?)`, [userId, paramId, true]);
-			return res(200).res({ message: 'User blocked successfully' });
+			return res.code(200).send({ message: 'User blocked successfully' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -211,7 +211,7 @@ export default async function userRoutes(fastify) {
 				throw fastify.httpErrors.forbidden('You cannot perform this operation on yourself');
 
 			await db.run(`DELETE FROM blocked_users WHERE blocker_id = ? and blocked_id = ?`, [userId, paramId]);
-			return res(200).res({ message: 'User unblocked successfully' });
+			return res.code(200).send({ message: 'User unblocked successfully' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -241,7 +241,7 @@ export default async function userRoutes(fastify) {
 
 			res.header('Content-Type', contentType);
 			red.header('Cache-Control', 'no-cache');
-			return res(200).send(buffer);
+			return res.code(200).send(buffer);
 		} catch (err) {
 			if (err.code === 'ENOENT')
 				throw fastify.httpErrors.notFound('Avatar not found');
@@ -255,7 +255,7 @@ export default async function userRoutes(fastify) {
 
 	fastify.put('/users/:id/avatar', {
 		preValidation: fastify.authenticateRequest,
-	}, async (req, reply) => {
+	}, async (req, res) => {
 		const paramId = Number(req.params.id);
 
 		if (req.authUser.id !== paramId)
@@ -289,7 +289,7 @@ export default async function userRoutes(fastify) {
 			await pipeline(data.file, fs.createWriteStream(uploadPath));
 			if (data.file.truncated) {
 				await fsp.unlink(uploadPath);
-				return reply.status(413).send({ error: 'Image exceeds 2MB limit.' });
+				return res.code(413).send({ error: 'Image exceeds 2MB limit.' });
 			}
 			const row = await db.get('SELECT avatar FROM users WHERE id = ?', [paramId]);
 			if (row && row.avatar && row.avatar !== 'default.png') {
@@ -302,7 +302,7 @@ export default async function userRoutes(fastify) {
 				}
 			}
 			await db.run('UPDATE users SET avatar = ? WHERE id = ?', [uniqueName, req.authUser.id]);
-			return res(200).send({ message: 'Avatar uploaded successfully', avatar: uniqueName });
+			return res.code(200).send({ message: 'Avatar uploaded successfully', avatar: uniqueName });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -346,7 +346,7 @@ export default async function userRoutes(fastify) {
 
 			await db.run('UPDATE users SET avatar = ? WHERE id = ?', ['default.png', userId]);
 
-			return res(200).res({ message: 'Avatar deleted successfully' });
+			return res.code(200).send({ message: 'Avatar deleted successfully' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -362,7 +362,7 @@ export default async function userRoutes(fastify) {
 		try {
 			const friends = await db.all(`SELECT u.id, u.display_name, u.avatar  FROM friends AS f JOIN users AS u ON (f.user_id   = ? AND u.id = f.friend_id) OR (f.friend_id = ? AND u.id = f.user_id) WHERE f.friendship_status = 'accepted'`, [req.authUser.id, req.authUser.id]);
 
-			return res(200).send(friends);
+			return res.code(200).send(friends);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -375,7 +375,7 @@ export default async function userRoutes(fastify) {
 		preValidation: [fastify.authenticateRequest, fastify.validateUsers, fastify.loadFriendship],
 	}, async (req, res) => {
 		if (req.friendship?.friendship_status === "accepted")
-			return res(200).res({ friend: req.friend });
+			return res.code(200).send({ friend: req.friend });
 		else
 			throw fastify.httpErrors.notFound('Friend not found');
 	});
@@ -393,7 +393,7 @@ export default async function userRoutes(fastify) {
 
 		try {
 			await db.run(`INSERT INTO friends (user_id, friend_id, friendship_status) VALUES (?, ?, ?)`, [userId, targetId, 'pending']);
-			return res(200).res({ message: 'Friend request sent' });
+			return res.code(200).send({ message: 'Friend request sent' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -420,7 +420,7 @@ export default async function userRoutes(fastify) {
 		try {
 			await db.run(`UPDATE friends SET friendship_status = 'accepted' WHERE user_id = ? 
 				AND friend_id = ? AND friendship_status = 'pending'`, [paramId, userId]);
-			return res(200).res({ message: 'Friend request accepted' });
+			return res.code(200).send({ message: 'Friend request accepted' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -447,7 +447,7 @@ export default async function userRoutes(fastify) {
 		try {
 			await db.run(`DELETE FROM friends WHERE friendship_status = 'pending' AND (user_id = ? 
 				AND friend_id = ?)`, [paramId, userId]);
-			return res(200).res({ message: 'Friend request rejected' });
+			return res.code(200).send({ message: 'Friend request rejected' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -470,9 +470,9 @@ export default async function userRoutes(fastify) {
 
 			if (resp) {
 				await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) AND friendship_status = 'pending'`, [userId, paramId]);
-				return res(200).res({ message: 'Friend request canceled' });
+				return res.code(200).send({ message: 'Friend request canceled' });
 			} else
-				return res(200).res({ message: 'No pending friend request' });
+				return res.code(200).send({ message: 'No pending friend request' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -495,7 +495,7 @@ export default async function userRoutes(fastify) {
 
 		try {
 			await db.run(`DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`, [userId, paramId, paramId, userId]);
-			return res(200).res({ message: 'Friend removed' });
+			return res.code(200).send({ message: 'Friend removed' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -511,7 +511,7 @@ export default async function userRoutes(fastify) {
 			const received = await db.all(`SELECT f.user_id AS id, u.display_name AS display_name
 				FROM friends f JOIN users u ON u.id = f.user_id WHERE f.friend_id = ?
 				AND f.friendship_status = 'pending'`, req.authUser.id);
-			return res(200).res(received);
+			return res.code(200).send(received);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -527,7 +527,7 @@ export default async function userRoutes(fastify) {
 			const sent = await db.all(`SELECT f.friend_id AS id, u.display_name AS display_name
 				FROM friends f JOIN users u ON u.id = f.friend_id WHERE f.user_id = ?
 				AND f.friendship_status = 'pending'`, req.authUser.id);
-			return res(200).ressend(sent);
+			return res.code(200).sendsend(sent);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -555,7 +555,7 @@ export default async function userRoutes(fastify) {
 				AND friend_id = ? AND friendship_status = 'pending'`, [friendId, userId]);
 			const requestReceived = !!recvRow;
 
-			return res(200).res({ areFriends, requestSent, requestReceived });
+			return res.code(200).send({ areFriends, requestSent, requestReceived });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -569,7 +569,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const received = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE friend_id = ? AND invite_status = 'pending'`, req.authUser.id);
-			return res(200).res(received);
+			return res.code(200).send(received);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -583,7 +583,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const sent = await db.all(`SELECT user_id, friend_id, invite_status FROM match_invites WHERE user_id = ? AND invite_status = 'pending'`, req.authUser.id);
-			return res(200).res(sent);
+			return res.code(200).send(sent);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -606,9 +606,9 @@ export default async function userRoutes(fastify) {
 
 			if (res) {
 				await db.run(`DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) AND invite_status = 'pending'`, [userId, paramId]);
-				res(200).res({ message: 'Match invite canceled' });
+				res.code(200).send({ message: 'Match invite canceled' });
 			} else
-				res(200).res({ message: 'Match invite not found' })
+				res.code(200).send({ message: 'Match invite not found' })
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -633,7 +633,7 @@ export default async function userRoutes(fastify) {
 
 		try {
 			await db.run(`INSERT INTO match_invites (user_id, friend_id) VALUES (?, ?)`, [userId, paramId]);
-			return res(200).res({ message: 'Match invite sent' });
+			return res.code(200).send({ message: 'Match invite sent' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -660,7 +660,7 @@ export default async function userRoutes(fastify) {
 		try {
 			await db.run('INSERT INTO matches (player1_id, player2_id) VALUES (?, ?)', [userId, paramId]);
 			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [userId, paramId, paramId, userId]);
-			return res(200).res({ message: 'Match invite accepted' });
+			return res.code(200).send({ message: 'Match invite accepted' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -686,7 +686,7 @@ export default async function userRoutes(fastify) {
 
 		try {
 			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [userId, paramId, paramId, userId]);
-			return res(200).res({ message: 'Match invite rejected' });
+			return res.code(200).send({ message: 'Match invite rejected' });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -706,7 +706,7 @@ export default async function userRoutes(fastify) {
 				ELSE 'Defeat' END AS result FROM matches m JOIN users u ON u.id = (CASE WHEN m.player1_id = $uid THEN
 				m.player2_id ELSE m.player1_id END) WHERE (m.player1_id = $uid OR m.player2_id = $uid) 
 				AND m.status = 'finished' ORDER BY m.created_at DESC`, { $uid: userId });
-			return res(200).res(match_history);
+			return res.code(200).send(match_history);
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -727,7 +727,7 @@ export default async function userRoutes(fastify) {
 				AND m.room_key LIKE '%' || ? || '%'`, [userId, userId, userId]);
 
 			const unread = rows.map(r => r.display_name);
-			return res(200).res({ unread });
+			return res.code(200).send({ unread });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
