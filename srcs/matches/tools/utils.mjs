@@ -61,7 +61,7 @@ export async function autoPairPlayers(fastify) {
 	}
 }
 
-export async function generateSixPlayerBracket(tournamentId) {
+export async function generatePlayerBracket(tournamentId) {
   try {
     // Buscar exatamente 4 jogadores com status “accepted”
     const players = await db.all(
