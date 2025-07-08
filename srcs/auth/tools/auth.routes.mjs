@@ -1,11 +1,7 @@
 import { loginUser } from './login.mjs'
 import { registerUser } from './register.mjs'
-<<<<<<< HEAD
 import { db, inSession } from './utils.mjs'
-=======
 import { sendLink } from './reset.mjs'
-import { db } from './utils.mjs'
->>>>>>> e072d4e (Reset password already sending e-mail with link)
 
 export default async function authRoutes(fastify) {
 	fastify.post('/register', async (req, reply) => {
