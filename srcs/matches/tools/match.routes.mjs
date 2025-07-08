@@ -97,7 +97,7 @@ export default async function matchRoutes(fastify) {
 			const exists = await db.get('SELECT 1 FROM players WHERE tournament_id = ? AND user_id = ?', [tour.id, user_id]);
 
 			if (exists)
-				throw fastify.httpErrors.conflict('Already joined');
+				throw fastify.httpErrors.conflict('You are already participating in this tournament');
 
 			await db.run('INSERT INTO players (tournament_id, user_id) VALUES (?, ?)', [tour.id, user_id]);
 			await db.run('UPDATE tournaments SET current_capacity = current_capacity + 1 WHERE id = ?', tour.id);
