@@ -1,6 +1,11 @@
 import { loginUser } from './login.mjs'
 import { registerUser } from './register.mjs'
+<<<<<<< HEAD
 import { db, inSession } from './utils.mjs'
+=======
+import { sendLink } from './reset.mjs'
+import { db } from './utils.mjs'
+>>>>>>> e072d4e (Reset password already sending e-mail with link)
 
 export default async function authRoutes(fastify) {
 	fastify.post('/register', async (req, reply) => {
@@ -37,6 +42,15 @@ export default async function authRoutes(fastify) {
 			}).send({ success: 'Login successful', user, twofa })
 		} catch (error) {
 			return reply.code(error.statusCode || 500).send({ error: error.message })
+		}
+	})
+
+	fastify.post('/send-link', async (req, reply) => {
+		try {
+			const result = await sendLink(db, req.body, fastify)
+			return reply.code(201).send({ success: result.message })
+		} catch (error) {
+			return reply.code(error.statusCode).send({ error: error.message })
 		}
 	})
 

@@ -30,3 +30,7 @@ export async function inSession(id) {
 
 	await db.run(`UPDATE users SET session_id = ?, session_expires = strftime('%s','now') + 3600 WHERE id = ?`, sessionId, id);
 }
+
+export function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}

@@ -105,6 +105,11 @@ export default async function authRoutes(app) {
 
 	app.post('/send-link', async (req, reply) => {
 		try {
+			const extendedBody = {
+				...req.body,
+				protocol: req.protocol,
+				host: req.headers.host
+			}
 			const res = await fetch(`${AUTH_URL}/api/send-link`, {
 				dispatcher: tlsAgent,
 				method: 'POST',
@@ -112,7 +117,7 @@ export default async function authRoutes(app) {
 					'Content-Type': 'application/json',
 					cookie: req.headers.cookie,
 				},
-				body: JSON.stringify(req.body),
+				body: JSON.stringify(extendedBody),
 			});
 			const data = await res.json();
 			return reply.code(res.status).send(data);

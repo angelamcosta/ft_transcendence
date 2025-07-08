@@ -10,40 +10,18 @@ export async function signUp(e: Event) {
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
 
 	const form = e.target as HTMLFormElement;
-	const emailInput = document.getElementById('emailInput') as HTMLInputElement;
-	const nameInput = document.getElementById('nameInput') as HTMLInputElement;
-	const passwordInput = document.getElementById('passwordInput') as HTMLInputElement;
+	const formData = new FormData(form);
+	const email = formData.get('email');
+	const display_name = formData.get('name');
+	const password = formData.get('password');
+	
 	let messageDiv = document.getElementById('registerError') as HTMLDivElement | null;
-
 	if (!messageDiv) {
 		messageDiv = document.createElement('div');
 		messageDiv.id = 'registerError';
 		messageDiv.className = 'text-red-600 mt-2 text-sm';
 		form.append(messageDiv);
 	}
-
-	// Check whitespaces
-	if (utils.hasWhitespace(nameInput.value)) {
-		messageDiv.textContent = "Display name cannot have whitespaces.";
-		return;
-	}
-
-	// check password length
-	if (!passwordInput.checkValidity()) {
-		messageDiv.textContent = "Password must be at least 6 characters long.";
-		return;
-	}
-
-	if (utils.hasWhitespace(passwordInput.value)) {
-		messageDiv.textContent = "Password cannot have whitespaces.";
-		return;
-	}
-	passwordInput.setCustomValidity('');
-
-	const formData = new FormData(form);
-	const email = formData.get('email');
-	const display_name = formData.get('name');
-	const password = formData.get('password');
 
 	try {
 		const response = await fetch('/register', {
@@ -150,7 +128,7 @@ export async function sendLink(e: Event) {
 
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
-	const email = formData.get('resetEmailInput');
+	const email = formData.get('resetEmail');
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
 	const loginForm = (document.getElementById('login') as HTMLFormElement | null);
 	const resetButton = (document.getElementById('resetButton') as HTMLButtonElement | null);
@@ -161,7 +139,6 @@ export async function sendLink(e: Event) {
 	}
 	
 	let successDiv = document.getElementById('successMessage') as HTMLDivElement | null;
-	
 	try {
 		const response = await fetch('/send-link', {
 			method: 'POST',
@@ -179,7 +156,7 @@ export async function sendLink(e: Event) {
 			messageDiv = document.createElement('div');
 			messageDiv.id = 'sendLinkError';
 			messageDiv.className = 'text-red-600 mt-2 text-sm';
-			messageDiv.textContent = data?.error || 'Send link failed.';
+			messageDiv.textContent = data?.error || 'Something went wrong. Please try again later.';
 			form.append(messageDiv);
 			return;
 		}
@@ -190,11 +167,11 @@ export async function sendLink(e: Event) {
 			loginForm?.append(successDiv);
 		}
 		resetButton?.classList.add("hidden");
-		successDiv.textContent = "A link to reset your password was sento to your e-mail";
+		successDiv.textContent = data?.success || 'If an account with that email exists, we’ve sent a reset link.';
 		workArea?.removeChild(form);
 	} catch (error) {
 		console.error('Error sending form data:', error);
-		alert('Login failed! Catched on Try');
+		alert('Send link failed! Catched on Try');
 	}
 }
 
@@ -248,54 +225,18 @@ export async function changePassword(e: Event) {
 	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
-	const oldPasswordInput = document.getElementById('oldPasswordInput') as HTMLInputElement;
-	const newPasswordInput = document.getElementById('newPasswordInput') as HTMLInputElement;
-	const confirmPasswordInput = document.getElementById('confirmPasswordInput') as HTMLInputElement;
-
+	const oldPassword = formData.get('oldPassword');
+	const newPassword = formData.get('newPassword');
+	const confirmPassword = formData.get('confirmPassword');
+	const userId = localStorage.getItem('userId');
+	
 	let messageDiv = document.getElementById('changeDetailsError') as HTMLDivElement | null;
-
 	if (!messageDiv) {
 		messageDiv = document.createElement('div');
 		messageDiv.id = 'changeDetailsError';
 		messageDiv.className = 'text-red-600 mt-2 text-sm';
 		form.append(messageDiv);
 	}
-
-	if (!oldPasswordInput.checkValidity() || !newPasswordInput.checkValidity() || !confirmPasswordInput.checkValidity()) {
-		return;
-	}
-
-	// check if passwords have whitespaces
-	if (utils.hasWhitespace(oldPasswordInput.value)) {
-		messageDiv.textContent = "Password cannot have whitespaces.";
-		
-		return;
-	}
-	if (utils.hasWhitespace(newPasswordInput.value)) {
-		messageDiv.textContent = "Password cannot have whitespaces.";
-		return;
-	}
-	if (utils.hasWhitespace(confirmPasswordInput.value)) {
-		messageDiv.textContent = "Password cannot have whitespaces.";
-		return;
-	}
-
-	// Check if confirm password is equal to the new password
-	if (confirmPasswordInput.value !== newPasswordInput.value) {
-		messageDiv.textContent = "Password confirmation do not match new password.";
-		return;
-	}
-
-	// Check if old password is equal to the new password
-	if (oldPasswordInput.value === newPasswordInput.value) {
-		messageDiv.textContent = "New password must be different from current one.";
-		return;
-	}
-
-	const oldPassword = formData.get('oldPassword');
-	const newPassword = formData.get('newPassword');
-	const confirmPassword = formData.get('confirmPassword');
-	const userId = localStorage.getItem('userId');
 
 	try {
 		const response = await fetch(`/users/${userId}`, {
@@ -330,7 +271,6 @@ export async function changeDisplayName(e: Event) {
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
 	const display_name = formData.get('name');
-	const displayName = document.getElementById('nameInput') as HTMLInputElement;
 	const userId = localStorage.getItem('userId');
 
 	let messageDiv = document.getElementById('loginError') as HTMLDivElement | null;
@@ -339,18 +279,6 @@ export async function changeDisplayName(e: Event) {
 		messageDiv.id = 'loginError';
 		messageDiv.className = 'text-red-600 mt-2 text-sm';
 		form.append(messageDiv);
-	}
-
-	if (utils.hasWhitespace(displayName.value)) {
-		messageDiv.textContent = "Display name cannot have whitespaces.";
-		return;
-	}
-
-	// Check if display name is equal to the current one
-	const curentDisplayName = localStorage.getItem('displayName');
-	if (curentDisplayName === displayName.value) {
-		messageDiv.textContent = "New display name must be different from current one.";
-		return;
 	}
 
 	try {
