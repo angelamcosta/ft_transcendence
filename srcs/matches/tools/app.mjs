@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import sensible from '@fastify/sensible';
 import matchRoutes from './match.routes.mjs';
 import fastifyCookie from '@fastify/cookie';
-import { loadTournament, loadMatch } from './middleware.mjs';
+import { loadTournament, loadMatch, authenticateRequest } from './middleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +36,7 @@ process.on('SIGTERM', shutdown);
 
 app.decorate('loadMatch', loadMatch(app));
 app.decorate('loadTournament', loadTournament(app));
+app.decorate('authenticateRequest', authenticateRequest(app));
 
 await app.register(matchRoutes, { prefix: '/api' });
 
