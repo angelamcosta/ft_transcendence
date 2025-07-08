@@ -5,14 +5,14 @@ const tlsAgent = new UndiciAgent({
 	connect: { rejectUnauthorized: false }
 });
 
-export async function validateEmptyBody(res, rep) {
+/*export async function validateEmptyBody(res, rep) {
     if (request.raw.method !== 'POST') return;
 
     const body = res.body;
 
     if (body === undefined || Object.keys(body).length === 0)
         return rep.code(400).send({ error: 'JSON body is empty' });
-}
+}*/
 
 export function validateData(fastify) {
 	return async (req) => {
