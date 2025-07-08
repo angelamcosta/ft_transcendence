@@ -1,16 +1,30 @@
 import * as displayPage from './displayPage.js'
 import * as buttonHandlers from './buttonHandlers.js'
 
+export interface User {
+	id: number;
+	display_name: string;
+}
+
+export interface Tournaments {
+	id: number;
+	name: string;
+	status: string;
+	capacity: number;
+	created_by: string;
+	current_capacity: number;
+}
+
 export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
-		displayPage.menu(menuArea, workArea);
-		displayPage.dashboard(workArea);
-		document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-		document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-		document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-		document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
-		document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
-		document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea));
-		document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea));
+	displayPage.menu(menuArea, workArea);
+	displayPage.dashboard(workArea);
+	document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
+	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
+	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
+	document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
+	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
+	document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea));
+	document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea));
 }
 
 export const eyeIcon = `
@@ -32,10 +46,10 @@ export const eyeSlashIcon = `
   		</svg>`;
 
 export function cleanDiv(divArea: HTMLDivElement | null) {
-  if (typeof (window as any).stopGame === 'function') {
-    (window as any).stopGame();
-  }
-  divArea?.replaceChildren();
+	if (typeof (window as any).stopGame === 'function') {
+		(window as any).stopGame();
+	}
+	divArea?.replaceChildren();
 }
 
 export function cleanLocalStorage() {
@@ -47,11 +61,6 @@ export function cleanLocalStorage() {
 
 export function hasWhitespace(input: string): boolean {
 	return /\s/.test(input);
-}
-
-export interface User {
-	id: number;
-	display_name: string;
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -70,6 +79,27 @@ export async function getUsers(): Promise<User[]> {
 			console.error('Failed to load users list', await res.text());
 	} catch (err) {
 		console.error('Error fetching users', err);
+		return [];
+	}
+	return [];
+}
+
+export async function getTournaments(): Promise<Tournaments[]> {
+	try {
+		const res = await fetch('/tournaments', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			credentials: 'include'
+		});
+		if (res.ok) {
+			const tournaments: Tournaments[] = await res.json();
+			return tournaments;
+		} else
+			console.error('Failed to load tournaments list', await res.text());
+	} catch (err) {
+		console.error('Error fetching tournaments', err);
 		return [];
 	}
 	return [];

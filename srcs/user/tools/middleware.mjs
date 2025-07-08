@@ -6,7 +6,7 @@ const tlsAgent = new UndiciAgent({
 });
 
 /*export async function validateEmptyBody(res, rep) {
-    if (request.raw.method !== 'POST') return;
+    if (res.raw.method !== 'POST') return;
 
     const body = res.body;
 
