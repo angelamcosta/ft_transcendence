@@ -10,6 +10,7 @@ import { sendDmMessage, setupDmChatControls, setupDmChatSocket } from './dmChatM
 import { buildProfile } from './profileManager.js';
 import { buildFriendsLayout, buildInviteCard, buildUserCard } from './friendsListUI.js';
 import { tournamentsPage } from './tournaments.js';
+import { pongPvpMatchUI } from './pongUI.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
@@ -843,7 +844,14 @@ export async function friendsList(workArea: HTMLDivElement | null) {
 			'received',
 			async id => {
 				const res = await fetch(`/users/invite/accept/${id}`, { method: 'PUT', credentials: 'include' })
-				utils.showModal((await res.json()).message)
+				const data = await res.json();
+				utils.showModal(data?.message);
+
+				if (data?.matchId) {
+					window.history.pushState({}, '', `/game?matchId=${data.matchId}`);
+					gamePage(workArea, data.matchId);
+					return;
+				}
 				friendsList(workArea)
 			},
 			async id => {
@@ -898,21 +906,18 @@ export async function friendsList(workArea: HTMLDivElement | null) {
 }
 
 // TODO : - game won't present errors, but won't start
-export function gamePage(workArea: HTMLDivElement | null) {
+export async function gamePage(workArea: HTMLDivElement | null, matchId?: string) {
 	if (!workArea)
-			return;
+		return;
 	utils.cleanDiv(workArea);
-	tournamentsPage(workArea);
 
-	/*const canvas = document.createElement('canvas');
+	if (!matchId) {
+		tournamentsPage(workArea);
+		return;
+	}
 
-	canvas.id = 'pong';
-	canvas.width = 1000;
-	canvas.height = 600;
-	canvas.style.display = 'block';
-	canvas.style.margin  = '0 auto';
+	const {canvas, namesRow, player1_name, player2_name, player1_id, player2_id, countdownDiv } = await pongPvpMatchUI(matchId!);
 
-	workArea.appendChild(canvas);
-
-	initPong(canvas);*/
+	workArea.append(canvas, namesRow, countdownDiv);
+	initPong(workArea, canvas, player1_name, player2_name, player1_id, player2_id, countdownDiv);
 }

@@ -620,7 +620,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
-		
+
 		if (req.invite?.invite_status === 'pending')
 			throw fastify.httpErrors.badRequest('There is already a pending match invite');
 
@@ -656,9 +656,10 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.forbidden('You cannot accept your own invite');
 
 		try {
-			await db.run('INSERT INTO matches (player1_id, player2_id) VALUES (?, ?)', [userId, paramId]);
+			const result = await db.run('INSERT INTO matches (player1_id, player2_id) VALUES (?, ?)', [userId, paramId]);
 			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [userId, paramId, paramId, userId]);
-			return res.code(200).send({ message: 'Match invite accepted' });
+			const matchId = result.lastID;
+			return res.code(200).send({ message: 'Match invite accepted', matchId: matchId });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;

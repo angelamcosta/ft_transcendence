@@ -2,6 +2,24 @@ import { initPong } from './pong.js';
 import * as utils from './utils.js';
 import { buildTournamentsLayout, createTournamentCard, buildTournamentCard, buildPlayLocalCard } from './tournamentsUI.js';
 
+export function startPracticeGame(workArea: HTMLDivElement | null) {
+	if (!workArea)
+		return;
+	utils.cleanDiv(workArea)
+	const canvas = document.createElement('canvas');
+
+	canvas.id = 'pong';
+	canvas.width = 1000;
+	canvas.height = 600;
+	canvas.style.display = 'block';
+	canvas.style.margin = '0 auto';
+	canvas.style.marginTop = '24px';
+
+	workArea.appendChild(canvas);
+
+	initPong(workArea, canvas);
+}
+
 export async function tournamentsPage(workArea: HTMLDivElement) {
 	const { container, left, middle, right } = buildTournamentsLayout();
 
@@ -77,28 +95,10 @@ export async function tournamentsPage(workArea: HTMLDivElement) {
 	}
 
 	right.append(buildPlayLocalCard(
-		() => startAIGame(workArea)
+		() => startPracticeGame(workArea)
 	));
 
 	await loadList();
 
 	workArea.append(container);
-}
-
-export function startAIGame(workArea: HTMLDivElement | null) {
-	if (!workArea)
-		return;
-	utils.cleanDiv(workArea)
-	const canvas = document.createElement('canvas');
-
-	canvas.id = 'pong';
-	canvas.width = 1000;
-	canvas.height = 600;
-	canvas.style.display = 'block';
-	canvas.style.margin = '0 auto';
-	canvas.style.marginTop = '24px';
-
-	workArea.appendChild(canvas);
-
-	initPong(canvas);
 }

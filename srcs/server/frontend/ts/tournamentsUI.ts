@@ -123,11 +123,11 @@ export function buildPlayLocalCard(
 	h3.classList.add('text-lg', 'font-semibold');
 	card.append(h3);
 
-	const btnAI = document.createElement('button');
-	btnAI.textContent = 'Play VS AI';
-	btnAI.classList.add('px-4', 'py-2', 'bg-indigo-500', 'text-white', 'rounded', 'cursor-pointer');
-	btnAI.addEventListener('click', onAI);
+	const btnPractice = document.createElement('button');
+	btnPractice.textContent = 'Play Practice';
+	btnPractice.classList.add('px-4', 'py-2', 'bg-indigo-500', 'text-white', 'rounded', 'cursor-pointer');
+	btnPractice.addEventListener('click', onAI);
 
-	card.append(btnAI);
+	card.append(btnPractice);
 	return card;
 }
