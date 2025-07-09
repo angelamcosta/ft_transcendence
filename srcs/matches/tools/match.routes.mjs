@@ -5,14 +5,16 @@ const GAME_URL = process.env.GAME_URL;
 if (!GAME_URL) throw new Error('⛔️ Missing env GAME_URL');
 
 export default async function matchRoutes(fastify) {
-	fastify.addHook('preHandler', validateEmptyBody);
+	//fastify.addHook('preHandler', validateEmptyBody);
 
 	fastify.get('/matches', async (req, res) => {
 		try {
 			const matches = await db.all('SELECT player1_id, player2_id, status FROM matches');
-			
+
 			return res.code(200).send(matches);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Failed to fetch matches: ', err.message);
 		}
@@ -20,70 +22,110 @@ export default async function matchRoutes(fastify) {
 
 	fastify.get('/tournaments', async (req, res) => {
 		try {
-			const tournaments = await db.all('SELECT id, name, status, capacity FROM tournaments');
+			const tournaments = await db.all('SELECT id, name, status, capacity, current_capacity, created_by FROM tournaments');
 
 			return res.code(200).send(tournaments);
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Failed to fetch tournaments: ', err.message);
 		}
 	});
 
-	fastify.post('/tournaments', async (req, res) => {
+	fastify.post('/tournaments', {
+		preValidation: fastify.authenticateRequest
+	}, async (req, res) => {
 		try {
-			const { name, capacity } = req.body;
+			const user_id = req.authUser.id;
+			const { name } = req.body;
 
-			if (!name || name === undefined || typeof (name) !== 'string')
+			if (typeof name !== 'string' || !name.trim())
 				throw fastify.httpErrors.unprocessableEntity('Request body is required');
 
-			if (typeof capacity !== 'number' || capacity <= 0 || (capacity & (capacity - 1)) !== 0 || 6 >= capacity)
-				throw fastify.httpErrors.unprocessableEntity('`capacity` must be a power of two and has a max of 6 players');
+			if (name.length > 12)
+				throw fastify.httpErrors.forbidden('Tournament name cannot be longer than 12 characters');
 
-			await db.run('INSERT INTO tournaments (name, capacity) VALUES (?, ?)', [name, capacity]);
+			const row = await db.get(`SELECT display_name FROM users WHERE id = ?`, user_id);
+
+			await db.run('INSERT INTO tournaments (created_by, name) VALUES (?, ?)', [row.display_name, name.trim()]);
 			return res.code(201).send({ message: 'Tournament created successfully' });
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
-			throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
 
-	fastify.post('/tournaments/:id/players', {
-		preValidation: fastify.loadTournament
+		fastify.delete('/tournaments/:id', {
+		preValidation: [fastify.loadTournament, fastify.authenticateRequest]
 	}, async (req, res) => {
-		const { user_id } = req.body;
-		const tour = req.tournament;
+		try {
+			const user_id = req.authUser.id;
+			const tour = req.tournament;
 
-		if (!user_id)
-			throw fastify.httpErrors.unprocessableEntity('`user_id` is required');
+			if (tour.status !== 'open')
+				throw fastify.httpErrors.forbidden('Cannot delete tournament after it already started');
 
-		if (tour.status !== 'open')
-			throw fastify.httpErrors.forbidden('Tournament not open for registration');
+			const user = await db.get(`SELECT display_name FROM users WHERE id = ?`, user_id);
+			const tournament = await db.get(`SELECT created_by FROM tournaments WHERE id = ?`, tour.id);
 
-		const exists = await db.get('SELECT 1 FROM players WHERE tournament_id = ? AND user_id = ?', [tour.id, user_id]);
+			if (user.display_name !== tournament.created_by)
+				throw fastify.httpErrors.forbidden(`Cannot delete someone else's tournament`);
 
-		if (exists)
-			throw fastify.httpErrors.conflict('Already joined');
-
-		await db.run('INSERT INTO players (tournament_id, user_id) VALUES (?, ?)', [tour.id, user_id]);
-		const { count } = await db.get('SELECT COUNT(*) AS count FROM players WHERE tournament_id = ?', [tour.id]);
-
-		if (count === tour.capacity) {
-			await db.run(
-				'UPDATE tournaments SET status = ? WHERE id = ?',
-				['in_progress', tour.id]
-			)
-			await startTournament(fastify, tour.id)
-			const created = await db.all(
-				'SELECT id FROM matches WHERE tournament_id = ?',
-				[tour.id]
-			)
-			for (const { id } of created) {
-				await fetch(`${GAME_URL}/api/game/${id}`, { method: 'POST' })
-				await fetch(`${GAME_URL}/api/game/${id}/init`, { method: 'POST' })
-				await fetch(`${GAME_URL}/api/game/${id}/start`, { method: 'POST' })
-			}
+			await db.run(`DELETE FROM tournaments WHERE id = ?`, tour.id);
+			return res.code(200).send({ message: 'Tournament deleted successfully' });
+		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
-		return res.code(201).send({ message: 'Joined tournament', players: count });
+	})
+
+	fastify.post('/tournaments/:id/players', {
+		preValidation: [fastify.loadTournament, fastify.authenticateRequest]
+	}, async (req, res) => {
+		try {
+			const user_id = req.authUser.id;
+			const tour = req.tournament;
+
+			if (tour.status !== 'open')
+				throw fastify.httpErrors.forbidden('Tournament not open for registration');
+
+			const exists = await db.get('SELECT 1 FROM players WHERE tournament_id = ? AND user_id = ?', [tour.id, user_id]);
+
+			if (exists)
+				throw fastify.httpErrors.conflict('You are already participating in this tournament');
+
+			await db.run('INSERT INTO players (tournament_id, user_id) VALUES (?, ?)', [tour.id, user_id]);
+			await db.run('UPDATE tournaments SET current_capacity = current_capacity + 1 WHERE id = ?', tour.id);
+			const { count } = await db.get('SELECT COUNT(*) AS count FROM players WHERE tournament_id = ?', [tour.id]);
+
+			if (count === tour.capacity) {
+				await db.run(
+					'UPDATE tournaments SET status = ? WHERE id = ?',
+					['in_progress', tour.id]
+				)
+				await startTournament(fastify, tour.id)
+				const created = await db.all(
+					'SELECT id FROM matches WHERE tournament_id = ?',
+					[tour.id]
+				)
+				for (const { id } of created) {
+					await fetch(`${GAME_URL}/api/game/${id}`, { method: 'POST' })
+					await fetch(`${GAME_URL}/api/game/${id}/init`, { method: 'POST' })
+					await fetch(`${GAME_URL}/api/game/${id}/start`, { method: 'POST' })
+				}
+			}
+			return res.code(201).send({ message: 'Joined tournament', players: count });
+		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
+		}
 	});
 
 	fastify.get('/tournaments/:id/matches', {
@@ -134,6 +176,8 @@ export default async function matchRoutes(fastify) {
 					WHERE m.id = ?`, [req.params.id]);
 				return res.code(200).send({ match });
 			} catch (err) {
+				if (err.statusCode && err.statusCode !== 500)
+					throw err;
 				fastify.log.error(`Database error: ${err.message}`);
 				throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 			}
@@ -145,10 +189,12 @@ export default async function matchRoutes(fastify) {
 			const { user_id } = req.body;
 
 			if (!user_id) throw fastify.httpErrors.unprocessableEntity('`user_id` is required');
-		
+
 			const result = await db.run(`DELETE FROM matchmaking_queue WHERE player_id = ?`, [user_id]);
 			return res.code(200).send({ "left": result.changes > 0 });
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 		}
@@ -165,6 +211,8 @@ export default async function matchRoutes(fastify) {
 			await db.run('INSERT INTO matchmaking_queue (player_id) VALUES (?)', [user_id]);
 			return res.code(201).send({ "queued": true });
 		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
 			fastify.log.error(`Database error: ${err.message}`);
 			throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 		}

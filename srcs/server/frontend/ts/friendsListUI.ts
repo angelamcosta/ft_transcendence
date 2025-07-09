@@ -38,12 +38,14 @@ export function buildUserCard(
 
 	if (users.length === 0) {
 		const p = document.createElement('p')
-		p.textContent = `No ${title.toLowerCase()}`
+		if (title === 'Your Friends')
+			p.textContent = `No friends yet`
+		else
+			p.textContent = `No ${title.toLowerCase()}`
 		p.classList.add('text-gray-500')
 		card.append(p)
-	} else {
+	} else
 		users.forEach(u => card.append(buildUserRow(u, buildActions(u))))
-	}
 
 	return card
 }
@@ -140,7 +142,6 @@ export function buildInviteCard(
 				reject.textContent = 'Reject'
 				reject.classList.add('px-3', 'py-1', 'bg-red-500', 'text-white', 'rounded', 'cursor-pointer', 'text-sm')
 				reject.addEventListener('click', async () => { await onRejectOrCancel(u.id) })
-
 				btns.append(accept, reject)
 			} else {
 				const cancel = document.createElement('button')

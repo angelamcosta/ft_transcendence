@@ -47,6 +47,7 @@ export default async function matchRoutes(app) {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
+					cookie: req.headers.cookie
 				},
 				body: JSON.stringify(req.body),
 			});
@@ -58,6 +59,24 @@ export default async function matchRoutes(app) {
 		}
 	})
 
+	app.delete('/tournaments/:id', async (req, reply) => {
+		try {
+			const t_id = req.params.id;
+			const res = await fetch(`${MATCHES_URL}/api/tournaments/${t_id}`, {
+				dispatcher: tlsAgent,
+				method: 'DELETE',
+				headers: {
+					cookie: req.headers.cookie,
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (err) {
+			console.error('Proxy /tournaments/:id error:', e);
+			return reply.code(500).send({ error: 'Error deleting tournament' });
+		}
+	})
+
 	app.post('/tournaments/:id/players', async (req, reply) => {
 		try {
 			const t_id = req.params.id;
@@ -65,9 +84,8 @@ export default async function matchRoutes(app) {
 				dispatcher: tlsAgent,
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
 				},
-				body: JSON.stringify(req.body),
 			});
 			const data = await res.json();
 			return reply.code(res.status).send(data);

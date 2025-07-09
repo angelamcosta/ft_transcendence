@@ -9,6 +9,7 @@ import { getUsers } from './utils.js';
 import { sendDmMessage, setupDmChatControls, setupDmChatSocket } from './dmChatManager.js';
 import { buildProfile } from './profileManager.js';
 import { buildFriendsLayout, buildInviteCard, buildUserCard } from './friendsListUI.js';
+import { tournamentsPage } from './tournaments.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
@@ -568,7 +569,6 @@ export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement |
 	playButton.title = "New Game";
 	playButton.innerHTML = '<svg class="w-6 h-6 mr-2 fill-current" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M45.563,29.174l-22-15c-0.307-0.208-0.703-0.231-1.031-0.058C22.205,14.289,22,14.629,22,15v30 c0,0.371,0.205,0.711,0.533,0.884C22.679,45.962,22.84,46,23,46c0.197,0,0.394-0.059,0.563-0.174l22-15 C45.836,30.64,46,30.331,46,30S45.836,29.36,45.563,29.174z M24,43.107V16.893L43.225,30L24,43.107z"/></svg>Play';
 	playButton.className = "block md:inline-block px-4 py-2 text-white hover:text-blue-800 focus:outline-none";
-	playButton.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
 	menu.appendChild(playButton);
 
 	const chatButton = document.createElement("button");
@@ -900,10 +900,11 @@ export async function friendsList(workArea: HTMLDivElement | null) {
 // TODO : - game won't present errors, but won't start
 export function gamePage(workArea: HTMLDivElement | null) {
 	if (!workArea)
-		return;
+			return;
 	utils.cleanDiv(workArea);
+	tournamentsPage(workArea);
 
-	const canvas = document.createElement('canvas');
+	/*const canvas = document.createElement('canvas');
 
 	canvas.id = 'pong';
 	canvas.width = 1000;
@@ -913,5 +914,5 @@ export function gamePage(workArea: HTMLDivElement | null) {
 
 	workArea.appendChild(canvas);
 
-	initPong(canvas);
+	initPong(canvas);*/
 }
