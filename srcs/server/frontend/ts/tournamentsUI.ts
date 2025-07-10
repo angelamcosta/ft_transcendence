@@ -1,6 +1,13 @@
 import * as utils from './utils.js'
+import { TournamentMatch } from './utils.js';
 
 type Action = { label: string; handler: () => void };
+
+type BracketMatch = {
+	player1: string;
+	player2: string;
+	score: string;
+};
 
 export function buildTournamentsLayout() {
 	const container = document.createElement('div')
@@ -132,6 +139,85 @@ export function buildPlayLocalCard(
 	return card;
 }
 
-export function buildTournamentBrackets() {
-	
+function createMatchCard({ player1, player2, score }: BracketMatch) {
+	const card = document.createElement('div');
+	card.classList.add(
+		'bg-white', 'rounded-xl', 'p-4', 'shadow', 'flex', 'flex-col',
+		'items-center', 'gap-2', 'min-w-[200px]'
+	);
+
+	const p1 = document.createElement('span');
+	p1.textContent = player1;
+	p1.classList.add('font-medium');
+
+	const scoreEl = document.createElement('span');
+	scoreEl.textContent = score || '–';
+	scoreEl.classList.add('text-xl', 'font-semibold');
+
+	const p2 = document.createElement('span');
+	p2.textContent = player2;
+	p2.classList.add('font-medium');
+
+	card.append(p1, scoreEl, p2);
+	return card;
+}
+
+export async function buildTournamentBrackets(t_id: number) {
+	const res = await fetch(`/tournaments/${t_id}/matches`, { credentials: 'include' });
+	const { matches } = (await res.json() as { matches: TournamentMatch[] });
+
+	if (!res.ok)
+		utils.showModal('Failed loading tournament brackets');
+
+	const semis: TournamentMatch[] = matches.filter(m => m.round === 1);
+	const finals: TournamentMatch[] = matches.filter(m => m.round === 2);
+
+	const finalMatch: TournamentMatch | undefined = finals[0];
+
+	const container = document.createElement('div');
+	container.classList.add(
+		'items-start',
+		'bg-white',
+		'rounded-xl',
+		'flex',
+		'inline-flex',
+		'p-6',
+		'gap-6',
+		'mt-6',
+		'mx-auto',
+		'shadow',
+	);
+
+	const row = document.createElement('div');
+	row.classList.add('flex', 'gap-6');
+
+	const semisCard = document.createElement('div');
+	semisCard.classList.add('flex', 'flex-col', 'flex-1', 'gap-4');
+	const semisLabel = document.createElement('h3');
+	semisLabel.textContent = 'Semi-finals';
+	semisLabel.classList.add('text-center', 'font-semibold', 'text-lg', 'mb-2');
+	semisCard.append(semisLabel);
+	for (let i = 0; i < 2; i++) {
+		const m = semis[i];
+		semisCard.append(createMatchCard({
+			player1: m?.player1 || 'TBD',
+			player2: m?.player2 || 'TBD',
+			score: m?.score ?? ''
+		}));
+	}
+
+	const finalsCard = document.createElement('div');
+	finalsCard.classList.add('flex', 'flex-col', 'items-center', 'self-center', 'gap-4', 'flex-1');
+	const finalsLabel = document.createElement('h4');
+	finalsLabel.textContent = 'Final';
+	finalsLabel.classList.add('text-center', 'font-semibold', 'text-lg', 'mb-2');
+	finalsCard.append(finalsLabel);
+	finalsCard.append(createMatchCard({
+		player1: finalMatch?.player1 || 'TBD',
+		player2: finalMatch?.player2 || 'TBD',
+		score: finalMatch?.score ?? ''
+	}));
+	row.append(semisCard, finalsCard);
+	container.append(row);
+	return container;
 }

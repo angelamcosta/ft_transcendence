@@ -2,6 +2,12 @@ import { initPong } from './pong.js';
 import * as utils from './utils.js';
 import { buildTournamentsLayout, createTournamentCard, buildTournamentCard, buildPlayLocalCard, buildTournamentBrackets } from './tournamentsUI.js';
 
+async function showBrackets(workArea: HTMLDivElement, t_id: number) {
+	utils.cleanDiv(workArea);
+	const newEl = await buildTournamentBrackets(t_id);
+	workArea.append(newEl);
+}
+
 export function startPracticeGame(workArea: HTMLDivElement | null) {
 	if (!workArea)
 		return;
@@ -59,7 +65,7 @@ export async function buildTournamentsPage(workArea: HTMLDivElement) {
 					if (tournament.current_capacity === tournament.capacity) {
 						actions.unshift({
 							label: 'View',
-							handler: () => { buildTournamentBrackets() }
+							handler: () => { showBrackets(workArea, tournament.id); }
 						})
 					}
 
@@ -96,10 +102,10 @@ export async function buildTournamentsPage(workArea: HTMLDivElement) {
 		}
 	}
 
-	right.append(buildPlayLocalCard(() =>  {
-			window.history.replaceState({}, '', '/game');
-			startPracticeGame(workArea)
-		}
+	right.append(buildPlayLocalCard(() => {
+		window.history.replaceState({}, '', '/game');
+		startPracticeGame(workArea)
+	}
 	));
 
 	await loadList();
