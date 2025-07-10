@@ -2,14 +2,13 @@ import { inSession, verifyPassword } from "./utils.mjs"
 import { sendEmail } from "./emailService.mjs"
 
 export async function loginUser(db, {email, password}) {
-	email = email.toLowerCase();
-	
 	if (!email || !password) {
 		const error = new Error('Missing fields')
 		error.statusCode = 400
 		throw error
 	}
 
+	email = email.toLowerCase();
 	const user = await db.get('SELECT * FROM users where email = ?', [email])
 	if (!user) {
 		const error = new Error('Invalid email or password')
