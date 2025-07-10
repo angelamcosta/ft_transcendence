@@ -118,12 +118,6 @@ export async function initPong(
 		const socket = new WebSocket(wsUrl);
 		activeSocket = socket;
 
-		window.addEventListener('keydown', e => {
-			if (e.code === 'Escape' && socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify({ type: 'stop' }));
-			}
-		});
-
 		socket.addEventListener('open', () => {
 			if (!matchId)
 				socket.send(JSON.stringify({ type: 'start' }));

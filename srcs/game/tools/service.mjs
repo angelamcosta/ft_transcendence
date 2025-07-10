@@ -6,6 +6,7 @@ export class GameService extends EventEmitter {
         this.reset();
         this.width = 1000;
         this.height = 600;
+        this.intervalId = null;
         this.resetTimeout = null;
     }
 
@@ -101,7 +102,8 @@ export class GameService extends EventEmitter {
         const b = this.state.ball;
         b.x = this.width / 2;  // Centro horizontal
         b.y = this.height / 2; // Centro vertical
-        b.vx = b.vx > 0 ? -5 : 5; // Inverte direção
+        b.vx = b.vx > 0 ? -5 : 5;
+        b.vy = Math.floor(Math.random() * 11) - 5;
 
         // Adiciona um pequeno delay para dar tempo de ver o placar
         clearInterval(this.intervalId);
