@@ -121,7 +121,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
 }
 
-export function signIn(workArea: HTMLDivElement | null, successMessage?: string) {
+export function signIn(workArea: HTMLDivElement | null, successMessage?: string, isError?: boolean) {
 	utils.cleanDiv(workArea);
 
 	const form = document.createElement('form');
@@ -164,6 +164,12 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 	submitButton.textContent = 'Login';
 	submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
+	const resetButton = document.createElement('button');
+	resetButton.type = 'button';
+	resetButton.id = "resetButton";
+	resetButton.textContent = 'Forgot password?';
+	resetButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+
 	form.appendChild(emailInput);
 	form.appendChild(document.createElement('br'));
 	form.appendChild(passwordContainer);
@@ -172,15 +178,186 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string)
 
 	if (successMessage) {
 		const msgDiv = document.createElement('div');
-		msgDiv.className = 'text-green-600 mt-4 text-sm text-center';
+		msgDiv.id = "successMessage";
+		if (isError) {
+			msgDiv.className = 'text-red-600 mt-4 text-sm text-center';
+		}
+		else {
+			msgDiv.className = 'text-green-600 mt-4 text-sm text-center';
+		}
 		msgDiv.textContent = successMessage;
 		form.appendChild(msgDiv);
 	}
 
 	workArea?.appendChild(form);
+	workArea?.appendChild(resetButton);
 
 	form.addEventListener('submit', formHandlers.signIn);
 	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
+	resetButton.addEventListener('click', () => buttonHandlers.resetButton());
+}
+
+export function sendLink(workArea: HTMLDivElement | null) {
+	if (!workArea)
+		return;
+	
+	const resetForm = document.createElement('form');
+	resetForm.id = 'resetPassword';
+	resetForm.classList.add('flex', 'flex-col', 'items-center', 'w-60', 'mx-auto');
+    // Creates a heading
+	const resetHeading = document.createElement("p");
+	resetHeading.textContent = "A link will be sent to reset your password.";
+	resetHeading.classList.add("text-1xl", "font-bold", "text-blue-600");
+    resetForm.appendChild(resetHeading);
+
+    const resetEmailInput = document.createElement('input');
+	resetEmailInput.type = 'resetEmail';
+	resetEmailInput.id = "resetEmailInput";
+	resetEmailInput.name = 'resetEmail';
+	resetEmailInput.placeholder = 'Enter your email';
+	resetEmailInput.willValidate;
+	resetEmailInput.required = true;
+	resetEmailInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+    resetForm.appendChild(resetEmailInput);
+
+    const resetSubmitButton = document.createElement('button');
+	resetSubmitButton.type = 'submit';
+	resetSubmitButton.textContent = 'Send link';
+	resetSubmitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+    resetForm.appendChild(resetSubmitButton);
+
+    resetForm.appendChild(document.createElement('br'));
+
+    const resetCancelButton = document.createElement('button');
+	resetCancelButton.type = 'button';
+	resetCancelButton.textContent = 'Cancel';
+	resetCancelButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700');
+    resetForm.appendChild(resetCancelButton);
+
+    workArea.appendChild(resetForm);
+
+	resetForm.addEventListener('submit', formHandlers.sendLink);
+    resetCancelButton.addEventListener("click", () => {
+		workArea.removeChild(resetForm);
+	});
+}
+
+export function resetPassword(workArea: HTMLDivElement | null) {
+	const passwordForm = document.createElement('form');
+	passwordForm.id = 'changePassword';
+	passwordForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'rounded');
+
+	const newPasswordContainer = document.createElement('div');
+	newPasswordContainer.classList.add('relative', 'w-60', 'm-4');
+
+	// Create an password input
+	const newPasswordInput = document.createElement('input');
+	newPasswordInput.type = 'password';
+	newPasswordInput.id = "newPasswordInput";
+	newPasswordInput.name = 'newPassword';
+	newPasswordInput.placeholder = 'Enter new password';
+	newPasswordInput.minLength = 6;
+	newPasswordInput.required = true;
+	newPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+
+	// Create a toggle button
+	const newToggleButton = document.createElement('button');
+	newToggleButton.type = 'button';
+	newToggleButton.id = 'newToggleButton';
+	newToggleButton.title = "Show password";
+	newToggleButton.innerHTML = utils.eyeIcon;
+	newToggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	newToggleButton.style.background = 'transparent';
+	newPasswordContainer.appendChild(newPasswordInput);
+	newPasswordContainer.appendChild(newToggleButton);
+
+	const confirmPasswordContainer = document.createElement('div');
+	confirmPasswordContainer.classList.add('relative', 'w-60', 'm-4');
+
+	// Create an password input
+	const confirmPasswordInput = document.createElement('input');
+	confirmPasswordInput.type = 'password';
+	confirmPasswordInput.id = "confirmPasswordInput";
+	confirmPasswordInput.name = 'confirmPassword';
+	confirmPasswordInput.placeholder = 'Confirm new password';
+	confirmPasswordInput.minLength = 6;
+	confirmPasswordInput.required = true;
+	confirmPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+
+	// Create a toggle button
+	const confirmToggleButton = document.createElement('button');
+	confirmToggleButton.type = 'button';
+	confirmToggleButton.id = 'confirmToggleButton';
+	confirmToggleButton.title = "Show password";
+	confirmToggleButton.innerHTML = utils.eyeIcon;
+	confirmToggleButton.className = "absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center block md:inline-block text-white focus:outline-none";
+	confirmToggleButton.style.background = 'transparent';
+	confirmPasswordContainer.appendChild(confirmPasswordInput);
+	confirmPasswordContainer.appendChild(confirmToggleButton);
+
+	// Create a submit button
+	const passwordSubmitButton = document.createElement('button');
+	passwordSubmitButton.type = 'submit';
+	passwordSubmitButton.textContent = 'Change password';
+	passwordSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+
+	// Create a reset button button
+	const passwordResetButton = document.createElement('button');
+	passwordResetButton.id = 'passwordResetButton';
+	passwordResetButton.type = 'button';
+	passwordResetButton.textContent = 'Reset';
+	passwordResetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
+
+	const passwordButtonContainer = document.createElement('div');
+	passwordButtonContainer.classList.add('flex', 'w-60', 'm-4');
+	passwordButtonContainer.appendChild(passwordSubmitButton);
+	passwordButtonContainer.appendChild(passwordResetButton);
+
+	// Creates a heading
+	const passwordHeading = document.createElement("h1");
+	passwordHeading.textContent = "Change password";
+	passwordHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
+
+	// Create an error message span
+	const newPasswordErrorMessage = document.createElement("span");
+	newPasswordErrorMessage.id = "newPasswordError";
+	newPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	newPasswordErrorMessage.style.minWidth = "1rem";
+	newPasswordErrorMessage.textContent = "";
+
+	// Create an error message span
+	const confirmPasswordErrorMessage = document.createElement("span");
+	confirmPasswordErrorMessage.id = "confirmPasswordError";
+	confirmPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
+	confirmPasswordErrorMessage.style.minWidth = "1rem";
+	confirmPasswordErrorMessage.textContent = "";
+
+	// Create an error message span
+	const passwordButtonErrorMessage = document.createElement("span");
+	passwordButtonErrorMessage.id = "passwordButtonError";
+	passwordButtonErrorMessage.className = "text-green-500 text-sm ml-2";
+	passwordButtonErrorMessage.style.minWidth = "1rem";
+	passwordButtonErrorMessage.textContent = "";
+
+	passwordForm.appendChild(passwordHeading);
+	passwordForm.appendChild(newPasswordContainer);
+	passwordForm.appendChild(newPasswordErrorMessage);
+	passwordForm.appendChild(document.createElement('br'));
+	passwordForm.appendChild(confirmPasswordContainer);
+	passwordForm.appendChild(confirmPasswordErrorMessage);
+	passwordForm.appendChild(document.createElement('br'));
+	passwordForm.appendChild(passwordButtonContainer);
+	passwordForm.appendChild(passwordButtonErrorMessage);
+
+	// Append passwordForm and login button to the body
+	workArea?.appendChild(passwordForm);
+
+	passwordForm.addEventListener('submit', formHandlers.resetPassword);
+	newToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, newPasswordInput, newToggleButton));
+	confirmToggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, confirmPasswordInput, confirmToggleButton));
+	passwordResetButton.addEventListener("click", () => {
+		passwordForm.reset();
+	});
 }
 
 export function verify2FA(workArea: HTMLDivElement | null) {

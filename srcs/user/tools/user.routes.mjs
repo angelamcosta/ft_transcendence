@@ -55,7 +55,7 @@ export default async function userRoutes(fastify) {
 			if (/\s/.test(oldPassword) || /\s/.test(newPassword) || /\s/.test(confirmPassword))
 				throw fastify.httpErrors.badRequest('Password cannot have whitespaces');
 			if (newPassword !== confirmPassword)
-				throw fastify.httpErrors.badRequest('Confirm password and new password dont match');
+				throw fastify.httpErrors.badRequest('Confirm password and new password do not match');
 			if (oldPassword === newPassword)
 				throw fastify.httpErrors.badRequest('New password must differ from current one');
 			if (newPassword.length < 6)

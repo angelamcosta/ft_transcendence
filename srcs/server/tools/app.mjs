@@ -250,7 +250,9 @@ await app.register(cors, {
 	})
 );
 
-app.get('/', async (req, res) => {
+const htmlRoutes = ['/', '/reset-password'];
+
+const handler = async (req, res) => {
 	try {
 		const filePath = '/app/public/index.html';
 		const fileContent = fs.readFileSync(filePath, 'utf-8');
@@ -263,6 +265,10 @@ app.get('/', async (req, res) => {
 		});
 		return res.code(500).send('Internal Server Error - File not found');
 	}
+};
+
+htmlRoutes.forEach(route => {
+	app.get(route, handler);
 });
 
 await app.register(authRoutes);
