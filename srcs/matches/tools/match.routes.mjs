@@ -168,6 +168,9 @@ export default async function matchRoutes(fastify) {
 						VALUES (?, ?, ?, 2)`, [match.tournament_id, w1, w2]);
 				}
 			}
+
+			if (match.round === 2)
+				await db.run(`UPDATE tournaments SET status = 'finished' WHERE id = ?`, match.tournament_id);
 		}
 		return res.code(201).send({ success: true });
 	});
