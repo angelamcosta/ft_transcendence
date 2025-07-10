@@ -247,9 +247,8 @@ export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivEle
 			matchCard.append(btn);
 		}
 		finalsCard.append(matchCard);
-	} else {
-		finalsCard.append(createMatchCard({ player1: 'TBD', player2: 'TBD', score: '' }));
 	}
+	
 	row.append(semisCard, finalsCard);
 	container.append(row);
 	return container;
