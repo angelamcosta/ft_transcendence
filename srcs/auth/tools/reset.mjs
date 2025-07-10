@@ -69,3 +69,80 @@ export async function sendLink(db, {email, protocol, host}, fastify) {
     }
     return { message: 'If an account with that email exists, we’ve sent a reset link.' };
 }
+
+export async function resetPassword(db, { token, newPassword, confirmPassword }) {
+    if (!token || !newPassword || !confirmPassword) {
+        const error = new Error('Missing fields')
+        error.statusCode = 400
+        throw error
+    }
+
+    const user = await db.get('SELECT * FROM reset_password WHERE token = ?', [token]);
+    if (!user) {
+        const error = new Error('Invalid token')
+        error.statusCode = 400
+        throw error
+    }
+                    
+    const now = new Date();
+    if (now > new Date(user.expire)) {
+        try {
+            await db.run('DELETE FROM reset_password WHERE token = ?', [token]);
+	    } catch (dbError) {
+		    console.log('Database error details:', dbError)
+		    const error = new Error('Something went wrong. Please try again later.')
+		    error.statusCode = 500
+		    error.originalError = dbError
+		    throw error
+	    }
+        const error = new Error('Token has expired')
+        error.statusCode = 401
+        throw error
+    }
+
+    if (/\s/.test(newPassword) || /\s/.test(confirmPassword)) {
+		const error = new Error('Fields must not contain whitespaces')
+		error.statusCode = 400
+		throw error
+	}
+
+	if (newPassword.length > 128 || confirmPassword.length > 128) {
+		const error = new Error(`Fields can't contain more than 128 characters`)
+		error.statusCode = 400
+		throw error
+	}
+
+    if (newPassword !== confirmPassword) {
+        const error = new Error('Confirm password and new password do not match')
+		error.statusCode = 400
+		throw error
+    }
+
+    if (newPassword.length < 6) {
+		const error = new Error('Password must be at least 6 characters')
+		error.statusCode = 400
+		throw error
+	}
+
+    const { hash } = await hashPassword(newPassword);
+    try {
+        await db.run( 'UPDATE users SET password = ? WHERE id = ?', [hash, user.user_id] );
+	} catch (dbError) {
+		console.log('Database error details:', dbError)
+		const error = new Error('Something went wrong. Please try again later.')
+		error.statusCode = 500
+		error.originalError = dbError
+		throw error
+	}
+
+    try {
+        await db.run('DELETE FROM reset_password WHERE user_id = ?', [user.user_id]);
+	} catch (dbError) {
+		console.log('Database error details:', dbError)
+		const error = new Error('Something went wrong. Please try again later.')
+		error.statusCode = 500
+		error.originalError = dbError
+		throw error
+	}
+    return { message: 'Successfully reseted password' };
+}

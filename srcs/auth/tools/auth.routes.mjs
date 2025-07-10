@@ -1,7 +1,7 @@
 import { loginUser } from './login.mjs'
 import { registerUser } from './register.mjs'
 import { db, inSession } from './utils.mjs'
-import { sendLink } from './reset.mjs'
+import { sendLink , resetPassword } from './reset.mjs'
 
 export default async function authRoutes(fastify) {
 	fastify.post('/register', async (req, reply) => {
@@ -44,6 +44,15 @@ export default async function authRoutes(fastify) {
 	fastify.post('/send-link', async (req, reply) => {
 		try {
 			const result = await sendLink(db, req.body, fastify)
+			return reply.code(201).send({ success: result.message })
+		} catch (error) {
+			return reply.code(error.statusCode).send({ error: error.message })
+		}
+	})
+
+	fastify.post('/reset-password', async (req, reply) => {
+		try {
+			const result = await resetPassword(db, req.body)
 			return reply.code(201).send({ success: result.message })
 		} catch (error) {
 			return reply.code(error.statusCode).send({ error: error.message })
@@ -127,6 +136,29 @@ export default async function authRoutes(fastify) {
 		await db.run('UPDATE users SET twofa_status = ? WHERE id = ?', [status, userId]);
 		reply.send({ success: `2FA ${status}` })
 	});
+
+	fastify.get('/verify-reset-token', async (req, reply) => {
+		try {
+			const token = req.headers['token'];
+
+			if(!token)
+				return reply.code(400).send({ error: 'Invalid token' });
+			const user = await db.get('SELECT * FROM reset_password WHERE token = ?', [token]);
+			if (!user)
+				return reply.code(401).send({ error: 'Invalid token' });
+			const now = new Date();
+			if (now > new Date(user.expire)) {
+				await db.run('DELETE FROM reset_password WHERE token = ?', [token]);
+				return reply.code(401).send({ error: 'Token has expired' })
+			}
+			
+			return reply.code(200).send({ success: 'Token is valid' });
+		}
+		catch (error) {
+			console.error('Reset token verification error:', error)
+			return reply.code(500).send({ error: 'Internal Server Error' })
+		}
+	})
 
 	fastify.get('/verify', { preValidation: fastify.authenticate }, async (req, reply) => {
 		const now = Math.floor(Date.now() / 1000)

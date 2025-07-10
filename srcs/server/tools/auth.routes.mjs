@@ -126,6 +126,43 @@ export default async function authRoutes(app) {
 			return reply.code(500).send({ error: 'Error sending link to reset password' });
 		}
 	});
+
+	app.post('/reset-password', async (req, reply) => {
+		try {
+			const res = await fetch(`${AUTH_URL}/api/reset-password`, {
+				dispatcher: tlsAgent,
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie,
+				},
+				body: JSON.stringify(req.body),
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /reset-password error:', e);
+			return reply.code(500).send({ error: 'Error reseting password' });
+		}
+	});
+
+	app.get('/verify-reset-token', async (req, reply) => {
+		try {
+			const res = await fetch(`${AUTH_URL}/api/verify-reset-token`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'token': req.headers['token']
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /verify error:', e);
+			return reply.code(500).send({ error: 'Error verifying reset token' });
+		}
+	})
 	
 	app.get('/verify', async (req, reply) => {
 		try {

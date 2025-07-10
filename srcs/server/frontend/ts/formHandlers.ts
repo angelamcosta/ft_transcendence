@@ -175,6 +175,48 @@ export async function sendLink(e: Event) {
 	}
 }
 
+export async function resetPassword(e: Event) {
+	e.preventDefault();
+
+	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const form = e.target as HTMLFormElement;
+	const formData = new FormData(form);
+	const newPassword = formData.get('newPassword');
+	const confirmPassword = formData.get('confirmPassword');
+	const params = new URLSearchParams(window.location.search);
+  	const token = params.get('token');
+	
+	let messageDiv = document.getElementById('changeDetailsError') as HTMLDivElement | null;
+	if (!messageDiv) {
+		messageDiv = document.createElement('div');
+		messageDiv.id = 'changeDetailsError';
+		messageDiv.className = 'text-red-600 mt-2 text-sm';
+		form.append(messageDiv);
+	}
+
+	try {
+		const response = await fetch(`/reset-password`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ token, newPassword, confirmPassword }),
+			credentials: 'include'
+		});
+
+		const data = await response.json();
+		if (!response.ok) {
+			messageDiv.textContent = data?.error || 'Error reset password';
+			return;
+		}
+		const message = data?.success || 'Success on password reset';
+		displayPage.signIn(workArea, message);
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Failed reseting password');
+	}
+}
+
 export async function verify2FA(e: Event) {
 	e.preventDefault();
 
