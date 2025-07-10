@@ -22,7 +22,7 @@ export async function fetchTournamentById(id) {
 }
 
 export async function fetchMatchById(id) {
-	if (!id) throw new Error('fetchTournamentById: missing id');
+	if (!id) throw new Error('fetchMatchById: missing id');
 	try {
 		const sql = idRegex.test(id) ? 'SELECT * FROM matches WHERE id = ?' : (() => { throw new Error('fetchMatchById: id must be numeric') });
 		const row = await db.get(sql, [id]);
