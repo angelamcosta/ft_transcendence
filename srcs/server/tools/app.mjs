@@ -250,7 +250,7 @@ await app.register(cors, {
 	})
 );
 
-const htmlRoutes = ['/', '/reset-password'];
+const htmlRoutes = ['/', '/reset-password', '/game'];
 
 const handler = async (req, res) => {
 	try {

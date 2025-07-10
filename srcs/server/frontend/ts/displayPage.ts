@@ -9,7 +9,7 @@ import { getUsers } from './utils.js';
 import { sendDmMessage, setupDmChatControls, setupDmChatSocket } from './dmChatManager.js';
 import { buildProfile } from './profileManager.js';
 import { buildFriendsLayout, buildInviteCard, buildUserCard } from './friendsListUI.js';
-import { tournamentsPage } from './tournaments.js';
+import { buildTournamentsPage } from './tournaments.js';
 import { pongPvpMatchUI } from './pongUI.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
@@ -1082,16 +1082,18 @@ export async function friendsList(workArea: HTMLDivElement | null) {
 	workArea.appendChild(container)
 }
 
+export async function tournamentsPage(workArea: HTMLDivElement | null) {
+	if (!workArea)
+		return;
+	utils.cleanDiv(workArea);
+	buildTournamentsPage(workArea);
+}
+
 // TODO : - game won't present errors, but won't start
 export async function gamePage(workArea: HTMLDivElement | null, matchId?: string) {
 	if (!workArea)
 		return;
 	utils.cleanDiv(workArea);
-
-	if (!matchId) {
-		tournamentsPage(workArea);
-		return;
-	}
 
 	const {canvas, namesRow, player1_name, player2_name, player1_id, player2_id, countdownDiv } = await pongPvpMatchUI(matchId!);
 

@@ -1,6 +1,6 @@
 import { initPong } from './pong.js';
 import * as utils from './utils.js';
-import { buildTournamentsLayout, createTournamentCard, buildTournamentCard, buildPlayLocalCard } from './tournamentsUI.js';
+import { buildTournamentsLayout, createTournamentCard, buildTournamentCard, buildPlayLocalCard, buildTournamentBrackets } from './tournamentsUI.js';
 
 export function startPracticeGame(workArea: HTMLDivElement | null) {
 	if (!workArea)
@@ -20,7 +20,7 @@ export function startPracticeGame(workArea: HTMLDivElement | null) {
 	initPong(workArea, canvas);
 }
 
-export async function tournamentsPage(workArea: HTMLDivElement) {
+export async function buildTournamentsPage(workArea: HTMLDivElement) {
 	const { container, left, middle, right } = buildTournamentsLayout();
 
 	left.append(createTournamentCard(async name => {
@@ -54,12 +54,14 @@ export async function tournamentsPage(workArea: HTMLDivElement) {
 		} else {
 			list.forEach((t: utils.Tournaments) => {
 				middle.append(buildTournamentCard(t, tournament => {
-					const actions = [
-						{
+					const actions = [];
+
+					if (tournament.current_capacity === tournament.capacity) {
+						actions.unshift({
 							label: 'View',
-							handler: () => { }
-						}
-					];
+							handler: () => { buildTournamentBrackets() }
+						})
+					}
 
 					if (tournament.created_by === displayName) {
 						actions.unshift({
@@ -94,8 +96,10 @@ export async function tournamentsPage(workArea: HTMLDivElement) {
 		}
 	}
 
-	right.append(buildPlayLocalCard(
-		() => startPracticeGame(workArea)
+	right.append(buildPlayLocalCard(() =>  {
+			window.history.replaceState({}, '', '/game');
+			startPracticeGame(workArea)
+		}
 	));
 
 	await loadList();

@@ -22,7 +22,7 @@ export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivEle
 	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
 	document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
-	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
+	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.tournamentsPageHandler(workArea));
 	document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea));
 	document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea));
 }

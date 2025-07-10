@@ -131,3 +131,7 @@ export function buildPlayLocalCard(
 	card.append(btnPractice);
 	return card;
 }
+
+export function buildTournamentBrackets() {
+	
+}

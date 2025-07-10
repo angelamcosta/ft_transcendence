@@ -68,8 +68,8 @@ export async function accountSettings(workArea: HTMLDivElement | null) {
     displayPage.accountSettings(workArea);
 }
 
-export function gamePageHandler(workArea: HTMLDivElement | null) {
-    gamePage(workArea);
+export function tournamentsPageHandler(workArea: HTMLDivElement | null) {
+    displayPage.tournamentsPage(workArea);
 }
 
 export async function chatPage(workArea: HTMLDivElement | null, userId: string, displayName: string) {
