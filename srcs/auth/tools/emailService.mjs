@@ -27,3 +27,21 @@ export async function sendEmail(to, otp) {
 		return (false)
 	}
 }
+
+export async function sendResetLink(to, link) {
+	const mailOptions = {
+		from: `"ft_transcendence" <${process.env.eService_email}>`,
+		to: `${to}`,
+		subject: 'Transcendence password reset',
+		text: `Click this link to reset your password: ${link}`
+	}
+
+	try {
+		const info = await transporter.sendMail(mailOptions)
+		console.log('Email sent:', info.messageId)
+		return (true)
+	} catch (error) {
+		console.error('Email sending failed:', error.message)
+		return (false)
+	}
+}

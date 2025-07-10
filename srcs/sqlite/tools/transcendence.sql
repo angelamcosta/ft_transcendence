@@ -13,6 +13,15 @@ CREATE TABLE IF NOT EXISTS users (
     avatar TEXT DEFAULT 'default.png'
 );
 
+CREATE TABLE IF NOT EXISTS reset_password (
+	user_id    INTEGER   NOT NULL,
+	token      TEXT      NOT NULL,
+	expire     INTEGER   NOT NULL,
+
+	PRIMARY KEY (token),
+	FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 CREATE TABLE IF NOT EXISTS friends (
     user_id INTEGER NOT NULL,
     friend_id INTEGER NOT NULL,

@@ -136,6 +136,19 @@ export async function set2FA(e: Event, checkbox: HTMLInputElement | null, span: 
     }
 }
 
+export async function resetButton() {
+    const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+
+    if (!workArea)
+        return;
+
+    const formExists = document.getElementById('resetPassword');
+    if (formExists)
+        return;
+    
+    displayPage.sendLink(workArea);
+}
+
 export function showPassword(e: Event, passwordInput: HTMLInputElement | null, toggleButton: HTMLButtonElement | null) {
     if (!passwordInput || !toggleButton) {
         return;
@@ -145,4 +158,5 @@ export function showPassword(e: Event, passwordInput: HTMLInputElement | null, t
     const isHidden = passwordInput.type === 'password';
     passwordInput.type = isHidden ? 'text' : 'password';
     toggleButton.innerHTML = isHidden ? utils.eyeSlashIcon : utils.eyeIcon;
+
 }

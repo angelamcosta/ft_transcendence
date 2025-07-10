@@ -13,7 +13,7 @@ export async function registerUser(db, {email, password, display_name}) {
 		throw error
 	}
 
-	if (email.length > 128 || password.length > 128 || display_name > 128) {
+	if (email.length > 128 || password.length > 128 || display_name.length > 128) {
 		const error = new Error(`Fields can't contain more than 128 characters`)
 		error.statusCode = 400
 		throw error

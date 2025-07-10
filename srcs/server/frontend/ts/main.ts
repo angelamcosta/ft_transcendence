@@ -42,6 +42,55 @@ async function isSignedIn() {
 	}
 }
 
+async function resetPassword(token: string | null) {
+	if (!token) {
+		return;
+	}
+
+	try {
+		const response = await fetch('/verify-reset-token', {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'token': token
+			},
+			credentials: 'include'
+		});
+
+		const data = await response.json();
+		if (!response.ok) {
+			displayPage.header(menuArea);
+			displayPage.signIn(workArea, data?.error || 'Invalid token', true);
+			buttonHandlers.initThemeToggle();
+			document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+			document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+			document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+		}
+		else {
+			displayPage.header(menuArea);
+			displayPage.resetPassword(workArea);
+			buttonHandlers.initThemeToggle();
+			document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+			document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+			document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+		}
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		alert('Verify failed! Catched on Try');
+		displayPage.header(menuArea);
+		let errorMessage = 'Invalid token';
+		if (error) {
+			errorMessage = 'Error: ' + error;
+		}
+		displayPage.signIn(workArea, errorMessage , true);
+		buttonHandlers.initThemeToggle();
+		document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+		document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+		document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+	}
+}
+
 const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
 const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 
@@ -55,4 +104,16 @@ if (!menuArea) {
 	throw new Error('No menu div!');
 }
 
-isSignedIn();
+const path = window.location.pathname;
+switch (path) {
+	case '/':
+    	isSignedIn();
+    	break;
+    case '/reset-password':
+		const params = new URLSearchParams(window.location.search);
+  		const token = params.get('token');
+    	resetPassword(token);
+    	break;
+	default:
+    	isSignedIn();
+  }
