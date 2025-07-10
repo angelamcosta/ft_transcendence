@@ -27,7 +27,8 @@ export function buildProfileLayout() {
 		'bg-white',
 		'rounded-xl',
 		'p-4',
-		'shadow'
+		'shadow',
+		'self-start'
 	);
 
 	const right = document.createElement('div');
@@ -229,10 +230,17 @@ export function buildStatsSection(
 }
 
 export function buildHistoryTable(history: Match[]) {
+	const wrapper = document.createElement('div');
+	wrapper.classList.add(
+		'max-h-[350px]',
+		'overflow-y-auto',
+		'border',
+		'border-gray-200',
+		'rounded-md'
+	);
 	const table = document.createElement('table');
 	table.classList.add(
 		'w-full',
-		'border-collapse',
 		'history-table'
 	);
 	table.innerHTML = `
@@ -266,6 +274,6 @@ export function buildHistoryTable(history: Match[]) {
 	}).join('')}
 	</tbody>
 	`;
-
-	return (table);
+	wrapper.append(table);
+	return (wrapper);
 }

@@ -14,18 +14,19 @@ export function buildTournamentsLayout() {
 	const container = document.createElement('div')
 	container.classList.add(
 		'flex', 'gap-6', 'p-6',
-		'max-w-[1050px]', 'mx-auto'
+		'max-w-[1050px]', 'mx-auto',
+		'h-[calc(100vh-4rem)]',
 	)
 
 	const cardBase = ['bg-white', 'rounded-xl', 'p-4', 'shadow', 'flex', 'flex-col', 'gap-4']
 	const left = document.createElement('div')
-	left.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	left.classList.add('max-h-[50%]', 'overflow-y-auto', 'flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
 
 	const middle = document.createElement('div')
-	middle.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	middle.classList.add('flex-1', 'self-start', ...cardBase)
 
 	const right = document.createElement('div')
-	right.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	right.classList.add('flex-1', 'self-start', ...cardBase)
 
 	container.append(left, middle, right)
 	return { container, left, middle, right }
@@ -249,10 +250,20 @@ export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivEle
 
 	const finalsCard = document.createElement('div');
 	finalsCard.classList.add('flex', 'flex-col', 'items-center', 'self-center', 'gap-4', 'flex-1');
+	if (finalMatch?.status === 'finished' && finalMatch.score) {
+		const [a, b] = finalMatch.score.split('-').map(n => parseInt(n, 10));
+		const winnerName = a > b ? finalMatch.player1 : finalMatch.player2;
+
+		const winnerHeader = document.createElement('h4');
+		winnerHeader.textContent = `Winner: ${winnerName}`;
+		winnerHeader.classList.add('text-center', 'font-semibold', 'text-lg', 'mb-2', 'text-green-600');
+		finalsCard.append(winnerHeader);
+	}
 	const finalsLabel = document.createElement('h4');
 	finalsLabel.textContent = 'Final';
 	finalsLabel.classList.add('text-center', 'font-semibold', 'text-lg', 'mb-2');
 	finalsCard.append(finalsLabel);
+
 	const matchCard = createMatchCard({
 		player1: finalMatch?.player1 || 'TBD',
 		player2: finalMatch?.player2 || 'TBD',

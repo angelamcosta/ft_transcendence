@@ -22,7 +22,8 @@ export default async function matchRoutes(fastify) {
 
 	fastify.get('/tournaments', async (req, res) => {
 		try {
-			const tournaments = await db.all('SELECT id, name, status, capacity, current_capacity, created_by FROM tournaments');
+			const tournaments = await db.all(`SELECT id, name, status, capacity, current_capacity, created_by 
+				FROM tournaments ORDER BY id DESC`);
 
 			return res.code(200).send(tournaments);
 		} catch (err) {
