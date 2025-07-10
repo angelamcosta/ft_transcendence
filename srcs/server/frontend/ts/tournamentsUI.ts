@@ -1,3 +1,4 @@
+import { gamePage } from './displayPage.js';
 import * as utils from './utils.js'
 import { TournamentMatch } from './utils.js';
 
@@ -162,9 +163,10 @@ function createMatchCard({ player1, player2, score }: BracketMatch) {
 	return card;
 }
 
-export async function buildTournamentBrackets(t_id: number) {
+export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivElement) {
 	const res = await fetch(`/tournaments/${t_id}/matches`, { credentials: 'include' });
 	const { matches } = (await res.json() as { matches: TournamentMatch[] });
+	const userId = localStorage.getItem('userId')!;
 
 	if (!res.ok)
 		utils.showModal('Failed loading tournament brackets');
@@ -199,11 +201,22 @@ export async function buildTournamentBrackets(t_id: number) {
 	semisCard.append(semisLabel);
 	for (let i = 0; i < 2; i++) {
 		const m = semis[i];
-		semisCard.append(createMatchCard({
-			player1: m?.player1 || 'TBD',
-			player2: m?.player2 || 'TBD',
+		const matchCard = createMatchCard({
+			player1: m?.player1 ?? 'TBD',
+			player2: m?.player2 ?? 'TBD',
 			score: m?.score ?? ''
-		}));
+		});
+		if (m && (m.player1_id.toString() === userId || m.player2_id.toString() === userId)) {
+			const btn = document.createElement('button');
+			btn.textContent = 'Start';
+			btn.classList.add('mt-2', 'px-4', 'py-1', 'bg-green-500', 'text-white', 'rounded', 'w-full');
+			btn.addEventListener('click', () => {
+				window.history.pushState({}, '', `/game?matchId=${m.id}`);
+				gamePage(workArea, String(m.id));
+			});
+			matchCard.append(btn);
+		}
+		semisCard.append(matchCard);
 	}
 
 	const finalsCard = document.createElement('div');
@@ -217,6 +230,26 @@ export async function buildTournamentBrackets(t_id: number) {
 		player2: finalMatch?.player2 || 'TBD',
 		score: finalMatch?.score ?? ''
 	}));
+	if (finalMatch) {
+		const matchCard = createMatchCard({
+			player1: finalMatch.player1,
+			player2: finalMatch.player2,
+			score: finalMatch.score ?? ''
+		});
+		if (finalMatch.player1_id.toString() === userId || finalMatch.player2_id.toString() === userId) {
+			const btn = document.createElement('button');
+			btn.textContent = 'Start';
+			btn.classList.add('mt-2', 'px-4', 'py-1', 'bg-green-500', 'text-white', 'rounded', 'w-full');
+			btn.addEventListener('click', () => {
+				window.history.pushState({}, '', `/game?matchId=${finalMatch.id}`);
+				gamePage(workArea, String(finalMatch.id));
+			});
+			matchCard.append(btn);
+		}
+		finalsCard.append(matchCard);
+	} else {
+		finalsCard.append(createMatchCard({ player1: 'TBD', player2: 'TBD', score: '' }));
+	}
 	row.append(semisCard, finalsCard);
 	container.append(row);
 	return container;

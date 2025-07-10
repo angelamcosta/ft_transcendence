@@ -4,7 +4,7 @@ import { buildTournamentsLayout, createTournamentCard, buildTournamentCard, buil
 
 async function showBrackets(workArea: HTMLDivElement, t_id: number) {
 	utils.cleanDiv(workArea);
-	const newEl = await buildTournamentBrackets(t_id);
+	const newEl = await buildTournamentBrackets(t_id, workArea);
 	workArea.append(newEl);
 }
 
@@ -37,6 +37,7 @@ export async function buildTournamentsPage(workArea: HTMLDivElement) {
 			body: JSON.stringify({ name })
 		});
 		const data = await res.json();
+		await fetch(`/tournaments/${data.id}/players`, { method: 'POST', credentials: 'include' });
 		utils.showModal(data?.message);
 		loadList();
 	}));
