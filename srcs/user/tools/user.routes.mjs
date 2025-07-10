@@ -700,7 +700,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const userId = req.params.id;
-			const match_history = await db.all(`SELECT m.created_at, m.id, m.score, m.winner_id, CASE WHEN m.player1_id = $uid THEN m.player2_id 
+			const match_history = await db.all(`SELECT m.created_at, m.updated_at, m.id, m.score, m.winner_id, CASE WHEN m.player1_id = $uid THEN m.player2_id 
 				ELSE m.player1_id END AS opp_id, u.display_name AS opp_name, CASE WHEN m.winner_id = $uid THEN 'Win' 
 				ELSE 'Defeat' END AS result FROM matches m JOIN users u ON u.id = (CASE WHEN m.player1_id = $uid THEN
 				m.player2_id ELSE m.player1_id END) WHERE (m.player1_id = $uid OR m.player2_id = $uid) 
