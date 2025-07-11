@@ -250,7 +250,7 @@ await app.register(cors, {
 	})
 );
 
-const htmlRoutes = ['/', '/reset-password', '/login', '/register', '/settings', '/profile', '/friends', '/chat', '/tournaments', '/play', '/game'];
+const htmlRoutes = ['/', '/reset-password', '/login', '/register', '/settings', '/profile', '/friends', '/chat-room', '/play', '/game'];
 
 const handler = async (req, res) => {
 	try {

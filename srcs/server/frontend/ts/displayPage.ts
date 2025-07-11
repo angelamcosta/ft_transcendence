@@ -741,8 +741,6 @@ export function accountSettings(workArea: HTMLDivElement | null) {
 	changePassword(workArea);
 	changeDisplayName(workArea);
 	manageTwoFactorAuth(workArea);
-
-	alert(location.pathname);
 }
 
 export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
@@ -895,7 +893,7 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 		return;
 
 	// Saves to browser history
-	utils.addToHistory("/chat");
+	utils.addToHistory("/chat-room");
 
 	utils.cleanDiv(workArea);
 
@@ -999,9 +997,6 @@ export async function tournamentsPage(workArea: HTMLDivElement | null) {
 	if (!workArea)
 		return;
 	utils.cleanDiv(workArea);
-
-	// Saves to browser history
-	utils.addToHistory("/tournaments");
 
 	buildTournamentsPage(workArea);
 }

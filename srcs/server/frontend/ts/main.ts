@@ -28,6 +28,12 @@ async function isSignedIn() {
 
 async function resetPassword(token: string | null) {
 	if (!token) {
+		displayPage.header(menuArea);
+		displayPage.signIn(workArea, 'Invalid token', true);
+		buttonHandlers.initThemeToggle();
+		document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+		document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+		document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 		return;
 	}
 
@@ -90,6 +96,7 @@ async function render(path: string | null) {
 				const userId = localStorage.getItem('userId')!;
 				const displayName = localStorage.getItem('displayName')!;
 				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
 				initAppNav(menuArea, workArea);
 				buttonHandlers.initThemeToggle();
 			}
@@ -99,36 +106,54 @@ async function render(path: string | null) {
 				resetPassword(token);
 			}
 			break;
-			case '/register':
+		case '/register':
 			if (isSgned) {
 				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
 				getUnreadMessages();
 				const userId = localStorage.getItem('userId')!;
 				const displayName = localStorage.getItem('displayName')!;
 				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
 				initAppNav(menuArea, workArea);
 				buttonHandlers.initThemeToggle();
 			}
 			else {
+				displayPage.header(menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 				displayPage.signUp(workArea, menuArea);
 			}
 			break;
-			case '/login':
+		case '/login':
 			if (isSgned) {
 				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
 				getUnreadMessages();
 				const userId = localStorage.getItem('userId')!;
 				const displayName = localStorage.getItem('displayName')!;
 				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
 				initAppNav(menuArea, workArea);
 				buttonHandlers.initThemeToggle();
 			}
 			else {
+				displayPage.header(menuArea);
 				displayPage.signIn(workArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
-			case '/settings':
+		case '/settings':
 			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
 				displayPage.accountSettings(workArea);
 			}
 			else {
@@ -141,8 +166,14 @@ async function render(path: string | null) {
 				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
-			case '/profile':
+		case '/profile':
 			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
 				const targetId = localStorage.getItem('lastTargetId')!;
 				displayPage.profile(workArea, targetId);
 			}
@@ -156,8 +187,14 @@ async function render(path: string | null) {
 				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
-			case '/friends':
+		case '/friends':
 			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
 				displayPage.friendsList(workArea);
 			}
 			else {
@@ -170,10 +207,14 @@ async function render(path: string | null) {
 				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
-			case '/chat':
+		case '/chat-room':
 			if (isSgned) {
+				getUnreadMessages();
 				const userId = localStorage.getItem('userId')!;
 				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
 				displayPage.chatPage(workArea, userId, displayName);
 			}
 			else {
@@ -186,22 +227,14 @@ async function render(path: string | null) {
 				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
-			case '/tournaments':
+		case '/play':
 			if (isSgned) {
-				displayPage.tournamentsPage(workArea);
-			}
-			else {
-				history.replaceState({ path: "/" }, "", "/");
-				displayPage.header(menuArea);
-				displayPage.landingPage(workArea, menuArea);
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
 				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
-			}
-			break;
-			case '/play':
-			if (isSgned) {
 				displayPage.gamePage(workArea);
 			}
 			else {
@@ -214,12 +247,14 @@ async function render(path: string | null) {
 				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
+
 		default:
 			if (isSgned) {
 				getUnreadMessages();
 				const userId = localStorage.getItem('userId')!;
 				const displayName = localStorage.getItem('displayName')!;
 				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
 				initAppNav(menuArea, workArea);
 				buttonHandlers.initThemeToggle();
 			}

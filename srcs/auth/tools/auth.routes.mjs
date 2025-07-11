@@ -158,6 +158,12 @@ export default async function authRoutes(fastify) {
 	fastify.get('/verify', { preValidation: fastify.authenticate }, async (req, reply) => {
 		const now = Math.floor(Date.now() / 1000)
 
+		const user = await db.get('SELECT * FROM users WHERE id = ? OR email = ?', [req.user.userId, req.user.email]);
+		if (!user)
+			return reply.code(401).send({ error: 'Invalid token' });
+		if (user.id !== req.user.userId || user.email !== req.user.email)
+			return reply.code(401).send({ error: 'Invalid token' });
+
 		if (req.user.exp - now < 5 * 60) {
 			const token = await reply.jwtSign(
 				{ userId: req.user.userId, email: req.user.email },

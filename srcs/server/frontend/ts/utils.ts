@@ -28,7 +28,6 @@ export interface TournamentMatch {
 
 export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
 	displayPage.menu(menuArea, workArea);
-	displayPage.dashboard(workArea);
 	document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
