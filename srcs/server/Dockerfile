@@ -25,7 +25,8 @@ RUN npm cache clean --force && \
 	npm install @fastify/cookie && \
     npm install typescript && \
 	npm install sqlite && \
-	npm install sqlite3
+	npm install sqlite3 && \
+	npm install axios
 
 # Build TailwindCSS and TypeScript
 RUN npx @tailwindcss/cli -i ./style.css -o ./public/style.css --minify && \
