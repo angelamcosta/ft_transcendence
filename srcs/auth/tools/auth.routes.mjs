@@ -1,6 +1,6 @@
 import { loginUser } from './login.mjs'
 import { registerUser } from './register.mjs'
-import { db, inSession } from './utils.mjs'
+import { db } from './utils.mjs'
 import { sendLink , resetPassword } from './reset.mjs'
 
 export default async function authRoutes(fastify) {
@@ -23,7 +23,6 @@ export default async function authRoutes(fastify) {
 			if (result.twofa === 'enabled')
 				return reply.code(200).send({ success: message, user, twofa })
 
-			await inSession(user.id);
 			const token = await reply.jwtSign(
 				{ userId: user.id, email: user.email },
 				{ expiresIn: '1h' }
@@ -60,11 +59,7 @@ export default async function authRoutes(fastify) {
 	})
 
 	fastify.post('/logout', { preValidation: fastify.authenticate }, async (req, reply) => {
-		await db.run(
-			'UPDATE users SET session_id = NULL WHERE id = ?',
-			[req.user.userId]
-		);
-		reply.clearCookie('auth', {
+		return reply.clearCookie('auth', {
 			path: '/',
 			httpOnly: true,
 			secure: true,
