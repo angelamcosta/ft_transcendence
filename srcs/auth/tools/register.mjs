@@ -52,7 +52,6 @@ export async function registerUser(db, {email, password, display_name}) {
 		await db.run(`INSERT INTO users (email, password, twofa_status, display_name) VALUES (?, ?, 'disabled', ?)`, [email, hash, display_name])
 		return { message: 'Registration successful' }
 	} catch (dbError) {
-		console.log('Database error details:', dbError)
 		const error = new Error('Registration failed')
 		error.statusCode = 500
 		error.originalError = dbError

@@ -80,6 +80,8 @@ services:
     build:
       context: ./srcs/game/
       dockerfile: Dockerfile
+    volumes:
+      - sqlite:/db
     ports:
       - "9002:9002"
     env_file:

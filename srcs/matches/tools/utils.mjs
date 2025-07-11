@@ -104,8 +104,6 @@ export async function generatePlayerBracket(tournamentId, fastify) {
 		await stmt.run(tournamentId, seed1.id, seed4.id);
 		await stmt.run(tournamentId, seed2.id, seed3.id);
 		await stmt.finalize();
-		console.log("4-player bracket generated and stored!");
-
 		const tourRow = await db.get('SELECT name FROM tournaments WHERE id = ?', tournamentId);
 		const tourName = tourRow.name;
 		const semi1 = { p1: seed1.name, p2: seed4.name };

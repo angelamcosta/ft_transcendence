@@ -24,19 +24,17 @@ async function main() {
 		const setCookie = loginRes.headers['set-cookie'];
 		if (!setCookie) throw new Error('No Set-Cookie header from /login');
 		const cookieHeader = setCookie.map(c => c.split(';')[0]).join('; ');
-
-		console.log('Authorized with the token\n\n', cookieHeader, '\n\n');
-
 		const post = (url) => axios.post(
 			`${HOST}${url}`,
 			{},
 			{ httpsAgent: agent, headers: { Cookie: cookieHeader } }
 		);
 
+		await post(`/game/create/${matchId}`);
 		await post(`/game/${matchId}/init`);
 		await post(`/game/${matchId}/start`);
-		console.log(`Game ${matchId} initialized & started.`);
-
+		await post(`/game/${matchId}/boot`);
+		
 		const ws = new WebSocket(`${HOST.replace(/^https/, 'wss')}/api/game/wss?matchId=${matchId}`, {
 			agent,
 			headers: { Cookie: cookieHeader },
@@ -44,7 +42,6 @@ async function main() {
 		});
 
 		ws.on('open', () => {
-			console.log('Connected to game socket. Use ↑/↓ for player 0, W/S for player 1. ESC to quit.');
 		});
 
 		ws.on('message', data => {
@@ -62,7 +59,6 @@ async function main() {
 		});
 
 		ws.on('close', () => {
-			console.log('\nConnection closed.');
 			process.exit(0);
 		});
 

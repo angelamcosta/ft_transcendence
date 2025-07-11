@@ -20,7 +20,6 @@ export async function sendEmail(to, otp) {
 
 	try {
 		const info = await transporter.sendMail(mailOptions)
-		console.log('Email sent:', info.messageId)
 		return (true)
 	} catch (error) {
 		console.error('Email sending failed:', error.message)
@@ -38,7 +37,6 @@ export async function sendResetLink(to, link) {
 
 	try {
 		const info = await transporter.sendMail(mailOptions)
-		console.log('Email sent:', info.messageId)
 		return (true)
 	} catch (error) {
 		console.error('Email sending failed:', error.message)

@@ -93,8 +93,6 @@ export class GameService extends EventEmitter {
     }
 
     resetBall() {
-        console.log("Resetting ball. Scores:", this.state.scores);
-
         clearInterval(this.intervalId);
         this.intervalId = null;
 
@@ -131,7 +129,6 @@ export class GameService extends EventEmitter {
     }
 
     control(playerIndex, action) {
-        console.log(`Controle: player=${playerIndex}, action=${action}`);
         let p = this.state.players[playerIndex];
         p.up = action === "up";
         p.down = action === "down";
