@@ -99,22 +99,6 @@ async function render(path: string | null) {
 				resetPassword(token);
 			}
 			break;
-		case '/reset-password':
-			if (isSgned) {
-				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
-			}
-			else {
-				const params = new URLSearchParams(window.location.search);
-				const token = params.get('token');
-				resetPassword(token);
-			}
-			break;
 			case '/register':
 			if (isSgned) {
 				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
