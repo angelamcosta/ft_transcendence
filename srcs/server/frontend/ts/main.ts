@@ -202,6 +202,20 @@ async function render(path: string | null) {
 				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
+			case '/tournaments':
+			if (isSgned) {
+				displayPage.tournamentsPage(workArea);
+			}
+			else {
+				history.replaceState({ path: "/" }, "", "/");
+				displayPage.header(menuArea);
+				displayPage.landingPage(workArea, menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+			break;
 			case '/play':
 			if (isSgned) {
 				displayPage.gamePage(workArea);
