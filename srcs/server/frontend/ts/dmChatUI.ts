@@ -59,7 +59,9 @@ export function buildDMChatContainer() {
 	c.classList.add(
 		'flex-1',
 		'p-2',
-		'overflow-y-auto'
+		'overflow-y-auto',
+		'break-words',
+    	'whitespace-pre-wrap'
 	);
 	return c;
 }

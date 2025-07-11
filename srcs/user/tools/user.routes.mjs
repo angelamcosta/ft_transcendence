@@ -620,7 +620,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		const userId = req.authUser.id;
 		const paramId = Number(req.params.id);
-		
+
 		if (req.invite?.invite_status === 'pending')
 			throw fastify.httpErrors.badRequest('There is already a pending match invite');
 
@@ -656,9 +656,10 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.forbidden('You cannot accept your own invite');
 
 		try {
-			await db.run('INSERT INTO matches (player1_id, player2_id) VALUES (?, ?)', [userId, paramId]);
+			const result = await db.run('INSERT INTO matches (player1_id, player2_id) VALUES (?, ?)', [userId, paramId]);
 			await db.run('DELETE FROM match_invites WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)', [userId, paramId, paramId, userId]);
-			return res.code(200).send({ message: 'Match invite accepted' });
+			const matchId = result.lastID;
+			return res.code(200).send({ message: 'Match invite accepted', matchId: matchId });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -699,7 +700,7 @@ export default async function userRoutes(fastify) {
 	}, async (req, res) => {
 		try {
 			const userId = req.params.id;
-			const match_history = await db.all(`SELECT m.created_at, m.id, m.score, m.winner_id, CASE WHEN m.player1_id = $uid THEN m.player2_id 
+			const match_history = await db.all(`SELECT m.created_at, m.updated_at, m.id, m.score, m.winner_id, CASE WHEN m.player1_id = $uid THEN m.player2_id 
 				ELSE m.player1_id END AS opp_id, u.display_name AS opp_name, CASE WHEN m.winner_id = $uid THEN 'Win' 
 				ELSE 'Defeat' END AS result FROM matches m JOIN users u ON u.id = (CASE WHEN m.player1_id = $uid THEN
 				m.player2_id ELSE m.player1_id END) WHERE (m.player1_id = $uid OR m.player2_id = $uid) 

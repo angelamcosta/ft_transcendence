@@ -1,10 +1,11 @@
 export interface Match {
 	score: string;
-	created_at: string
-	opp_name: string,
-	opp_id: number,
+	created_at: string;
+	updated_at: string;
+	opp_name: string;
+	opp_id: number;
 	winner_id: number;
-	result: 'Win' | 'Defeat'
+	result: 'Win' | 'Defeat';
 }
 
 export function buildProfileLayout() {
@@ -26,7 +27,8 @@ export function buildProfileLayout() {
 		'bg-white',
 		'rounded-xl',
 		'p-4',
-		'shadow'
+		'shadow',
+		'self-start'
 	);
 
 	const right = document.createElement('div');
@@ -228,10 +230,17 @@ export function buildStatsSection(
 }
 
 export function buildHistoryTable(history: Match[]) {
+	const wrapper = document.createElement('div');
+	wrapper.classList.add(
+		'max-h-[350px]',
+		'overflow-y-auto',
+		'border',
+		'border-gray-200',
+		'rounded-md'
+	);
 	const table = document.createElement('table');
 	table.classList.add(
 		'w-full',
-		'border-collapse',
 		'history-table'
 	);
 	table.innerHTML = `
@@ -245,7 +254,7 @@ export function buildHistoryTable(history: Match[]) {
   	</thead>
 	<tbody>
 		${history.map(m => {
-		const dt = new Date(m.created_at.replace(' ', 'T') + 'Z')
+		const dt = new Date(m.updated_at.replace(' ', 'T') + 'Z')
 			.toLocaleString('pt-PT', {
 				timeZone: 'Europe/Lisbon',
 				year: 'numeric', month: 'short', day: '2-digit',
@@ -265,6 +274,6 @@ export function buildHistoryTable(history: Match[]) {
 	}).join('')}
 	</tbody>
 	`;
-
-	return (table);
+	wrapper.append(table);
+	return (wrapper);
 }

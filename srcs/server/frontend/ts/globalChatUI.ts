@@ -25,7 +25,9 @@ export function buildGlobalChatCard() {
 	chatContainer.classList.add(
 		'flex-1',
 		'p-2',
-		'overflow-y-auto'
+		'overflow-y-auto',
+		'break-words',
+		'whitespace-pre-wrap'
 	)
 
 	const inputWrapper = document.createElement('div');

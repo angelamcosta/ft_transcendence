@@ -1,3 +1,4 @@
+import { directMessagePage, friendsList, gamePage, profile } from './displayPage.js';
 import * as utils from './utils.js'
 
 type Action = { label: string; handler: () => void }
@@ -157,4 +158,138 @@ export function buildInviteCard(
 	}
 
 	return card
+}
+
+export async function buildFriendsList(workArea: HTMLDivElement) {
+	const userId = Number(localStorage.getItem('userId')!);
+	const displayName = localStorage.getItem('displayName')!;
+
+	const [friends, blocked, fReceived, fSent, rawMRec, rawMSent] = await Promise.all([
+		fetch('/users/friends', { credentials: 'include' }).then(r => r.json()),
+		fetch('/users/block', { credentials: 'include' }).then(r => r.json()),
+		fetch('/users/friends/requests/received', { credentials: 'include' }).then(r => r.json()),
+		fetch('/users/friends/requests/sent', { credentials: 'include' }).then(r => r.json()),
+		fetch('/users/invite/received', { credentials: 'include' }).then(r => r.json()),
+		fetch('/users/invite/sent', { credentials: 'include' }).then(r => r.json()),
+	]) as [utils.User[], utils.User[], utils.User[], utils.User[], any[], any[]]
+
+	const nameById = new Map<number, string>();
+	(await utils.getUsers()).forEach((u: utils.User) => nameById.set(u.id, u.display_name));
+
+	const mReceived = rawMRec.map(inv => ({
+		id: inv.invite_id ?? inv.user_id,
+		display_name: nameById.get(inv.user_id) ?? 'Unknown'
+	}));
+
+	const mSent = rawMSent.map(inv => ({
+		id: inv.invite_id ?? inv.friend_id,
+		display_name: nameById.get(inv.friend_id) ?? 'Unknown'
+	}));
+
+	const { container, left, middle, right } = buildFriendsLayout()
+
+	left.append(
+		buildUserCard(
+			'Your Friends',
+			friends,
+			u => [
+				{ label: 'Message', handler: () => directMessagePage(workArea, displayName, u.display_name, String(userId), u.id) },
+				{ label: 'View Profile', handler: () => profile(workArea, String(u.id)) },
+				{
+					label: 'Remove Friend', handler: async () => {
+						const res = await fetch(`/users/friends/${u.id}`, { method: 'DELETE', credentials: 'include' })
+						utils.showModal((await res.json()).message)
+						friendsList(workArea)
+					}
+				},
+				{
+					label: 'Block', handler: async () => {
+						const res = await fetch(`/users/block/${u.id}`, { method: 'POST', credentials: 'include' })
+						utils.showModal((await res.json()).message)
+						friendsList(workArea)
+					}
+				}
+			]
+		),
+		buildUserCard(
+			'Blocked Users',
+			blocked,
+			u => [
+				{
+					label: 'Unblock', handler: async () => {
+						const res = await fetch(`/users/unblock/${u.id}`, { method: 'DELETE', credentials: 'include' })
+						utils.showModal((await res.json()).message)
+						friendsList(workArea)
+					}
+				}
+			]
+		)
+	)
+
+	middle.append(
+		buildInviteCard(
+			'Match Invitations Received',
+			mReceived,
+			'received',
+			async id => {
+				const res = await fetch(`/users/invite/accept/${id}`, { method: 'PUT', credentials: 'include' })
+				const data = await res.json();
+				utils.showModal(data?.message);
+
+				if (data?.matchId) {
+					window.history.pushState({}, '', `/game?matchId=${data.matchId}`);
+					gamePage(workArea, data.matchId);
+					return;
+				}
+				friendsList(workArea)
+			},
+			async id => {
+				const res = await fetch(`/users/invite/reject/${id}`, { method: 'PUT', credentials: 'include' })
+				utils.showModal((await res.json()).message)
+				friendsList(workArea)
+			}
+		),
+		buildInviteCard(
+			'Match Invitations Sent',
+			mSent,
+			'sent',
+			async () => { },
+			async id => {
+				const res = await fetch(`/users/invite/cancel/${id}`, { method: 'DELETE', credentials: 'include' })
+				utils.showModal((await res.json()).message)
+				friendsList(workArea)
+			}
+		)
+	)
+
+	right.append(
+		buildInviteCard(
+			'Friend Invitations Received',
+			fReceived,
+			'received',
+			async id => {
+				const res = await fetch(`/users/friends/accept/${id}`, { method: 'PUT', credentials: 'include' })
+				utils.showModal((await res.json()).message)
+				friendsList(workArea)
+			},
+			async id => {
+				const res = await fetch(`/users/friends/reject/${id}`, { method: 'PUT', credentials: 'include' })
+				utils.showModal((await res.json()).message)
+				friendsList(workArea)
+			}
+		),
+		buildInviteCard(
+			'Friend Invitations Sent',
+			fSent,
+			'sent',
+			async () => { },
+			async id => {
+				const res = await fetch(`/users/friends/cancel/${id}`, { method: 'DELETE', credentials: 'include' })
+				utils.showModal((await res.json()).message)
+				friendsList(workArea)
+			}
+		)
+	)
+
+	return ({ container });
 }

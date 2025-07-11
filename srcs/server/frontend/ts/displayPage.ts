@@ -8,8 +8,9 @@ import { buildDmUI } from './dmChatUI.js'
 import { getUsers } from './utils.js';
 import { sendDmMessage, setupDmChatControls, setupDmChatSocket } from './dmChatManager.js';
 import { buildProfile } from './profileManager.js';
-import { buildFriendsLayout, buildInviteCard, buildUserCard } from './friendsListUI.js';
-import { tournamentsPage } from './tournaments.js';
+import {  buildFriendsList } from './friendsListUI.js';
+import { buildTournamentsPage } from './tournaments.js';
+import { pongPvpMatchUI } from './pongUI.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
@@ -948,148 +949,26 @@ export async function friendsList(workArea: HTMLDivElement | null) {
 	if (!workArea) return
 	utils.cleanDiv(workArea)
 
-	const userId = Number(localStorage.getItem('userId')!);
-	const displayName = localStorage.getItem('displayName')!;
-
-	const [friends, blocked, fReceived, fSent, rawMRec, rawMSent] = await Promise.all([
-		fetch('/users/friends', { credentials: 'include' }).then(r => r.json()),
-		fetch('/users/block', { credentials: 'include' }).then(r => r.json()),
-		fetch('/users/friends/requests/received', { credentials: 'include' }).then(r => r.json()),
-		fetch('/users/friends/requests/sent', { credentials: 'include' }).then(r => r.json()),
-		fetch('/users/invite/received', { credentials: 'include' }).then(r => r.json()),
-		fetch('/users/invite/sent', { credentials: 'include' }).then(r => r.json()),
-	]) as [utils.User[], utils.User[], utils.User[], utils.User[], any[], any[]]
-
-	const nameById = new Map<number, string>();
-	(await getUsers()).forEach((u: utils.User) => nameById.set(u.id, u.display_name));
-
-	const mReceived = rawMRec.map(inv => ({
-		id: inv.invite_id ?? inv.user_id,
-		display_name: nameById.get(inv.user_id) ?? 'Unknown'
-	}));
-
-	const mSent = rawMSent.map(inv => ({
-		id: inv.invite_id ?? inv.friend_id,
-		display_name: nameById.get(inv.friend_id) ?? 'Unknown'
-	}));
-
-	const { container, left, middle, right } = buildFriendsLayout()
-
-	left.append(
-		buildUserCard(
-			'Your Friends',
-			friends,
-			u => [
-				{ label: 'Message', handler: () => directMessagePage(workArea, displayName, u.display_name, String(userId), u.id) },
-				{ label: 'View Profile', handler: () => profile(workArea, String(u.id)) },
-				{
-					label: 'Remove Friend', handler: async () => {
-						const res = await fetch(`/users/friends/${u.id}`, { method: 'DELETE', credentials: 'include' })
-						utils.showModal((await res.json()).message)
-						friendsList(workArea)
-					}
-				},
-				{
-					label: 'Block', handler: async () => {
-						const res = await fetch(`/users/block/${u.id}`, { method: 'POST', credentials: 'include' })
-						utils.showModal((await res.json()).message)
-						friendsList(workArea)
-					}
-				}
-			]
-		),
-		buildUserCard(
-			'Blocked Users',
-			blocked,
-			u => [
-				{
-					label: 'Unblock', handler: async () => {
-						const res = await fetch(`/users/unblock/${u.id}`, { method: 'DELETE', credentials: 'include' })
-						utils.showModal((await res.json()).message)
-						friendsList(workArea)
-					}
-				}
-			]
-		)
-	)
-
-	middle.append(
-		buildInviteCard(
-			'Match Invitations Received',
-			mReceived,
-			'received',
-			async id => {
-				const res = await fetch(`/users/invite/accept/${id}`, { method: 'PUT', credentials: 'include' })
-				utils.showModal((await res.json()).message)
-				friendsList(workArea)
-			},
-			async id => {
-				const res = await fetch(`/users/invite/reject/${id}`, { method: 'PUT', credentials: 'include' })
-				utils.showModal((await res.json()).message)
-				friendsList(workArea)
-			}
-		),
-		buildInviteCard(
-			'Match Invitations Sent',
-			mSent,
-			'sent',
-			async () => { },
-			async id => {
-				const res = await fetch(`/users/invite/cancel/${id}`, { method: 'DELETE', credentials: 'include' })
-				utils.showModal((await res.json()).message)
-				friendsList(workArea)
-			}
-		)
-	)
-
-	right.append(
-		buildInviteCard(
-			'Friend Invitations Received',
-			fReceived,
-			'received',
-			async id => {
-				const res = await fetch(`/users/friends/accept/${id}`, { method: 'PUT', credentials: 'include' })
-				utils.showModal((await res.json()).message)
-				friendsList(workArea)
-			},
-			async id => {
-				const res = await fetch(`/users/friends/reject/${id}`, { method: 'PUT', credentials: 'include' })
-				utils.showModal((await res.json()).message)
-				friendsList(workArea)
-			}
-		),
-		buildInviteCard(
-			'Friend Invitations Sent',
-			fSent,
-			'sent',
-			async () => { },
-			async id => {
-				const res = await fetch(`/users/friends/cancel/${id}`, { method: 'DELETE', credentials: 'include' })
-				utils.showModal((await res.json()).message)
-				friendsList(workArea)
-			}
-		)
-	)
+	const { container } = await buildFriendsList(workArea);
 
 	workArea.appendChild(container)
 }
 
-// TODO : - game won't present errors, but won't start
-export function gamePage(workArea: HTMLDivElement | null) {
+export async function tournamentsPage(workArea: HTMLDivElement | null) {
 	if (!workArea)
-			return;
+		return;
 	utils.cleanDiv(workArea);
-	tournamentsPage(workArea);
+	buildTournamentsPage(workArea);
+}
 
-	/*const canvas = document.createElement('canvas');
+// TODO : - game won't present errors, but won't start
+export async function gamePage(workArea: HTMLDivElement | null, matchId?: string) {
+	if (!workArea)
+		return;
+	utils.cleanDiv(workArea);
 
-	canvas.id = 'pong';
-	canvas.width = 1000;
-	canvas.height = 600;
-	canvas.style.display = 'block';
-	canvas.style.margin  = '0 auto';
+	const {canvas, namesRow, player1_name, player2_name, player1_id, player2_id, countdownDiv } = await pongPvpMatchUI(matchId!);
 
-	workArea.appendChild(canvas);
-
-	initPong(canvas);*/
+	workArea.append(canvas, namesRow, countdownDiv);
+	initPong(workArea, canvas, player1_name, player2_name, player1_id, player2_id, countdownDiv);
 }

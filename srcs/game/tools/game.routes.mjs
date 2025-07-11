@@ -2,45 +2,43 @@ import { GameService } from './service.mjs';
 import { validateEmptyBody } from './middleware.mjs'
 
 export default async function gameRoutes(fastify, opts) {
-  const games = opts.games;
+	const games = opts.games;
 
-  fastify.addHook('preHandler', validateEmptyBody);
+	//fastify.addHook('preHandler', validateEmptyBody);
 
-  fastify.post('/:id', async (req, res) => {
-    const { id } = req.params;
-    if (!games.has(id))
-      games.set(id, new GameService());
+	fastify.post('/game/create/:id', async (req, reply) => {
+		const { id } = req.params;
+		if (!games.has(id))
+			games.set(id, new GameService());
 
-    return res.code(201).send({ gameId: id });
-  });
+		return reply.code(201).send({ gameId: id });
+	});
 
-  fastify.post('/:id/init', async (req, res) => {
-    const game = games.get(req.params.id);
+	fastify.post('/game/:id/init', async (req, reply) => {
+		const game = games.get(req.params.id);
 
-    if (!game) return reply.code(404).send({ error: 'Match not found' });
+		if (!game) return reply.code(404).send({ error: 'Match not found' });
 
-    game.reset();
-    return res.code(201).send({ ok: true });
-  });
+		game.reset();
+		return reply.code(201).send({ ok: true });
+	});
 
-  fastify.post('/:id/start', async (req, res) => {
-    const game = games.get(req.params.id);
+	fastify.post('/game/:id/start', async (req, reply) => {
+		const game = games.get(req.params.id);
 
-    if (!game) return reply.code(404).send({ error: 'Match not found' });
-    
-    game.start();
-    return res.code(201).send({ ok: true });
-  });
+		if (!game) return reply.code(404).send({ error: 'Match not found' });
 
-  fastify.post('/:id/control/:player/:action', async (req, res) => {
-    if (err.code === 'FST_ERR_CTP_EMPTY_JSON_BODY')
-      return reply.code(400).send({ error: 'JSON body is empty' });
+		game.start();
+		return reply.code(201).send({ ok: true });
+	});
 
-    reply.send(err);
+	fastify.post('/game/:id/control/:player/:action', async (req, reply) => {
+		const { id, player, action } = req.params;
 
-    const game = games.get(req.params.id);
-    if (!game) return reply.code(404).send({ error: 'Match not found' });
-    game.control(Number(req.params.player), req.params.action);
-    return res.code(201).send({ ok: true });
-  });
+		const game = games.get(id);
+		const act = (action === 'up' || action === 'down') ? action : '';
+		if (!game) return reply.code(404).send({ error: 'Match not found' });
+		game.control(Number(player), act);
+		return reply.code(200).send({ ok: true });
+	});
 }

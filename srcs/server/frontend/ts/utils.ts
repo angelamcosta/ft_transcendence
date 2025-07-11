@@ -15,6 +15,17 @@ export interface Tournaments {
 	current_capacity: number;
 }
 
+export interface TournamentMatch {
+	id: number;
+	player1_id: number;
+	player2_id: number;
+	player1: string;
+	player2: string;
+	status: string;
+	score: string | null;
+	round: number;
+}
+
 export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
 	displayPage.menu(menuArea, workArea);
 	displayPage.dashboard(workArea);
@@ -22,7 +33,7 @@ export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivEle
 	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
 	document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
-	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.gamePageHandler(workArea));
+	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.tournamentsPageHandler(workArea));
 	document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea));
 	document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea));
 }

@@ -1,4 +1,4 @@
-import { db } from './utils.mjs'
+import { db, generatePlayerBracket } from './utils.mjs'
 import { validateEmptyBody } from './middleware.mjs'
 
 const GAME_URL = process.env.GAME_URL;
@@ -22,7 +22,8 @@ export default async function matchRoutes(fastify) {
 
 	fastify.get('/tournaments', async (req, res) => {
 		try {
-			const tournaments = await db.all('SELECT id, name, status, capacity, current_capacity, created_by FROM tournaments');
+			const tournaments = await db.all(`SELECT id, name, status, capacity, current_capacity, created_by 
+				FROM tournaments ORDER BY id DESC`);
 
 			return res.code(200).send(tournaments);
 		} catch (err) {
@@ -48,8 +49,8 @@ export default async function matchRoutes(fastify) {
 
 			const row = await db.get(`SELECT display_name FROM users WHERE id = ?`, user_id);
 
-			await db.run('INSERT INTO tournaments (created_by, name) VALUES (?, ?)', [row.display_name, name.trim()]);
-			return res.code(201).send({ message: 'Tournament created successfully' });
+			const result = await db.run('INSERT INTO tournaments (created_by, name) VALUES (?, ?)', [row.display_name, name.trim()]);
+			return res.code(201).send({ message: 'Tournament created successfully', id: result.lastID });
 		} catch (err) {
 			if (err.statusCode && err.statusCode !== 500)
 				throw err;
@@ -58,7 +59,7 @@ export default async function matchRoutes(fastify) {
 		}
 	});
 
-		fastify.delete('/tournaments/:id', {
+	fastify.delete('/tournaments/:id', {
 		preValidation: [fastify.loadTournament, fastify.authenticateRequest]
 	}, async (req, res) => {
 		try {
@@ -108,16 +109,10 @@ export default async function matchRoutes(fastify) {
 					'UPDATE tournaments SET status = ? WHERE id = ?',
 					['in_progress', tour.id]
 				)
-				await startTournament(fastify, tour.id)
-				const created = await db.all(
-					'SELECT id FROM matches WHERE tournament_id = ?',
-					[tour.id]
-				)
-				for (const { id } of created) {
-					await fetch(`${GAME_URL}/api/game/${id}`, { method: 'POST' })
-					await fetch(`${GAME_URL}/api/game/${id}/init`, { method: 'POST' })
-					await fetch(`${GAME_URL}/api/game/${id}/start`, { method: 'POST' })
-				}
+				const players = await db.all(`SELECT id FROM players WHERE tournament_id = ?`, tour.id);
+				for (const p of players)
+					await db.run(`UPDATE players SET status = 'accepted' WHERE id = ?`, p.id);
+				await generatePlayerBracket(tour.id);
 			}
 			return res.code(201).send({ message: 'Joined tournament', players: count });
 		} catch (err) {
@@ -131,7 +126,10 @@ export default async function matchRoutes(fastify) {
 	fastify.get('/tournaments/:id/matches', {
 		preValidation: fastify.loadTournament
 	}, async (req, res) => {
-		const matches = await db.all(`SELECT m.id, p1.id AS player1_id, u1.display_name AS player1, p2.id AS player2_id, u2.display_name AS player2, m.status, m.score, m.round FROM matches m JOIN players p1 ON m.player1_id = p1.id JOIN users u1 ON p1.user_id = u1.id JOIN players p2 ON m.player2_id = p2.id JOIN users u2 ON p2.user_id = u2.id WHERE m.tournament_id = ? ORDER BY m.round, m.created_at`, [req.tournament.id]);
+		const matches = await db.all(` SELECT m.id, m.player1_id, u1.display_name AS player1, m.player2_id, u2.display_name 
+		AS player2, m.status, m.score, m.round FROM matches m LEFT JOIN users u1 ON m.player1_id = u1.id
+    	LEFT JOIN users u2 ON m.player2_id = u2.id WHERE m.tournament_id = ? ORDER BY m.round, m.created_at`
+			, [req.tournament.id]);
 
 		return res.code(200).send({ matches });
 	});
@@ -157,8 +155,24 @@ export default async function matchRoutes(fastify) {
 
 		fastify.log.info(`Match ${match.id} finished, winner ${winnerId}`)
 
-		if (match.tournament_id)
-			fastify.emit('match:finished', { tournamentId: match.tournament_id, round: match.round })
+		if (match.tournament_id) {
+			if (match.round === 1) {
+				const { count } = await db.get(`SELECT COUNT(*) AS count FROM matches
+            		WHERE tournament_id = ? AND round = 1 AND status = 'finished'`, [match.tournament_id]);
+				
+				if (count === 2) {
+					const winners = await db.all(`SELECT winner_id FROM matches
+            			WHERE tournament_id = ? AND round = 1 AND status = 'finished'`,
+						[match.tournament_id]);
+					const [w1, w2] = winners.map(r => r.winner_id);
+					await db.run(`INSERT INTO matches (tournament_id, player1_id, player2_id, round) 
+						VALUES (?, ?, ?, 2)`, [match.tournament_id, w1, w2]);
+				}
+			}
+
+			if (match.round === 2)
+				await db.run(`UPDATE tournaments SET status = 'finished' WHERE id = ?`, match.tournament_id);
+		}
 		return res.code(201).send({ success: true });
 	});
 
