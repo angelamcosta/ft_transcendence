@@ -1,4 +1,4 @@
-import { db, generatePlayerBracket } from './utils.mjs'
+import { db, generatePlayerBracket, sendFinalsNoti } from './utils.mjs'
 import { validateEmptyBody } from './middleware.mjs'
 
 const GAME_URL = process.env.GAME_URL;
@@ -112,7 +112,7 @@ export default async function matchRoutes(fastify) {
 				const players = await db.all(`SELECT id FROM players WHERE tournament_id = ?`, tour.id);
 				for (const p of players)
 					await db.run(`UPDATE players SET status = 'accepted' WHERE id = ?`, p.id);
-				await generatePlayerBracket(tour.id);
+				await generatePlayerBracket(tour.id, fastify);
 			}
 			return res.code(201).send({ message: 'Joined tournament', players: count });
 		} catch (err) {
@@ -159,7 +159,7 @@ export default async function matchRoutes(fastify) {
 			if (match.round === 1) {
 				const { count } = await db.get(`SELECT COUNT(*) AS count FROM matches
             		WHERE tournament_id = ? AND round = 1 AND status = 'finished'`, [match.tournament_id]);
-				
+
 				if (count === 2) {
 					const winners = await db.all(`SELECT winner_id FROM matches
             			WHERE tournament_id = ? AND round = 1 AND status = 'finished'`,
@@ -167,6 +167,9 @@ export default async function matchRoutes(fastify) {
 					const [w1, w2] = winners.map(r => r.winner_id);
 					await db.run(`INSERT INTO matches (tournament_id, player1_id, player2_id, round) 
 						VALUES (?, ?, ?, 2)`, [match.tournament_id, w1, w2]);
+					const tourRow = await db.get('SELECT name FROM tournaments WHERE id = ?', match.tournament_id);
+					const tourName = tourRow.name;
+					sendFinalsNoti(w1, w2, tourName, fastify);
 				}
 			}
 
