@@ -57,8 +57,13 @@ export async function buildProfile(
 				uploadBtn.disabled = true;
 				uploadInput.value = '';
 				utils.showModal('Avatar uploaded succesfully!');
-			} else
-				utils.showModal(data?.error);
+			} else {
+				fileNameEl.hidden = true;
+				fileNameEl.textContent = '';
+				uploadBtn.disabled = true;
+				uploadInput.value = '';
+				utils.showModal(data?.message);
+			}
 		});
 
 		uploadInput.addEventListener('change', () => {
@@ -83,6 +88,8 @@ export async function buildProfile(
 			if (res.ok) {
 				utils.showModal('Avatar deleted succesfully!');
 				img.src = '/avatars/default.png';
+				fileNameEl.textContent = '';
+				fileNameEl.hidden = true;
 			} else
 				utils.showModal(data?.error);
 		});
