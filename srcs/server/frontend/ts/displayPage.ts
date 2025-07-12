@@ -1072,6 +1072,9 @@ export async function tournamentsPage(workArea: HTMLDivElement | null) {
 	// Saves to browser history
 	utils.addToHistory("/play");
 
+	// Add nav menu
+	utils.initAppNav();
+
 	buildTournamentsPage(workArea);
 }
 
