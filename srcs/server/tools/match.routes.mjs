@@ -168,6 +168,25 @@ export default async function matchRoutes(app) {
 		}
 	})
 
+	app.get('/tournaments/wins/:id', async (req, reply) => {
+		try {
+			const t_id = req.params.id;
+			const res = await fetch(`${MATCHES_URL}/api/tournaments/wins/${t_id}`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /tournaments/wins error:', e);
+			return reply.code(500).send({ error: 'Error getting tournament wins' });
+		}
+	});
+
 	app.delete('/matchmaking/leave', async (req, reply) => {
 		try {
 			const res = await fetch(`${MATCHES_URL}/api/matchmaking/leave`, {

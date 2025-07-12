@@ -11,11 +11,13 @@ export async function buildProfile(
 	const viewerId = targetId ?? userId;
 	const isSelf = viewerId === userId;
 
-	const [{ display_name, email }, history] = await Promise.all([
+	const [{ display_name, email }, history, tournamentWins] = await Promise.all([
 		fetch(`/users/${viewerId}`, { credentials: 'include' }).then(r => r.json()),
 		fetch(`/users/${viewerId}/history`, { credentials: 'include' }).then(r => r.json()),
+		fetch(`/tournaments/wins/${viewerId}`, { credentials: 'include' }).then(r => r.json())
 	]);
 
+	const t_wins = tournamentWins.wins.length;
 	const wins = history.filter((m: Match) => m.winner_id === +viewerId).length;
 	const losses = history.length - wins;
 	const winRate = history.length ? Math.round(100 * wins / history.length) : 0;
@@ -23,7 +25,7 @@ export async function buildProfile(
 	const { container, left, right } = buildProfileLayout();
 	const infoCard = buildInfoCard(display_name, email, isSelf);
 	const { card: avatarCard, uploadInput, fileNameEl, browseBtn, uploadBtn, delBtn, img } = buildAvatarSection(`/users/${viewerId}/avatar`, isSelf);
-	const statsDiv = buildStatsSection(wins, losses, winRate);
+	const statsDiv = buildStatsSection(t_wins, wins, losses, winRate);
 	const histTable = buildHistoryTable(history);
 
 	async function loadAvatar() {
