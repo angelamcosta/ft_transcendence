@@ -192,7 +192,7 @@ function createMatchCard({ player1, player2, score }: BracketMatch) {
 	return card;
 }
 
-export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivElement, menuArea: HTMLDivElement) {
+export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivElement) {
 	const res = await fetch(`/tournaments/${t_id}/matches`, { credentials: 'include' });
 	const { matches } = (await res.json() as { matches: TournamentMatch[] });
 	const userId = localStorage.getItem('userId')!;
@@ -241,7 +241,7 @@ export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivEle
 			btn.classList.add('mt-2', 'px-4', 'py-1', 'bg-green-500', 'text-white', 'rounded', 'w-full');
 			btn.addEventListener('click', () => {
 				window.history.pushState({}, '', `/game?matchId=${m.id}`);
-				gamePage(workArea, menuArea, String(m.id));
+				gamePage(workArea, String(m.id));
 			});
 			matchCard.append(btn);
 		}
@@ -276,7 +276,7 @@ export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivEle
 		btn.classList.add('mt-2', 'px-4', 'py-1', 'bg-green-500', 'text-white', 'rounded', 'w-full');
 		btn.addEventListener('click', () => {
 			window.history.pushState({}, '', `/game?matchId=${finalMatch.id}`);
-			gamePage(workArea, menuArea, String(finalMatch.id));
+			gamePage(workArea, String(finalMatch.id));
 		});
 		matchCard.append(btn);
 	}

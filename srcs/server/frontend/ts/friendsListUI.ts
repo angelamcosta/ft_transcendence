@@ -1,4 +1,4 @@
-import { directMessagePage, friendsList, gamePage, menu, profile } from './displayPage.js';
+import { directMessagePage, friendsList, gamePage, profile } from './displayPage.js';
 import * as utils from './utils.js'
 
 type Action = { label: string; handler: () => void }
@@ -160,7 +160,7 @@ export function buildInviteCard(
 	return card
 }
 
-export async function buildFriendsList(workArea: HTMLDivElement, menuArea: HTMLDivElement) {
+export async function buildFriendsList(workArea: HTMLDivElement) {
 	const userId = Number(localStorage.getItem('userId')!);
 	const displayName = localStorage.getItem('displayName')!;
 
@@ -193,20 +193,20 @@ export async function buildFriendsList(workArea: HTMLDivElement, menuArea: HTMLD
 			'Your Friends',
 			friends,
 			u => [
-				{ label: 'Message', handler: () => directMessagePage(workArea, menuArea, displayName, u.display_name, String(userId), u.id) },
-				{ label: 'View Profile', handler: () => profile(workArea, menuArea, String(u.id)) },
+				{ label: 'Message', handler: () => directMessagePage(workArea, displayName, u.display_name, String(userId), u.id) },
+				{ label: 'View Profile', handler: () => profile(workArea, String(u.id)) },
 				{
 					label: 'Remove Friend', handler: async () => {
 						const res = await fetch(`/users/friends/${u.id}`, { method: 'DELETE', credentials: 'include' })
 						utils.showModal((await res.json()).message)
-						friendsList(workArea, menuArea)
+						friendsList(workArea)
 					}
 				},
 				{
 					label: 'Block', handler: async () => {
 						const res = await fetch(`/users/block/${u.id}`, { method: 'POST', credentials: 'include' })
 						utils.showModal((await res.json()).message)
-						friendsList(workArea, menuArea)
+						friendsList(workArea)
 					}
 				}
 			]
@@ -219,7 +219,7 @@ export async function buildFriendsList(workArea: HTMLDivElement, menuArea: HTMLD
 					label: 'Unblock', handler: async () => {
 						const res = await fetch(`/users/unblock/${u.id}`, { method: 'DELETE', credentials: 'include' })
 						utils.showModal((await res.json()).message)
-						friendsList(workArea, menuArea)
+						friendsList(workArea)
 					}
 				}
 			]
@@ -241,12 +241,12 @@ export async function buildFriendsList(workArea: HTMLDivElement, menuArea: HTMLD
 					gamePage(workArea, data.matchId);
 					return;
 				}
-				friendsList(workArea, menuArea)
+				friendsList(workArea)
 			},
 			async id => {
 				const res = await fetch(`/users/invite/reject/${id}`, { method: 'PUT', credentials: 'include' })
 				utils.showModal((await res.json()).message)
-				friendsList(workArea, menuArea)
+				friendsList(workArea)
 			}
 		),
 		buildInviteCard(
@@ -257,7 +257,7 @@ export async function buildFriendsList(workArea: HTMLDivElement, menuArea: HTMLD
 			async id => {
 				const res = await fetch(`/users/invite/cancel/${id}`, { method: 'DELETE', credentials: 'include' })
 				utils.showModal((await res.json()).message)
-				friendsList(workArea, menuArea)
+				friendsList(workArea)
 			}
 		)
 	)
@@ -270,12 +270,12 @@ export async function buildFriendsList(workArea: HTMLDivElement, menuArea: HTMLD
 			async id => {
 				const res = await fetch(`/users/friends/accept/${id}`, { method: 'PUT', credentials: 'include' })
 				utils.showModal((await res.json()).message)
-				friendsList(workArea, menuArea)
+				friendsList(workArea)
 			},
 			async id => {
 				const res = await fetch(`/users/friends/reject/${id}`, { method: 'PUT', credentials: 'include' })
 				utils.showModal((await res.json()).message)
-				friendsList(workArea, menuArea)
+				friendsList(workArea)
 			}
 		),
 		buildInviteCard(
@@ -286,7 +286,7 @@ export async function buildFriendsList(workArea: HTMLDivElement, menuArea: HTMLD
 			async id => {
 				const res = await fetch(`/users/friends/cancel/${id}`, { method: 'DELETE', credentials: 'include' })
 				utils.showModal((await res.json()).message)
-				friendsList(workArea, menuArea)
+				friendsList(workArea)
 			}
 		)
 	)

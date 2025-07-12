@@ -2,14 +2,14 @@ import { initPong } from './pong.js';
 import * as utils from './utils.js';
 import { buildTournamentsLayout, createTournamentCard, buildTournamentCard, buildPlayLocalCard, buildTournamentBrackets } from './tournamentsUI.js';
 
-async function showBrackets(workArea: HTMLDivElement,  menuArea: HTMLDivElement, t_id: number) {
+async function showBrackets(workArea: HTMLDivElement, t_id: number) {
 	utils.cleanDiv(workArea);
-	const newEl = await buildTournamentBrackets(t_id, workArea, menuArea);
+	const newEl = await buildTournamentBrackets(t_id, workArea);
 	workArea.append(newEl);
 }
 
-export function startPracticeGame(workArea: HTMLDivElement | null,  menuArea: HTMLDivElement | null) {
-	if (!workArea ||  !menuArea)
+export function startPracticeGame(workArea: HTMLDivElement | null) {
+	if (!workArea)
 		return;
 	utils.cleanDiv(workArea)
 	const canvas = document.createElement('canvas');
@@ -23,10 +23,10 @@ export function startPracticeGame(workArea: HTMLDivElement | null,  menuArea: HT
 
 	workArea.appendChild(canvas);
 
-	initPong(workArea, menuArea, canvas);
+	initPong(workArea, canvas);
 }
 
-export async function buildTournamentsPage(workArea: HTMLDivElement,  menuArea: HTMLDivElement) {
+export async function buildTournamentsPage(workArea: HTMLDivElement) {
 	const { container, left, middle, right } = buildTournamentsLayout();
 
 	async function loadList() {
@@ -53,7 +53,7 @@ export async function buildTournamentsPage(workArea: HTMLDivElement,  menuArea: 
 					if (tournament.current_capacity === tournament.capacity) {
 						actions.unshift({
 							label: 'View',
-							handler: () => { showBrackets(workArea, menuArea, tournament.id); }
+							handler: () => { showBrackets(workArea, tournament.id); }
 						})
 					}
 
@@ -105,7 +105,7 @@ export async function buildTournamentsPage(workArea: HTMLDivElement,  menuArea: 
 
 	right.append(buildPlayLocalCard(() => {
 		window.history.replaceState({}, '', '/game');
-		startPracticeGame(workArea, menuArea)
+		startPracticeGame(workArea)
 	}
 	));
 

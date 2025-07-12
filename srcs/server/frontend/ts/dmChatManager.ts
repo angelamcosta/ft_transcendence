@@ -106,7 +106,6 @@ export function appendDmMessage(
 export async function setupDmChatControls(
 	targetId: number,
 	workArea: HTMLDivElement,
-	menuArea: HTMLDivElement,
 	dmCard: HTMLDivElement,
 	chatContainer: HTMLDivElement,
 	messageInput: HTMLInputElement,
@@ -223,7 +222,7 @@ export async function setupDmChatControls(
 	})
 
 	viewProfileBtn.addEventListener('click', () => {
-		profile(workArea, menuArea, targetId.toString())
+		profile(workArea, targetId.toString())
 	})
 
 	await Promise.all([
