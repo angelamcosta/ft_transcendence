@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Fastify from 'fastify';
+import sensible from '@fastify/sensible';
 import gameRoutes from './game.routes.mjs';
 import { attachWebSocket } from './middleware.mjs';
 
@@ -26,6 +27,7 @@ const shutdown = async () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
+await app.register(sensible);
 await app.register(gameRoutes, { prefix: '/api', games });
 
 const server = app.server;
