@@ -1,15 +1,14 @@
-import { inSession, verifyPassword } from "./utils.mjs"
+import { verifyPassword } from "./utils.mjs"
 import { sendEmail } from "./emailService.mjs"
 
 export async function loginUser(db, {email, password}) {
-	email = email.toLowerCase();
-	
 	if (!email || !password) {
 		const error = new Error('Missing fields')
 		error.statusCode = 400
 		throw error
 	}
 
+	email = email.toLowerCase();
 	const user = await db.get('SELECT * FROM users where email = ?', [email])
 	if (!user) {
 		const error = new Error('Invalid email or password')
@@ -25,7 +24,6 @@ export async function loginUser(db, {email, password}) {
 	}
 
 	if (user.twofa_status === 'enabled') {
-		await inSession(user.id);
 		const otp_code = Math.floor(100000 + Math.random() * 900000)
 		const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 

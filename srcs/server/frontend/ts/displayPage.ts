@@ -15,6 +15,9 @@ import { pongPvpMatchUI } from './pongUI.js';
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
+	// Saves to browser history
+	utils.addToHistory("/");
+
 	// Create <h1>
 	const heading = document.createElement("h1");
 	heading.textContent = "Welcome to our Game Hub!";
@@ -27,9 +30,12 @@ export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivEl
 export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
+	// Saves to browser history
+	utils.addToHistory("/register");
+
 	const form = document.createElement('form');
 	form.id = 'newAccount';
-	form.classList.add('flex', 'flex-col', 'items-center');
+	form.classList.add('w-80', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	// Create an email input
 	const emailInput = document.createElement('input');
@@ -124,9 +130,12 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 export function signIn(workArea: HTMLDivElement | null, successMessage?: string, isError?: boolean) {
 	utils.cleanDiv(workArea);
 
+	// Saves to browser history
+	utils.addToHistory("/login");
+
 	const form = document.createElement('form');
 	form.id = 'login';
-	form.classList.add('flex', 'flex-col', 'items-center');
+	form.classList.add('w-80', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	const emailInput = document.createElement('input');
 	emailInput.type = 'email';
@@ -175,6 +184,8 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string,
 	form.appendChild(passwordContainer);
 	form.appendChild(document.createElement('br'));
 	form.appendChild(submitButton);
+	form.appendChild(document.createElement('br'));
+	form.appendChild(resetButton);
 
 	if (successMessage) {
 		const msgDiv = document.createElement('div');
@@ -190,7 +201,6 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string,
 	}
 
 	workArea?.appendChild(form);
-	workArea?.appendChild(resetButton);
 
 	form.addEventListener('submit', formHandlers.signIn);
 	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
@@ -203,7 +213,8 @@ export function sendLink(workArea: HTMLDivElement | null) {
 	
 	const resetForm = document.createElement('form');
 	resetForm.id = 'resetPassword';
-	resetForm.classList.add('flex', 'flex-col', 'items-center', 'w-60', 'mx-auto');
+	resetForm.classList.add('w-80', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
+
     // Creates a heading
 	const resetHeading = document.createElement("p");
 	resetHeading.textContent = "A link will be sent to reset your password.";
@@ -243,9 +254,13 @@ export function sendLink(workArea: HTMLDivElement | null) {
 }
 
 export function resetPassword(workArea: HTMLDivElement | null) {
+
+	// Saves to browser history
+	utils.addToHistory("/reset-password");
+
 	const passwordForm = document.createElement('form');
 	passwordForm.id = 'changePassword';
-	passwordForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'rounded');
+	passwordForm.classList.add('w-80', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	const newPasswordContainer = document.createElement('div');
 	newPasswordContainer.classList.add('relative', 'w-60', 'm-4');
@@ -363,9 +378,13 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 export function verify2FA(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
+	// Saves to browser history
+	utils.addToHistory("/verify-2fa");
+
 	const form = document.createElement('form');
 	form.id = 'verify';
-	form.classList.add('flex', 'flex-col', 'items-center');
+	//form.classList.add('flex', 'flex-col', 'items-center');
+	form.classList.add('w-80', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	const codeInput = document.createElement('input');
 	codeInput.type = 'number';
@@ -401,6 +420,9 @@ export function verify2FA(workArea: HTMLDivElement | null) {
 export function dashboard(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
+	// Saves to browser history
+	utils.addToHistory("/");
+
 	// Create <h1>
 	const heading = document.createElement("h1");
 	heading.textContent = "Welcome to your dashboard!";
@@ -412,7 +434,7 @@ export function dashboard(workArea: HTMLDivElement | null) {
 export function changePassword(workArea: HTMLDivElement | null) {
 	const passwordForm = document.createElement('form');
 	passwordForm.id = 'changePassword';
-	passwordForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+	passwordForm.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	const oldPasswordContainer = document.createElement('div');
 	oldPasswordContainer.classList.add('relative', 'w-60', 'm-4');
@@ -565,7 +587,7 @@ export function changePassword(workArea: HTMLDivElement | null) {
 export function changeDisplayName(workArea: HTMLDivElement | null) {
 	const nameForm = document.createElement('form');
 	nameForm.id = 'changeName';
-	nameForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+	nameForm.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	const nameContainer = document.createElement('div');
 	nameContainer.classList.add('relative', 'w-60', 'm-4');
@@ -584,14 +606,14 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	const nameSubmitButton = document.createElement('button');
 	nameSubmitButton.type = 'submit';
 	nameSubmitButton.textContent = 'Change display name';
-	nameSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
+	nameSubmitButton.classList.add('px-4', 'py-1', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
 
 	// Create a reset button button
 	const nameResetButton = document.createElement('button');
 	nameResetButton.id = 'nameResetButton';
 	nameResetButton.type = 'button';
 	nameResetButton.textContent = 'Reset';
-	nameResetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
+	nameResetButton.classList.add('px-4', 'py-1', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
 
 	const nameButtonContainer = document.createElement('div');
 	nameButtonContainer.classList.add('flex', 'w-60', 'm-4');
@@ -638,7 +660,7 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 
 	const twoFactorForm = document.createElement('form');
 	twoFactorForm.id = 'set2FA';
-	twoFactorForm.classList.add('flex', 'flex-col', 'items-center', 'w-100', 'mx-auto', 'border', 'border-4', 'border-t-0', 'border-blue-500', 'rounded');
+	twoFactorForm.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	const twoFactorContainer = document.createElement('div');
 	twoFactorContainer.classList.add('flex', 'items-center', 'gap-2', 'relative', 'w-60', 'm-4');
@@ -712,6 +734,9 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 
 export function accountSettings(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
+
+	// Saves to browser history
+	utils.addToHistory("/settings");
 
 	changePassword(workArea);
 	changeDisplayName(workArea);
@@ -867,6 +892,9 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 	if (!workArea)
 		return;
 
+	// Saves to browser history
+	utils.addToHistory("/chat-room");
+
 	utils.cleanDiv(workArea);
 
 	const { userListContainer, chatContainer, messageInput, sendBtn } =
@@ -942,12 +970,23 @@ export async function directMessagePage(
 export async function profile(workArea: HTMLDivElement | null, targetId: string | null) {
 	if (!workArea)
 		return;
+
+	// Saves to browser history
+	utils.addToHistory("/profile");
+
+	// Saves last user viewed
+	if (targetId)
+		localStorage.setItem('lastTargetId', targetId)!;
+
 	buildProfile(workArea, targetId);
 }
 
 export async function friendsList(workArea: HTMLDivElement | null) {
 	if (!workArea) return
 	utils.cleanDiv(workArea)
+
+	// Saves to browser history
+	utils.addToHistory("/friends");
 
 	const { container } = await buildFriendsList(workArea);
 
@@ -958,6 +997,7 @@ export async function tournamentsPage(workArea: HTMLDivElement | null) {
 	if (!workArea)
 		return;
 	utils.cleanDiv(workArea);
+
 	buildTournamentsPage(workArea);
 }
 
@@ -966,6 +1006,9 @@ export async function gamePage(workArea: HTMLDivElement | null, matchId?: string
 	if (!workArea)
 		return;
 	utils.cleanDiv(workArea);
+
+	// Saves to browser history
+	utils.addToHistory("/play");
 
 	const {canvas, namesRow, player1_name, player2_name, player1_id, player2_id, countdownDiv } = await pongPvpMatchUI(matchId!);
 

@@ -29,27 +29,14 @@ export function startPracticeGame(workArea: HTMLDivElement | null) {
 export async function buildTournamentsPage(workArea: HTMLDivElement) {
 	const { container, left, middle, right } = buildTournamentsLayout();
 
-	left.append(createTournamentCard(async name => {
-		const res = await fetch('/tournaments', {
-			method: 'POST',
-			credentials: 'include',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ name })
-		});
-		const data = await res.json();
-		await fetch(`/tournaments/${data.id}/players`, { method: 'POST', credentials: 'include' });
-		utils.showModal(data?.message);
-		loadList();
-	}));
-
 	async function loadList() {
-		middle.innerHTML = '';
+		left.innerHTML = '';
 		const list: utils.Tournaments[] = await utils.getTournaments();
 
 		const h3 = document.createElement('h3');
 		h3.textContent = 'Tournaments';
 		h3.classList.add('text-lg', 'font-semibold');
-		middle.append(h3);
+		left.append(h3);
 
 		const displayName = localStorage.getItem('displayName');
 
@@ -57,10 +44,10 @@ export async function buildTournamentsPage(workArea: HTMLDivElement) {
 			const p = document.createElement('p');
 			p.classList.add('text-gray-500');
 			p.textContent = 'No tournaments taking place';
-			middle.append(p);
+			left.append(p);
 		} else {
 			list.forEach((t: utils.Tournaments) => {
-				middle.append(buildTournamentCard(t, tournament => {
+				left.append(buildTournamentCard(t, tournament => {
 					const actions = [];
 
 					if (tournament.current_capacity === tournament.capacity) {
@@ -102,6 +89,19 @@ export async function buildTournamentsPage(workArea: HTMLDivElement) {
 			});
 		}
 	}
+
+	middle.append(createTournamentCard(async name => {
+		const res = await fetch('/tournaments', {
+			method: 'POST',
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ name })
+		});
+		const data = await res.json();
+		await fetch(`/tournaments/${data.id}/players`, { method: 'POST', credentials: 'include' });
+		utils.showModal(data?.message);
+		loadList();
+	}));
 
 	right.append(buildPlayLocalCard(() => {
 		window.history.replaceState({}, '', '/game');

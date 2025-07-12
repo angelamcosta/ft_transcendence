@@ -4,8 +4,6 @@ import { validateEmptyBody } from './middleware.mjs'
 export default async function gameRoutes(fastify, opts) {
 	const games = opts.games;
 
-	//fastify.addHook('preHandler', validateEmptyBody);
-
 	fastify.post('/game/create/:id', async (req, reply) => {
 		const { id } = req.params;
 		if (!games.has(id))

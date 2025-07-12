@@ -14,18 +14,19 @@ export function buildTournamentsLayout() {
 	const container = document.createElement('div')
 	container.classList.add(
 		'flex', 'gap-6', 'p-6',
-		'max-w-[1050px]', 'mx-auto'
+		'max-w-[1050px]', 'mx-auto',
+		'h-[calc(100vh-4rem)]',
 	)
 
 	const cardBase = ['bg-white', 'rounded-xl', 'p-4', 'shadow', 'flex', 'flex-col', 'gap-4']
 	const left = document.createElement('div')
-	left.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	left.classList.add('max-h-[50%]', 'overflow-y-auto', 'flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
 
 	const middle = document.createElement('div')
-	middle.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	middle.classList.add('flex-1', 'self-start', ...cardBase)
 
 	const right = document.createElement('div')
-	right.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	right.classList.add('flex-1', 'self-start', ...cardBase)
 
 	container.append(left, middle, right)
 	return { container, left, middle, right }
@@ -83,6 +84,34 @@ export function buildTournamentCard(
 
 	info.append(name, cap);
 
+	const status = document.createElement('span');
+	let statusClass = ['text-xs', 'font-semibold', 'uppercase', 'px-2', 'py-0.5', 'rounded-full'];
+	let statusColors: string[];
+
+	if (tournament.status === 'open') {
+		status.textContent = 'Open';
+		statusColors = ['bg-green-100', 'text-green-800'];
+	}
+	else if (tournament.status === 'in_progress') {
+		status.textContent = 'In Progress';
+		statusColors = ['bg-yellow-100', 'text-yellow-800'];
+	}
+	else {
+		status.textContent = 'Finished';
+		statusColors = ['bg-gray-100', 'text-gray-800'];
+	}
+
+	status.classList.add(...statusClass, ...statusColors);
+
+
+	const actions = buildActions(tournament);
+	const order: Record<string, number> = {
+		View: 0,
+		Join: 1,
+		Delete: 2
+	};
+	actions.sort((a, b) => (order[a.label] ?? 99) - (order[b.label] ?? 99));
+
 	const menuContainer = document.createElement('div');
 	menuContainer.classList.add('relative', 'inline-block');
 
@@ -97,7 +126,7 @@ export function buildTournamentCard(
 		'overflow-hidden', 'z-10', 'hidden'
 	);
 
-	buildActions(tournament).forEach(a => {
+	actions.forEach(a => {
 		const it = document.createElement('div');
 		it.textContent = a.label;
 		it.classList.add('px-4', 'py-2', 'whitespace-nowrap', 'text-gray-800', 'hover:bg-gray-100', 'cursor-pointer');
@@ -116,7 +145,7 @@ export function buildTournamentCard(
 
 	menuContainer.append(menuBtn, menuList);
 
-	card.append(info, menuContainer);
+	card.append(info, status, menuContainer);
 	return card;
 }
 
@@ -206,7 +235,7 @@ export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivEle
 			player2: m?.player2 ?? 'TBD',
 			score: m?.score ?? ''
 		});
-		if (m && (m.player1_id.toString() === userId || m.player2_id.toString() === userId)) {
+		if (m && m.status !== 'finished' && (m.player1_id.toString() === userId || m.player2_id.toString() === userId)) {
 			const btn = document.createElement('button');
 			btn.textContent = 'Start';
 			btn.classList.add('mt-2', 'px-4', 'py-1', 'bg-green-500', 'text-white', 'rounded', 'w-full');
@@ -221,35 +250,38 @@ export async function buildTournamentBrackets(t_id: number, workArea: HTMLDivEle
 
 	const finalsCard = document.createElement('div');
 	finalsCard.classList.add('flex', 'flex-col', 'items-center', 'self-center', 'gap-4', 'flex-1');
+	if (finalMatch?.status === 'finished' && finalMatch.score) {
+		const [a, b] = finalMatch.score.split('-').map(n => parseInt(n, 10));
+		const winnerName = a > b ? finalMatch.player1 : finalMatch.player2;
+
+		const winnerHeader = document.createElement('h4');
+		winnerHeader.textContent = `Winner: ${winnerName}`;
+		winnerHeader.classList.add('text-center', 'font-semibold', 'text-lg', 'mb-2', 'text-green-600');
+		finalsCard.append(winnerHeader);
+	}
 	const finalsLabel = document.createElement('h4');
 	finalsLabel.textContent = 'Final';
 	finalsLabel.classList.add('text-center', 'font-semibold', 'text-lg', 'mb-2');
 	finalsCard.append(finalsLabel);
-	finalsCard.append(createMatchCard({
+
+	const matchCard = createMatchCard({
 		player1: finalMatch?.player1 || 'TBD',
 		player2: finalMatch?.player2 || 'TBD',
 		score: finalMatch?.score ?? ''
-	}));
-	if (finalMatch) {
-		const matchCard = createMatchCard({
-			player1: finalMatch.player1,
-			player2: finalMatch.player2,
-			score: finalMatch.score ?? ''
+	});
+
+	if (finalMatch && finalMatch.status !== 'finished' && (finalMatch.player1_id.toString() === userId || finalMatch.player2_id.toString() === userId)) {
+		const btn = document.createElement('button');
+		btn.textContent = 'Start';
+		btn.classList.add('mt-2', 'px-4', 'py-1', 'bg-green-500', 'text-white', 'rounded', 'w-full');
+		btn.addEventListener('click', () => {
+			window.history.pushState({}, '', `/game?matchId=${finalMatch.id}`);
+			gamePage(workArea, String(finalMatch.id));
 		});
-		if (finalMatch.player1_id.toString() === userId || finalMatch.player2_id.toString() === userId) {
-			const btn = document.createElement('button');
-			btn.textContent = 'Start';
-			btn.classList.add('mt-2', 'px-4', 'py-1', 'bg-green-500', 'text-white', 'rounded', 'w-full');
-			btn.addEventListener('click', () => {
-				window.history.pushState({}, '', `/game?matchId=${finalMatch.id}`);
-				gamePage(workArea, String(finalMatch.id));
-			});
-			matchCard.append(btn);
-		}
-		finalsCard.append(matchCard);
-	} else {
-		finalsCard.append(createMatchCard({ player1: 'TBD', player2: 'TBD', score: '' }));
+		matchCard.append(btn);
 	}
+	finalsCard.append(matchCard);
+
 	row.append(semisCard, finalsCard);
 	container.append(row);
 	return container;

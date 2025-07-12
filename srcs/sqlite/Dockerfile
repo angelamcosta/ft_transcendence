@@ -9,6 +9,7 @@ RUN apt-get update -y && \
 
 COPY ./tools/init-db.sh /db/init-db.sh
 COPY ./tools/transcendence.sql /db/transcendence.sql
+COPY ./tools/default.png   /db/default.png
 
 RUN chmod +x /db/init-db.sh
 
