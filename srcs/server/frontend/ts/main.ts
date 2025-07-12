@@ -1,39 +1,10 @@
 import * as displayPage from './displayPage.js';
-import * as buttonHandlers from './buttonHandlers.js';
-import { initGlobalChat } from './globalChatManager.js';
-import { initAppNav } from './utils.js';
-import { getUnreadMessages } from './globalChatManager.js';
+import * as utils from './utils.js';
 
-async function isSignedIn() {
-	try {
-		const response = await fetch('/verify', {
-			method: 'GET',
-			headers: {
-				'Accept': 'application/json',
-			},
-			credentials: 'include'
-		});
-
-		if (!response.ok) {
-			return false;
-		}
-		else {
-			return true;
-		}
-	} catch (error) {
-		console.error('Error sending form data:', error);
-		return false;
-	}
-}
 
 async function resetPassword(token: string | null) {
-	if (!token) {
-		displayPage.header(menuArea);
-		displayPage.signIn(workArea, 'Invalid token', true);
-		buttonHandlers.initThemeToggle();
-		document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-		document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-		document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+	if (!token || token === '') {
+		displayPage.notFound(workArea);
 		return;
 	}
 
@@ -50,34 +21,19 @@ async function resetPassword(token: string | null) {
 
 		const data = await response.json();
 		if (!response.ok) {
-			displayPage.header(menuArea);
 			displayPage.signIn(workArea, data?.error || 'Invalid token', true);
-			buttonHandlers.initThemeToggle();
-			document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-			document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-			document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 		}
 		else {
-			displayPage.header(menuArea);
 			displayPage.resetPassword(workArea);
-			buttonHandlers.initThemeToggle();
-			document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-			document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-			document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);
-		alert('Verify failed! Catched on Try');
-		displayPage.header(menuArea);
+		alert('Reset failed! Catched on Try');
 		let errorMessage = 'Invalid token';
 		if (error) {
 			errorMessage = 'Error: ' + error;
 		}
 		displayPage.signIn(workArea, errorMessage , true);
-		buttonHandlers.initThemeToggle();
-		document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-		document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-		document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 	}
 }
 
@@ -87,18 +43,11 @@ async function render(path: string | null) {
 		throw new Error('No path to render!');
 	}
 
-	const isSgned = await isSignedIn();
+	const isSgned = await utils.isSignedIn();
 	switch (path) {
 		case '/reset-password':
 			if (isSgned) {
-				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				displayPage.dashboard(workArea);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
+				displayPage.notFound(workArea);
 			}
 			else {
 				const params = new URLSearchParams(window.location.search);
@@ -108,164 +57,74 @@ async function render(path: string | null) {
 			break;
 		case '/register':
 			if (isSgned) {
-				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				displayPage.dashboard(workArea);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
+				displayPage.notFound(workArea);
 			}
 			else {
-				displayPage.header(menuArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 				displayPage.signUp(workArea, menuArea);
 			}
 			break;
 		case '/login':
 			if (isSgned) {
-				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				displayPage.dashboard(workArea);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
+				displayPage.notFound(workArea);
 			}
 			else {
-				displayPage.header(menuArea);
 				displayPage.signIn(workArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 			}
 			break;
 		case '/settings':
 			if (isSgned) {
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
 				displayPage.accountSettings(workArea);
 			}
 			else {
-				history.replaceState({ path: "/" }, "", "/");
-				displayPage.header(menuArea);
-				displayPage.landingPage(workArea, menuArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/profile':
 			if (isSgned) {
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
 				const targetId = localStorage.getItem('lastTargetId')!;
 				displayPage.profile(workArea, targetId);
 			}
 			else {
-				history.replaceState({ path: "/" }, "", "/");
-				displayPage.header(menuArea);
-				displayPage.landingPage(workArea, menuArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/friends':
 			if (isSgned) {
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
 				displayPage.friendsList(workArea);
 			}
 			else {
-				history.replaceState({ path: "/" }, "", "/");
-				displayPage.header(menuArea);
-				displayPage.landingPage(workArea, menuArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/chat-room':
 			if (isSgned) {
-				getUnreadMessages();
 				const userId = localStorage.getItem('userId')!;
 				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
 				displayPage.chatPage(workArea, userId, displayName);
 			}
 			else {
-				history.replaceState({ path: "/" }, "", "/");
-				displayPage.header(menuArea);
-				displayPage.landingPage(workArea, menuArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/play':
 			if (isSgned) {
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
-				displayPage.gamePage(workArea);
+				displayPage.tournamentsPage(workArea);
 			}
 			else {
-				history.replaceState({ path: "/" }, "", "/");
-				displayPage.header(menuArea);
-				displayPage.landingPage(workArea, menuArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+				displayPage.notFound(workArea);
 			}
 			break;
-
-		default:
+		case '/':
 			if (isSgned) {
-				getUnreadMessages();
-				const userId = localStorage.getItem('userId')!;
-				const displayName = localStorage.getItem('displayName')!;
-				initGlobalChat(userId, displayName);
 				displayPage.dashboard(workArea);
-				initAppNav(menuArea, workArea);
-				buttonHandlers.initThemeToggle();
 			}
 			else {
-				displayPage.header(menuArea);
-				displayPage.landingPage(workArea, menuArea);
-				buttonHandlers.initThemeToggle();
-				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+				displayPage.landingPage(workArea);
 			}
+			break;
+		default:
+			utils.addToHistory(path);
+			displayPage.notFound(workArea);
   	}
 }
 

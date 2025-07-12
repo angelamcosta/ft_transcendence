@@ -42,13 +42,8 @@ export async function signOut(workArea: HTMLDivElement | null) {
 
         cleanGlobalChat();
         localStorage.clear();
-        displayPage.header(menuArea);
-        displayPage.landingPage(workArea, menuArea);
-        initThemeToggle();
         utils.cleanLocalStorage();
-        document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-        document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-        document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+        displayPage.landingPage(workArea);
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Logout failed! Catched on Try');

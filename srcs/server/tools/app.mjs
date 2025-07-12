@@ -278,6 +278,29 @@ await app.register(matchRoutes);
 await app.register(userRoutes);
 await app.register(chatRoutes);
 
+app.setNotFoundHandler((request, reply) => {
+  // Optional: log the unknown path
+  request.log.warn(`404 Not Found: ${request.url}`);
+
+  // If you want to serve your SPA's index.html for unknown routes (like React/Angular apps)
+  if (request.raw.method === 'GET' && request.headers.accept && request.headers.accept.includes('text/html')) {
+    const filePath = '/app/public/index.html';
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      return reply.code(200).type('text/html').send(fileContent);
+    } catch (err) {
+      request.log.error('Error loading fallback index.html:', err);
+      return reply.code(500).send('Internal Server Error');
+    }
+  }
+
+  // Fallback: regular 404 response
+  return reply.code(404).type('text/html').send(`
+    <h1>404 - Page Not Found</h1>
+    <p>The page "${request.url}" could not be found.</p>
+  `);
+});
+
 app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
 	if (err) {
 		console.error(err);

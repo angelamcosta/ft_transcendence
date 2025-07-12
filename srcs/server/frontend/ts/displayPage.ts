@@ -12,11 +12,18 @@ import {  buildFriendsList } from './friendsListUI.js';
 import { buildTournamentsPage } from './tournaments.js';
 import { pongPvpMatchUI } from './pongUI.js';
 
-export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
+export function landingPage(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
 	// Saves to browser history
 	utils.addToHistory("/");
+
+	// Add header menu
+	utils.initAppHeader();
+
+	const container = document.createElement('div');
+	container.id = 'landingPageContainer';
+	container.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	// Create <h1>
 	const heading = document.createElement("h1");
@@ -24,7 +31,8 @@ export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivEl
 	heading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
 	// Append to div
-	workArea?.appendChild(heading);
+	container.appendChild(heading);
+	workArea?.appendChild(container);
 }
 
 export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
@@ -32,6 +40,9 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 
 	// Saves to browser history
 	utils.addToHistory("/register");
+
+	// Add header menu
+	utils.initAppHeader();
 
 	const form = document.createElement('form');
 	form.id = 'newAccount';
@@ -124,7 +135,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	resetButton.addEventListener("click", () => {
 		form.reset();
 	});
-	cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
+	cancelButton.addEventListener("click", () => landingPage(workArea));
 }
 
 export function signIn(workArea: HTMLDivElement | null, successMessage?: string, isError?: boolean) {
@@ -132,6 +143,9 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string,
 
 	// Saves to browser history
 	utils.addToHistory("/login");
+
+	// Add header menu
+	utils.initAppHeader();
 
 	const form = document.createElement('form');
 	form.id = 'login';
@@ -258,6 +272,9 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 	// Saves to browser history
 	utils.addToHistory("/reset-password");
 
+	// Add header menu
+	utils.initAppHeader();
+
 	const passwordForm = document.createElement('form');
 	passwordForm.id = 'changePassword';
 	passwordForm.classList.add('w-80', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
@@ -381,6 +398,9 @@ export function verify2FA(workArea: HTMLDivElement | null) {
 	// Saves to browser history
 	utils.addToHistory("/verify-2fa");
 
+	// Add header menu
+	utils.initAppHeader();
+
 	const form = document.createElement('form');
 	form.id = 'verify';
 	//form.classList.add('flex', 'flex-col', 'items-center');
@@ -423,12 +443,51 @@ export function dashboard(workArea: HTMLDivElement | null) {
 	// Saves to browser history
 	utils.addToHistory("/");
 
+	// Add nav menu
+	utils.initAppNav();
+
+	const container = document.createElement('div');
+	container.id = 'dashboardContainer';
+	container.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
+
 	// Create <h1>
 	const heading = document.createElement("h1");
 	heading.textContent = "Welcome to your dashboard!";
 	heading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
-	workArea?.appendChild(heading);
+
+	container.appendChild(heading);
+	workArea?.appendChild(container);
+}
+
+export async function notFound(workArea: HTMLDivElement | null) {
+	utils.cleanDiv(workArea);
+
+	// Add nav or header menu
+	const isSgned = await utils.isSignedIn();
+	if (isSgned)
+		utils.initAppNav();
+	else
+		utils.initAppHeader();
+	
+	const container = document.createElement('div');
+	container.id = 'notFoundContainer';
+	container.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
+
+
+	// Create <h1>
+	const heading = document.createElement("h1");
+	heading.textContent = "404";
+	heading.classList.add("text-6xl", "font-bold", "text-blue-600");
+
+	const phrase = document.createElement("p");
+	phrase.textContent = "Page not found";
+	phrase.classList.add("text-2xl", "font-bold", "text-blue-600");
+
+	container.appendChild(heading);
+	container.appendChild(phrase);
+
+	workArea?.appendChild(container);
 }
 
 export function changePassword(workArea: HTMLDivElement | null) {
@@ -738,12 +797,15 @@ export function accountSettings(workArea: HTMLDivElement | null) {
 	// Saves to browser history
 	utils.addToHistory("/settings");
 
+	// Add nav menu
+	utils.initAppNav();
+
 	changePassword(workArea);
 	changeDisplayName(workArea);
 	manageTwoFactorAuth(workArea);
 }
 
-export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
+export function menu(menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(menuArea);
 
 	const nav = document.createElement("nav");
@@ -852,7 +914,7 @@ export function header(headerArea: HTMLDivElement | null) {
 	logo.textContent = "Our game hub";
 
 	const menu = document.createElement("div");
-	menu.id = "menu";
+	menu.id = "header";
 	menu.className = "hidden md:flex space-x-4";
 
 	const signInButton = document.createElement("button");
@@ -894,6 +956,9 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 
 	// Saves to browser history
 	utils.addToHistory("/chat-room");
+
+	// Add nav menu
+	utils.initAppNav();
 
 	utils.cleanDiv(workArea);
 
@@ -974,6 +1039,9 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 	// Saves to browser history
 	utils.addToHistory("/profile");
 
+	// Add nav menu
+	utils.initAppNav();
+
 	// Saves last user viewed
 	if (targetId)
 		localStorage.setItem('lastTargetId', targetId)!;
@@ -988,6 +1056,9 @@ export async function friendsList(workArea: HTMLDivElement | null) {
 	// Saves to browser history
 	utils.addToHistory("/friends");
 
+	// Add nav menu
+	utils.initAppNav();
+
 	const { container } = await buildFriendsList(workArea);
 
 	workArea.appendChild(container)
@@ -997,6 +1068,9 @@ export async function tournamentsPage(workArea: HTMLDivElement | null) {
 	if (!workArea)
 		return;
 	utils.cleanDiv(workArea);
+
+	// Saves to browser history
+	utils.addToHistory("/play");
 
 	buildTournamentsPage(workArea);
 }
