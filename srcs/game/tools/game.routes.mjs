@@ -52,7 +52,7 @@ export default async function gameRoutes(fastify, opts) {
 		return reply.code(200).send({ ok: true });
 	});
 
-	fastify.post('/game/:id/boot', async (req, reply) => {
+	fastify.post('/game/:id/boot/enable', async (req, reply) => {
 		const { id } = req.params;
 		const row = await db.get('SELECT cli_booted FROM matches WHERE id = ?', [id]);
 
@@ -61,6 +61,22 @@ export default async function gameRoutes(fastify, opts) {
 
 		try {
 			await db.run('UPDATE matches SET cli_booted = 1 WHERE id = ?', [id]);
+
+			return reply.code(200).send({ ok: true });
+		} catch (err) {
+			throw fastify.httpErrors.internalServerError('Failed to update cli_booted status: ' + err.message);
+		}
+	});
+
+	fastify.post('/game/:id/boot/disable', async (req, reply) => {
+		const { id } = req.params;
+		const row = await db.get('SELECT cli_booted FROM matches WHERE id = ?', [id]);
+
+		if (!row)
+			throw fastify.httpErrors.notFound('Match not found');
+
+		try {
+			await db.run('UPDATE matches SET cli_booted = 0 WHERE id = ?', [id]);
 
 			return reply.code(200).send({ ok: true });
 		} catch (err) {

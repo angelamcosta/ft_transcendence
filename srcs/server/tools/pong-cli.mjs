@@ -38,13 +38,16 @@ async function main() {
 		await post(`/game/create/${matchId}`);
 		await post(`/game/${matchId}/init`);
 		await post(`/game/${matchId}/start`);
-		await post(`/game/${matchId}/boot`);
-		
+		await post(`/game/${matchId}/boot/enable`);
+
 		const ws = new WebSocket(`${HOST.replace(/^https/, 'wss')}/api/game/wss?matchId=${matchId}`, {
 			agent,
 			headers: { Cookie: cookieHeader },
 			rejectUnauthorized: false
 		});
+
+		const VICTORY_SCORE = 5;
+		let finished = false;
 
 		ws.on('open', () => {
 		});
@@ -54,8 +57,11 @@ async function main() {
 			if (msg.type === 'state') {
 				const { ball, scores } = msg.data;
 				process.stdout.write(`\rScores: ${scores[0]} – ${scores[1]} | Ball @ (${ball.x.toFixed(0)},${ball.y.toFixed(0)})`);
-				if ((scores[0] || scores[1]) === 5) {
-					process.stdout.write('\nGame finished! Exiting...\n');
+				const maxScore = Math.max(scores[0], scores[1]);
+				if(!finished && maxScore >= VICTORY_SCORE) {
+					finished = true;
+					console.log('\nGame finished! Exiting...');
+					ws.close();
 					process.exit(0);
 				}
 			} else if (msg.type === 'error') {
@@ -74,7 +80,7 @@ async function main() {
 					{},
 					{ httpsAgent: agent, headers: { Cookie: cookie } }
 				);
-			} catch (e) {}
+			} catch (e) { }
 		}
 
 		const repeat = { 0: null, 1: null };
@@ -106,10 +112,10 @@ async function main() {
 			}
 			let player, action;
 			switch (key.name) {
-				case 'up': player = 0; action = 'up'; break;
-				case 'down': player = 0; action = 'down'; break;
-				case 'w': player = 1; action = 'up'; break;
-				case 's': player = 1; action = 'down'; break;
+				case 'w': player = 0; action = 'up'; break;
+				case 's': player = 0; action = 'down'; break;
+				case 'up': player = 1; action = 'up'; break;
+				case 'down': player = 1; action = 'down'; break;
 				default:
 					return;
 			}

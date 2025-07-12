@@ -229,7 +229,22 @@ export default async function matchRoutes(fastify) {
 				fastify.log.error(`Database error: ${err.message}`);
 				throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
 			}
-		})
+	})
+
+	fastify.get('/tournaments/wins/:id', async (req, res) => {
+		try {
+			const paramId = Number(req.params.id);
+
+			const rows = await db.all(`SELECT id FROM matches WHERE status = 'finished' AND round = 2 AND winner_id = ?`, paramId);
+
+			return res.code(200).send({ wins: rows })
+		} catch (err) {
+			if (err.statusCode && err.statusCode !== 500)
+				throw err;
+			fastify.log.error(`Database error: ${err.message}`);
+			throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
+		}
+	});
 
 	// ! matchmaking
 	fastify.delete('/matchmaking/leave', async (req, res) => {

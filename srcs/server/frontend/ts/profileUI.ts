@@ -216,12 +216,14 @@ export function buildAvatarSection(
 }
 
 export function buildStatsSection(
+	t_wins: number,
 	wins: number,
 	losses: number,
 	winRate: number
 ) {
 	const div = document.createElement('div');
 	div.innerHTML = `
+	<strong>Tournament Wins:<strong/> ${t_wins} &nbsp;&nbsp;
     <strong>Wins:</strong> ${wins} &nbsp;&nbsp;
     <strong>Losses:</strong> ${losses} &nbsp;&nbsp;
     <strong>Win Rate:</strong> ${winRate}%`;
