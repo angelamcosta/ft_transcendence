@@ -310,6 +310,7 @@ export function openDirectMessage(
 	}
 	directMessagePage(
 		document.getElementById('appArea') as HTMLDivElement,
+		document.getElementById('headArea') as HTMLDivElement,
 		display_name, targetName,
 		localStorage.getItem('userId')!, targetId
 	);

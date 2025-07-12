@@ -8,6 +8,7 @@ export async function signUp(e: Event) {
 	e.preventDefault();
 
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
@@ -42,7 +43,7 @@ export async function signUp(e: Event) {
 			return;
 		}
 		const message = data?.success || 'Register success';
-		displayPage.signIn(workArea, message);
+		displayPage.signIn(workArea, menuArea, message);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Register failed! Catched on Try');
@@ -109,13 +110,10 @@ export async function signIn(e: Event) {
 		}
 
 		if (user2FA === 'enabled') {
-			displayPage.verify2FA(workArea);
+			displayPage.verify2FA(workArea, menuArea);
 		}
 		else {
-			initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
-			getUnreadMessages();
-			utils.initAppNav(menuArea, workArea);
-			buttonHandlers.initThemeToggle();
+			displayPage.dashboard(workArea, menuArea);
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);
@@ -179,6 +177,7 @@ export async function resetPassword(e: Event) {
 	e.preventDefault();
 
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
 	const newPassword = formData.get('newPassword');
@@ -210,7 +209,7 @@ export async function resetPassword(e: Event) {
 			return;
 		}
 		const message = data?.success || 'Success on password reset';
-		displayPage.signIn(workArea, message);
+		displayPage.signIn(workArea, menuArea, message);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed reseting password');
@@ -250,10 +249,7 @@ export async function verify2FA(e: Event) {
 			}
 			return;
 		}
-		initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
-		getUnreadMessages();
-		utils.initAppNav(menuArea, workArea);
-		buttonHandlers.initThemeToggle();
+		displayPage.dashboard(workArea, menuArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Login failed! Catched on Try');
@@ -298,7 +294,6 @@ export async function changePassword(e: Event) {
 
 		messageDiv.textContent = '';
 		utils.showModal('Password changed successfully!');
-		utils.initAppNav(menuArea, workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed changing password');
@@ -352,8 +347,6 @@ export async function changeDisplayName(e: Event) {
 		window.dispatchEvent(new CustomEvent('global-presence-updated'));
 		messageDiv.textContent = '';
 		utils.showModal('Display name changed successfully!');
-		utils.initAppNav(menuArea, workArea);
-		buttonHandlers.initThemeToggle();
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed changing display name');

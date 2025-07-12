@@ -18,13 +18,21 @@ export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivEl
 	// Saves to browser history
 	utils.addToHistory("/");
 
+	// Add header menu
+	utils.initAppHeader(menuArea, workArea);
+
+	const container = document.createElement('div');
+	container.id = 'landingPageContainer';
+	container.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
+
 	// Create <h1>
 	const heading = document.createElement("h1");
 	heading.textContent = "Welcome to our Game Hub!";
 	heading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
 	// Append to div
-	workArea?.appendChild(heading);
+	container.appendChild(heading);
+	workArea?.appendChild(container);
 }
 
 export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
@@ -32,6 +40,9 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 
 	// Saves to browser history
 	utils.addToHistory("/register");
+
+	// Add header menu
+	utils.initAppHeader(menuArea, workArea);
 
 	const form = document.createElement('form');
 	form.id = 'newAccount';
@@ -127,11 +138,14 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	cancelButton.addEventListener("click", () => landingPage(workArea, menuArea));
 }
 
-export function signIn(workArea: HTMLDivElement | null, successMessage?: string, isError?: boolean) {
+export function signIn(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, successMessage?: string, isError?: boolean) {
 	utils.cleanDiv(workArea);
 
 	// Saves to browser history
 	utils.addToHistory("/login");
+
+	// Add header menu
+	utils.initAppHeader(menuArea, workArea);
 
 	const form = document.createElement('form');
 	form.id = 'login';
@@ -253,10 +267,13 @@ export function sendLink(workArea: HTMLDivElement | null) {
 	});
 }
 
-export function resetPassword(workArea: HTMLDivElement | null) {
+export function resetPassword(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 
 	// Saves to browser history
 	utils.addToHistory("/reset-password");
+
+	// Add header menu
+	utils.initAppHeader(menuArea, workArea);
 
 	const passwordForm = document.createElement('form');
 	passwordForm.id = 'changePassword';
@@ -375,11 +392,14 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 	});
 }
 
-export function verify2FA(workArea: HTMLDivElement | null) {
+export function verify2FA(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
 	// Saves to browser history
 	utils.addToHistory("/verify-2fa");
+
+	// Add header menu
+	utils.initAppHeader(menuArea, workArea);
 
 	const form = document.createElement('form');
 	form.id = 'verify';
@@ -417,18 +437,57 @@ export function verify2FA(workArea: HTMLDivElement | null) {
 	form.addEventListener('submit', formHandlers.verify2FA);
 }
 
-export function dashboard(workArea: HTMLDivElement | null) {
+export function dashboard(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
 	// Saves to browser history
 	utils.addToHistory("/");
+
+	// Add nav menu
+	utils.initAppNav(menuArea, workArea);
+
+	const container = document.createElement('div');
+	container.id = 'dashboardContainer';
+	container.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
 
 	// Create <h1>
 	const heading = document.createElement("h1");
 	heading.textContent = "Welcome to your dashboard!";
 	heading.classList.add("text-3xl", "font-bold", "text-blue-600");
 
-	workArea?.appendChild(heading);
+
+	container.appendChild(heading);
+	workArea?.appendChild(container);
+}
+
+export async function notFound(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
+	utils.cleanDiv(workArea);
+
+	// Add nav or header menu
+	const isSgned = await utils.isSignedIn();
+	if (isSgned)
+		utils.initAppNav(menuArea, workArea);
+	else
+		utils.initAppHeader(menuArea, workArea);
+	
+	const container = document.createElement('div');
+	container.id = 'notFoundContainer';
+	container.classList.add('w-100', 'flex', 'flex-col', 'items-center', 'mx-auto', 'my-4', 'p-4', 'bg-white', 'rounded-xl', 'shadow');
+
+
+	// Create <h1>
+	const heading = document.createElement("h1");
+	heading.textContent = "404";
+	heading.classList.add("text-6xl", "font-bold", "text-blue-600");
+
+	const phrase = document.createElement("p");
+	phrase.textContent = "Page not found";
+	phrase.classList.add("text-2xl", "font-bold", "text-blue-600");
+
+	container.appendChild(heading);
+	container.appendChild(phrase);
+
+	workArea?.appendChild(container);
 }
 
 export function changePassword(workArea: HTMLDivElement | null) {
@@ -732,18 +791,21 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 	twoFactorCheckbox.addEventListener("change", (e: Event) => buttonHandlers.set2FA(e, twoFactorCheckbox, labelSpan, errorMessage));
 }
 
-export function accountSettings(workArea: HTMLDivElement | null) {
+export function accountSettings(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
 	// Saves to browser history
 	utils.addToHistory("/settings");
+
+	// Add nav menu
+	utils.initAppNav(menuArea, workArea);
 
 	changePassword(workArea);
 	changeDisplayName(workArea);
 	manageTwoFactorAuth(workArea);
 }
 
-export function menu(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
+export function menu(menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(menuArea);
 
 	const nav = document.createElement("nav");
@@ -852,7 +914,7 @@ export function header(headerArea: HTMLDivElement | null) {
 	logo.textContent = "Our game hub";
 
 	const menu = document.createElement("div");
-	menu.id = "menu";
+	menu.id = "header";
 	menu.className = "hidden md:flex space-x-4";
 
 	const signInButton = document.createElement("button");
@@ -886,7 +948,7 @@ export function header(headerArea: HTMLDivElement | null) {
 	headerArea?.appendChild(nav);
 }
 
-export async function chatPage(workArea: HTMLDivElement | null, userId: string, display_name: string) {
+export async function chatPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, userId: string, display_name: string) {
 	setActiveDM(null);
 
 	if (!workArea)
@@ -894,6 +956,9 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 
 	// Saves to browser history
 	utils.addToHistory("/chat-room");
+
+	// Add nav menu
+	utils.initAppNav(menuArea, workArea);
 
 	utils.cleanDiv(workArea);
 
@@ -923,11 +988,12 @@ export async function chatPage(workArea: HTMLDivElement | null, userId: string, 
 
 export async function directMessagePage(
 	workArea: HTMLDivElement | null,
+	menuArea: HTMLDivElement | null,
 	displayName: string, targetName: string,
 	userId: string, targetId: number
 ) {
 
-	if (!workArea) return;
+	if (!workArea || !menuArea) return;
 	utils.cleanDiv(workArea);
 
 	const {
@@ -942,6 +1008,7 @@ export async function directMessagePage(
 	await setupDmChatControls(
 		targetId,
 		workArea,
+		menuArea,
 		wrapper.querySelector('.card') as HTMLDivElement,
 		chatContainer,
 		messageInput,
@@ -967,12 +1034,15 @@ export async function directMessagePage(
 	})
 }
 
-export async function profile(workArea: HTMLDivElement | null, targetId: string | null) {
+export async function profile(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, targetId: string | null) {
 	if (!workArea)
 		return;
 
 	// Saves to browser history
 	utils.addToHistory("/profile");
+
+	// Add nav menu
+	utils.initAppNav(menuArea, workArea);
 
 	// Saves last user viewed
 	if (targetId)
@@ -981,37 +1051,46 @@ export async function profile(workArea: HTMLDivElement | null, targetId: string 
 	buildProfile(workArea, targetId);
 }
 
-export async function friendsList(workArea: HTMLDivElement | null) {
-	if (!workArea) return
+export async function friendsList(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
+	if (!workArea || !menuArea) return
 	utils.cleanDiv(workArea)
 
 	// Saves to browser history
 	utils.addToHistory("/friends");
 
-	const { container } = await buildFriendsList(workArea);
+	// Add nav menu
+	utils.initAppNav(menuArea, workArea);
+
+	const { container } = await buildFriendsList(workArea, menuArea);
 
 	workArea.appendChild(container)
 }
 
-export async function tournamentsPage(workArea: HTMLDivElement | null) {
-	if (!workArea)
-		return;
-	utils.cleanDiv(workArea);
-
-	buildTournamentsPage(workArea);
-}
-
-// TODO : - game won't present errors, but won't start
-export async function gamePage(workArea: HTMLDivElement | null, matchId?: string) {
-	if (!workArea)
+export async function tournamentsPage(workArea: HTMLDivElement | null,  menuArea: HTMLDivElement | null) {
+	if (!workArea || !menuArea)
 		return;
 	utils.cleanDiv(workArea);
 
 	// Saves to browser history
 	utils.addToHistory("/play");
 
+	buildTournamentsPage(workArea, menuArea);
+}
+
+// TODO : - game won't present errors, but won't start
+export async function gamePage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, matchId?: string) {
+	if (!workArea || !menuArea)
+		return;
+	utils.cleanDiv(workArea);
+
+	// Saves to browser history
+	utils.addToHistory("/play");
+
+	// Add nav menu
+	utils.initAppNav(menuArea, workArea);
+
 	const {canvas, namesRow, player1_name, player2_name, player1_id, player2_id, countdownDiv } = await pongPvpMatchUI(matchId!);
 
 	workArea.append(canvas, namesRow, countdownDiv);
-	initPong(workArea, canvas, player1_name, player2_name, player1_id, player2_id, countdownDiv);
+	initPong(workArea, menuArea, canvas, player1_name, player2_name, player1_id, player2_id, countdownDiv);
 }

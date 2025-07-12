@@ -2,6 +2,7 @@ import { profile } from "./displayPage.js";
 
 export async function postResult(
 	workArea: HTMLDivElement,
+	menukArea: HTMLDivElement,
 	matchId: string,
 	s1: number, s2: number,
 	p1: string, p2: string,
@@ -22,5 +23,5 @@ export async function postResult(
 
 	if (!res.ok)
 		console.error('Failed to post match result');
-	profile(workArea, localStorage.getItem('userId'!));
+	profile(workArea, menukArea, localStorage.getItem('userId'!));
 }

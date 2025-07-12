@@ -1,5 +1,7 @@
 import * as displayPage from './displayPage.js'
 import * as buttonHandlers from './buttonHandlers.js'
+import { getUnreadMessages } from './globalChatManager.js';
+import { initGlobalChat } from './globalChatManager.js';
 
 export interface User {
 	id: number;
@@ -26,15 +28,58 @@ export interface TournamentMatch {
 	round: number;
 }
 
+export async function isSignedIn() {
+	try {
+		const response = await fetch('/verify', {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+			},
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	} catch (error) {
+		console.error('Error sending form data:', error);
+		return false;
+	}
+}
+
 export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
-	displayPage.menu(menuArea, workArea);
+	const menu = menuArea?.querySelector('#menu') as HTMLDivElement | null;
+	if (menu)
+		return;
+
+	displayPage.menu(menuArea);
+	getUnreadMessages();
+	const userId = localStorage.getItem('userId')!;
+	const displayName = localStorage.getItem('displayName')!;
+	initGlobalChat(userId, displayName);
 	document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
-	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
-	document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, localStorage.getItem('userId')!, localStorage.getItem('displayName')!));
-	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.tournamentsPageHandler(workArea));
-	document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea));
-	document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea));
+	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea, menuArea));
+	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea, menuArea));
+	document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, menuArea, userId, displayName));
+	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.tournamentsPageHandler(workArea, menuArea));
+	document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea, menuArea));
+	document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea, menuArea));
+	buttonHandlers.initThemeToggle();
+}
+
+export function initAppHeader(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
+	const header = menuArea?.querySelector('#header') as HTMLDivElement | null;
+	if (header)
+		return;
+
+	displayPage.header(menuArea);
+	buttonHandlers.initThemeToggle();
+	document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+	document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea, menuArea));
+	document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 }
 
 export const eyeIcon = `

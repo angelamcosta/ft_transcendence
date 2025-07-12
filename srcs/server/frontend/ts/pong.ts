@@ -22,7 +22,7 @@ export function stopGame() {
 (window as any).stopGame = stopGame;
 
 export async function initPong(
-	workArea: HTMLDivElement, canvas: HTMLCanvasElement,
+	workArea: HTMLDivElement, menukArea: HTMLDivElement, canvas: HTMLCanvasElement,
 	player_one?: string, player_two?: string,
 	player1_id?: string, player2_id?: string,
 	countdownDiv?: HTMLDivElement
@@ -289,7 +289,7 @@ export async function initPong(
 								countdownDiv.innerText = `Redirecting in ${countdown}…`;
 							if (countdown <= 0) {
 								clearInterval(timer);
-								postResult(workArea, matchId, s1, s2, player1_id, player2_id)
+								postResult(workArea, menukArea, matchId, s1, s2, player1_id, player2_id)
 							}
 						}, 1000);
 					}
