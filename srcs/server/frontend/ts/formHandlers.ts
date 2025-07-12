@@ -114,6 +114,7 @@ export async function signIn(e: Event) {
 		else {
 			initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 			getUnreadMessages();
+			displayPage.dashboard(workArea);
 			utils.initAppNav(menuArea, workArea);
 			buttonHandlers.initThemeToggle();
 		}
@@ -163,10 +164,10 @@ export async function sendLink(e: Event) {
 		if (!successDiv) {
 			successDiv = document.createElement('div');
 			successDiv.id = 'successMessage';
-			successDiv.className = 'text-green-600 mt-4 text-sm text-center';
 			loginForm?.append(successDiv);
 		}
 		resetButton?.classList.add("hidden");
+		successDiv.className = 'text-green-600 mt-4 text-sm text-center';
 		successDiv.textContent = data?.success || 'If an account with that email exists, we’ve sent a reset link.';
 		workArea?.removeChild(form);
 	} catch (error) {
@@ -252,6 +253,7 @@ export async function verify2FA(e: Event) {
 		}
 		initGlobalChat(localStorage.getItem('userId')!, localStorage.getItem('displayName')!);
 		getUnreadMessages();
+		displayPage.dashboard(workArea);
 		utils.initAppNav(menuArea, workArea);
 		buttonHandlers.initThemeToggle();
 	} catch (error) {
@@ -298,6 +300,7 @@ export async function changePassword(e: Event) {
 
 		messageDiv.textContent = '';
 		utils.showModal('Password changed successfully!');
+		displayPage.dashboard(workArea);
 		utils.initAppNav(menuArea, workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
@@ -352,6 +355,7 @@ export async function changeDisplayName(e: Event) {
 		window.dispatchEvent(new CustomEvent('global-presence-updated'));
 		messageDiv.textContent = '';
 		utils.showModal('Display name changed successfully!');
+		displayPage.dashboard(workArea);
 		utils.initAppNav(menuArea, workArea);
 		buttonHandlers.initThemeToggle();
 	} catch (error) {

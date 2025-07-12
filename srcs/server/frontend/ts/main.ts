@@ -15,35 +15,25 @@ async function isSignedIn() {
 		});
 
 		if (!response.ok) {
-			displayPage.header(menuArea);
-			displayPage.landingPage(workArea, menuArea);
-			buttonHandlers.initThemeToggle();
-			document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-			document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-			document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			return false;
 		}
 		else {
-			getUnreadMessages();
-			const userId = localStorage.getItem('userId')!;
-			const displayName = localStorage.getItem('displayName')!;
-			initGlobalChat(userId, displayName);
-			initAppNav(menuArea, workArea);
-			buttonHandlers.initThemeToggle();
+			return true;
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);
-		alert('Verify failed! Catched on Try');
-		displayPage.header(menuArea);
-		displayPage.landingPage(workArea, menuArea);
-		buttonHandlers.initThemeToggle();
-		document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-		document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
-		document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+		return false;
 	}
 }
 
 async function resetPassword(token: string | null) {
 	if (!token) {
+		displayPage.header(menuArea);
+		displayPage.signIn(workArea, 'Invalid token', true);
+		buttonHandlers.initThemeToggle();
+		document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+		document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+		document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 		return;
 	}
 
@@ -91,6 +81,194 @@ async function resetPassword(token: string | null) {
 	}
 }
 
+async function render(path: string | null) {
+	if (!path) {
+		alert('No path to render!');
+		throw new Error('No path to render!');
+	}
+
+	const isSgned = await isSignedIn();
+	switch (path) {
+		case '/reset-password':
+			if (isSgned) {
+				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+			}
+			else {
+				const params = new URLSearchParams(window.location.search);
+				const token = params.get('token');
+				resetPassword(token);
+			}
+			break;
+		case '/register':
+			if (isSgned) {
+				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+			}
+			else {
+				displayPage.header(menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+				displayPage.signUp(workArea, menuArea);
+			}
+			break;
+		case '/login':
+			if (isSgned) {
+				history.replaceState({ path: "/dashboard" }, "", "/dashboard");
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+			}
+			else {
+				displayPage.header(menuArea);
+				displayPage.signIn(workArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+			break;
+		case '/settings':
+			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+				displayPage.accountSettings(workArea);
+			}
+			else {
+				history.replaceState({ path: "/" }, "", "/");
+				displayPage.header(menuArea);
+				displayPage.landingPage(workArea, menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+			break;
+		case '/profile':
+			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+				const targetId = localStorage.getItem('lastTargetId')!;
+				displayPage.profile(workArea, targetId);
+			}
+			else {
+				history.replaceState({ path: "/" }, "", "/");
+				displayPage.header(menuArea);
+				displayPage.landingPage(workArea, menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+			break;
+		case '/friends':
+			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+				displayPage.friendsList(workArea);
+			}
+			else {
+				history.replaceState({ path: "/" }, "", "/");
+				displayPage.header(menuArea);
+				displayPage.landingPage(workArea, menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+			break;
+		case '/chat-room':
+			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+				displayPage.chatPage(workArea, userId, displayName);
+			}
+			else {
+				history.replaceState({ path: "/" }, "", "/");
+				displayPage.header(menuArea);
+				displayPage.landingPage(workArea, menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+			break;
+		case '/play':
+			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+				displayPage.gamePage(workArea);
+			}
+			else {
+				history.replaceState({ path: "/" }, "", "/");
+				displayPage.header(menuArea);
+				displayPage.landingPage(workArea, menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+			break;
+
+		default:
+			if (isSgned) {
+				getUnreadMessages();
+				const userId = localStorage.getItem('userId')!;
+				const displayName = localStorage.getItem('displayName')!;
+				initGlobalChat(userId, displayName);
+				displayPage.dashboard(workArea);
+				initAppNav(menuArea, workArea);
+				buttonHandlers.initThemeToggle();
+			}
+			else {
+				displayPage.header(menuArea);
+				displayPage.landingPage(workArea, menuArea);
+				buttonHandlers.initThemeToggle();
+				document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
+				document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
+				document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
+			}
+  	}
+}
+
 const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
 const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 
@@ -104,16 +282,10 @@ if (!menuArea) {
 	throw new Error('No menu div!');
 }
 
+window.addEventListener("popstate", (e) => {
+  const path = e.state?.path || location.pathname;
+  render(path);
+});
+
 const path = window.location.pathname;
-switch (path) {
-	case '/':
-    	isSignedIn();
-    	break;
-    case '/reset-password':
-		const params = new URLSearchParams(window.location.search);
-  		const token = params.get('token');
-    	resetPassword(token);
-    	break;
-	default:
-    	isSignedIn();
-  }
+render(path);

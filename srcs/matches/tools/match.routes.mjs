@@ -5,7 +5,6 @@ const GAME_URL = process.env.GAME_URL;
 if (!GAME_URL) throw new Error('⛔️ Missing env GAME_URL');
 
 export default async function matchRoutes(fastify) {
-	//fastify.addHook('preHandler', validateEmptyBody);
 
 	fastify.get('/matches', async (req, res) => {
 		try {

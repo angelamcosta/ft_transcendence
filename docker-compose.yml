@@ -97,6 +97,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - sqlite:/db
+      - public:/data/public
     networks:
       - transcendence
 

@@ -116,7 +116,6 @@ export async function generatePlayerBracket(tournamentId, fastify) {
 	}
 }
 
-
 async function sendSemisNoti(semi1, semi2, tourName, fastify) {
 	const res = await fetch(`${SERVER_URL}/notify/semis`, {
 		dispatcher: tlsAgent,
