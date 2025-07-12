@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import axios from 'axios';
 import WebSocket from 'ws';
 import https from 'https';

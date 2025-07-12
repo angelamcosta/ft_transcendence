@@ -144,7 +144,6 @@ export async function initPong(
 				const msg = JSON.parse(dataStr);
 				if (msg.type === 'state') {
 					state = msg.data as GameState;
-					// IA simples no cliente
 					if (vsComputer && state) {
 						const targetY = state.ball.y - HALF_PADDLE;
 						let action: '' | 'up' | 'down' = '';
@@ -183,11 +182,9 @@ export async function initPong(
 		if (!gameListenersAdded) {
 			window.addEventListener('keydown', e => {
 				if (vsComputer) {
-					// vs CPU: usado apenas ↑ ↓ para o Player 1 (índice 0)
 					if (e.code === 'ArrowUp') sendControl(0, 'up');
 					if (e.code === 'ArrowDown') sendControl(0, 'down');
 				} else {
-					// PvP: W/S para Player 1 (índice 0); ↑/↓ para Player 2 (índice 1)
 					if (e.code === 'KeyW') sendControl(0, 'up');
 					if (e.code === 'KeyS') sendControl(0, 'down');
 					if (e.code === 'ArrowUp') sendControl(1, 'up');

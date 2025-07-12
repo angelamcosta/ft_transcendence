@@ -14,13 +14,9 @@ import { pongPvpMatchUI } from './pongUI.js';
 
 export function landingPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
-
-	// Create <h1>
 	const heading = document.createElement("h1");
 	heading.textContent = "Welcome to our Game Hub!";
 	heading.classList.add("text-3xl", "font-bold", "text-blue-600");
-
-	// Append to div
 	workArea?.appendChild(heading);
 }
 
@@ -30,8 +26,6 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	const form = document.createElement('form');
 	form.id = 'newAccount';
 	form.classList.add('flex', 'flex-col', 'items-center');
-
-	// Create an email input
 	const emailInput = document.createElement('input');
 	emailInput.type = 'email';
 	emailInput.id = "emailInput";
@@ -40,8 +34,6 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	emailInput.willValidate;
 	emailInput.required = true;
 	emailInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create an email input
 	const nameInput = document.createElement('input');
 	nameInput.type = 'text';
 	nameInput.id = "nameInput";
@@ -52,8 +44,6 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 
 	const passwordContainer = document.createElement('div');
 	passwordContainer.classList.add('relative', 'w-60', 'm-4');
-
-	// Create an email input
 	const passwordInput = document.createElement('input');
 	passwordInput.type = 'password';
 	passwordInput.id = "passwordInput";
@@ -62,8 +52,6 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	passwordInput.minLength = 6;
 	passwordInput.required = true;
 	passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create a toggle button
 	const toggleButton = document.createElement('button');
 	toggleButton.type = 'button';
 	toggleButton.title = "Show password";
@@ -72,21 +60,15 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	toggleButton.style.background = 'transparent';
 	passwordContainer.appendChild(passwordInput);
 	passwordContainer.appendChild(toggleButton);
-
-	// Create a submit button
 	const submitButton = document.createElement('button');
 	submitButton.type = 'submit';
 	submitButton.textContent = 'Create account';
 	submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
-
-	// Create a reset button button
 	const resetButton = document.createElement('button');
 	resetButton.id = 'resetButton';
 	resetButton.type = 'button';
 	resetButton.textContent = 'Reset';
 	resetButton.classList.add('px-4', 'py-2', 'bg-gray-500', 'text-white', 'rounded', 'hover:bg-gray-700', 'mr-auto');
-
-	// Create a reset button button
 	const cancelButton = document.createElement('button');
 	cancelButton.id = 'cancelButton';
 	cancelButton.type = 'button';
@@ -97,8 +79,6 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	buttonContainer.classList.add('flex', 'w-60', 'm-4');
 	buttonContainer.appendChild(resetButton);
 	buttonContainer.appendChild(cancelButton);
-
-	// Append elements to form
 	form.appendChild(emailInput);
 	form.appendChild(document.createElement('br'));
 	form.appendChild(nameInput);
@@ -108,11 +88,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	form.appendChild(submitButton);
 	form.appendChild(document.createElement('br'));
 	form.appendChild(buttonContainer);
-
-	// Append form and login button to the body
 	workArea?.appendChild(form);
-
-	// Handle form submission
 	form.addEventListener('submit', formHandlers.signUp);
 	toggleButton.addEventListener('click', (e: MouseEvent) => buttonHandlers.showPassword(e, passwordInput, toggleButton));
 	resetButton.addEventListener("click", () => {
@@ -148,8 +124,6 @@ export function signIn(workArea: HTMLDivElement | null, successMessage?: string,
 	passwordInput.minLength = 6;
 	passwordInput.required = true;
 	passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create a toggle button
 	const toggleButton = document.createElement('button');
 	toggleButton.type = 'button';
 	toggleButton.title = "Show password";
@@ -204,7 +178,6 @@ export function sendLink(workArea: HTMLDivElement | null) {
 	const resetForm = document.createElement('form');
 	resetForm.id = 'resetPassword';
 	resetForm.classList.add('flex', 'flex-col', 'items-center', 'w-60', 'mx-auto');
-    // Creates a heading
 	const resetHeading = document.createElement("p");
 	resetHeading.textContent = "A link will be sent to reset your password.";
 	resetHeading.classList.add("text-1xl", "font-bold", "text-blue-600");
@@ -249,8 +222,6 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 
 	const newPasswordContainer = document.createElement('div');
 	newPasswordContainer.classList.add('relative', 'w-60', 'm-4');
-
-	// Create an password input
 	const newPasswordInput = document.createElement('input');
 	newPasswordInput.type = 'password';
 	newPasswordInput.id = "newPasswordInput";
@@ -259,8 +230,6 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 	newPasswordInput.minLength = 6;
 	newPasswordInput.required = true;
 	newPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create a toggle button
 	const newToggleButton = document.createElement('button');
 	newToggleButton.type = 'button';
 	newToggleButton.id = 'newToggleButton';
@@ -273,8 +242,6 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 
 	const confirmPasswordContainer = document.createElement('div');
 	confirmPasswordContainer.classList.add('relative', 'w-60', 'm-4');
-
-	// Create an password input
 	const confirmPasswordInput = document.createElement('input');
 	confirmPasswordInput.type = 'password';
 	confirmPasswordInput.id = "confirmPasswordInput";
@@ -283,8 +250,6 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 	confirmPasswordInput.minLength = 6;
 	confirmPasswordInput.required = true;
 	confirmPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create a toggle button
 	const confirmToggleButton = document.createElement('button');
 	confirmToggleButton.type = 'button';
 	confirmToggleButton.id = 'confirmToggleButton';
@@ -294,14 +259,10 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 	confirmToggleButton.style.background = 'transparent';
 	confirmPasswordContainer.appendChild(confirmPasswordInput);
 	confirmPasswordContainer.appendChild(confirmToggleButton);
-
-	// Create a submit button
 	const passwordSubmitButton = document.createElement('button');
 	passwordSubmitButton.type = 'submit';
 	passwordSubmitButton.textContent = 'Change password';
 	passwordSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
-
-	// Create a reset button button
 	const passwordResetButton = document.createElement('button');
 	passwordResetButton.id = 'passwordResetButton';
 	passwordResetButton.type = 'button';
@@ -312,27 +273,19 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 	passwordButtonContainer.classList.add('flex', 'w-60', 'm-4');
 	passwordButtonContainer.appendChild(passwordSubmitButton);
 	passwordButtonContainer.appendChild(passwordResetButton);
-
-	// Creates a heading
 	const passwordHeading = document.createElement("h1");
 	passwordHeading.textContent = "Change password";
 	passwordHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
-
-	// Create an error message span
 	const newPasswordErrorMessage = document.createElement("span");
 	newPasswordErrorMessage.id = "newPasswordError";
 	newPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	newPasswordErrorMessage.style.minWidth = "1rem";
 	newPasswordErrorMessage.textContent = "";
-
-	// Create an error message span
 	const confirmPasswordErrorMessage = document.createElement("span");
 	confirmPasswordErrorMessage.id = "confirmPasswordError";
 	confirmPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	confirmPasswordErrorMessage.style.minWidth = "1rem";
 	confirmPasswordErrorMessage.textContent = "";
-
-	// Create an error message span
 	const passwordButtonErrorMessage = document.createElement("span");
 	passwordButtonErrorMessage.id = "passwordButtonError";
 	passwordButtonErrorMessage.className = "text-green-500 text-sm ml-2";
@@ -348,8 +301,6 @@ export function resetPassword(workArea: HTMLDivElement | null) {
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(passwordButtonContainer);
 	passwordForm.appendChild(passwordButtonErrorMessage);
-
-	// Append passwordForm and login button to the body
 	workArea?.appendChild(passwordForm);
 
 	passwordForm.addEventListener('submit', formHandlers.resetPassword);
@@ -380,8 +331,6 @@ export function verify2FA(workArea: HTMLDivElement | null) {
 	submitButton.type = 'submit';
 	submitButton.textContent = 'Verify code';
 	submitButton.classList.add('w-60', 'm-4', 'px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
-
-	// Create an error message span
 	const errorMessage = document.createElement("span");
 	errorMessage.id = "verifyError";
 	errorMessage.className = "text-red-500 text-sm ml-2";
@@ -400,8 +349,6 @@ export function verify2FA(workArea: HTMLDivElement | null) {
 
 export function dashboard(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
-
-	// Create <h1>
 	const heading = document.createElement("h1");
 	heading.textContent = "Welcome to your dashboard!";
 	heading.classList.add("text-3xl", "font-bold", "text-blue-600");
@@ -416,8 +363,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 
 	const oldPasswordContainer = document.createElement('div');
 	oldPasswordContainer.classList.add('relative', 'w-60', 'm-4');
-
-	// Create an password input
 	const oldPasswordInput = document.createElement('input');
 	oldPasswordInput.type = 'password';
 	oldPasswordInput.id = "oldPasswordInput";
@@ -426,8 +371,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	oldPasswordInput.minLength = 6;
 	oldPasswordInput.required = true;
 	oldPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create a toggle button
 	const oldToggleButton = document.createElement('button');
 	oldToggleButton.type = 'button';
 	oldToggleButton.id = 'oldToggleButton';
@@ -440,8 +383,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 
 	const newPasswordContainer = document.createElement('div');
 	newPasswordContainer.classList.add('relative', 'w-60', 'm-4');
-
-	// Create an password input
 	const newPasswordInput = document.createElement('input');
 	newPasswordInput.type = 'password';
 	newPasswordInput.id = "newPasswordInput";
@@ -450,8 +391,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	newPasswordInput.minLength = 6;
 	newPasswordInput.required = true;
 	newPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create a toggle button
 	const newToggleButton = document.createElement('button');
 	newToggleButton.type = 'button';
 	newToggleButton.id = 'newToggleButton';
@@ -464,8 +403,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 
 	const confirmPasswordContainer = document.createElement('div');
 	confirmPasswordContainer.classList.add('relative', 'w-60', 'm-4');
-
-	// Create an password input
 	const confirmPasswordInput = document.createElement('input');
 	confirmPasswordInput.type = 'password';
 	confirmPasswordInput.id = "confirmPasswordInput";
@@ -474,8 +411,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	confirmPasswordInput.minLength = 6;
 	confirmPasswordInput.required = true;
 	confirmPasswordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-
-	// Create a toggle button
 	const confirmToggleButton = document.createElement('button');
 	confirmToggleButton.type = 'button';
 	confirmToggleButton.id = 'confirmToggleButton';
@@ -485,14 +420,10 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	confirmToggleButton.style.background = 'transparent';
 	confirmPasswordContainer.appendChild(confirmPasswordInput);
 	confirmPasswordContainer.appendChild(confirmToggleButton);
-
-	// Create a submit button
 	const passwordSubmitButton = document.createElement('button');
 	passwordSubmitButton.type = 'submit';
 	passwordSubmitButton.textContent = 'Change password';
 	passwordSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
-
-	// Create a reset button button
 	const passwordResetButton = document.createElement('button');
 	passwordResetButton.id = 'passwordResetButton';
 	passwordResetButton.type = 'button';
@@ -503,34 +434,24 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	passwordButtonContainer.classList.add('flex', 'w-60', 'm-4');
 	passwordButtonContainer.appendChild(passwordSubmitButton);
 	passwordButtonContainer.appendChild(passwordResetButton);
-
-	// Creates a heading
 	const passwordHeading = document.createElement("h1");
 	passwordHeading.textContent = "Change password";
 	passwordHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
-
-	// Create an error message span
 	const oldPasswordErrorMessage = document.createElement("span");
 	oldPasswordErrorMessage.id = "oldPasswordError";
 	oldPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	oldPasswordErrorMessage.style.minWidth = "1rem";
 	oldPasswordErrorMessage.textContent = "";
-
-	// Create an error message span
 	const newPasswordErrorMessage = document.createElement("span");
 	newPasswordErrorMessage.id = "newPasswordError";
 	newPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	newPasswordErrorMessage.style.minWidth = "1rem";
 	newPasswordErrorMessage.textContent = "";
-
-	// Create an error message span
 	const confirmPasswordErrorMessage = document.createElement("span");
 	confirmPasswordErrorMessage.id = "confirmPasswordError";
 	confirmPasswordErrorMessage.className = "text-red-500 text-sm ml-2";
 	confirmPasswordErrorMessage.style.minWidth = "1rem";
 	confirmPasswordErrorMessage.textContent = "";
-
-	// Create an error message span
 	const passwordButtonErrorMessage = document.createElement("span");
 	passwordButtonErrorMessage.id = "passwordButtonError";
 	passwordButtonErrorMessage.className = "text-green-500 text-sm ml-2";
@@ -549,8 +470,6 @@ export function changePassword(workArea: HTMLDivElement | null) {
 	passwordForm.appendChild(document.createElement('br'));
 	passwordForm.appendChild(passwordButtonContainer);
 	passwordForm.appendChild(passwordButtonErrorMessage);
-
-	// Append passwordForm and login button to the body
 	workArea?.appendChild(passwordForm);
 
 	passwordForm.addEventListener('submit', formHandlers.changePassword);
@@ -569,8 +488,6 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 
 	const nameContainer = document.createElement('div');
 	nameContainer.classList.add('relative', 'w-60', 'm-4');
-
-	// Create an password input
 	const nameInput = document.createElement('input');
 	nameInput.type = 'text';
 	nameInput.id = "nameInput";
@@ -579,14 +496,10 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	nameInput.required = true;
 	nameInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
 	nameContainer.appendChild(nameInput);
-
-	// Create a submit button
 	const nameSubmitButton = document.createElement('button');
 	nameSubmitButton.type = 'submit';
 	nameSubmitButton.textContent = 'Change display name';
 	nameSubmitButton.classList.add('px-4', 'py-2', 'bg-blue-500', 'text-white', 'rounded', 'hover:bg-blue-700');
-
-	// Create a reset button button
 	const nameResetButton = document.createElement('button');
 	nameResetButton.id = 'nameResetButton';
 	nameResetButton.type = 'button';
@@ -597,20 +510,14 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	nameButtonContainer.classList.add('flex', 'w-60', 'm-4');
 	nameButtonContainer.appendChild(nameSubmitButton);
 	nameButtonContainer.appendChild(nameResetButton);
-
-	// Creates a heading
 	const nameHeading = document.createElement("h1");
 	nameHeading.textContent = "Change display name";
 	nameHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
-
-	// Create an error message span
 	const nameErrorMessage = document.createElement("span");
 	nameErrorMessage.id = "nameError";
 	nameErrorMessage.className = "text-red-500 text-sm ml-2";
 	nameErrorMessage.style.minWidth = "1rem";
 	nameErrorMessage.textContent = "";
-
-	// Create an error message span
 	const nameButtonErrorMessage = document.createElement("span");
 	nameButtonErrorMessage.id = "nameButtonError";
 	nameButtonErrorMessage.className = "text-green-500 text-sm ml-2";
@@ -623,8 +530,6 @@ export function changeDisplayName(workArea: HTMLDivElement | null) {
 	nameForm.appendChild(document.createElement('br'));
 	nameForm.appendChild(nameButtonContainer);
 	nameForm.appendChild(nameButtonErrorMessage);
-
-	// Append nameForm and login button to the body
 	workArea?.appendChild(nameForm);
 
 	nameForm.addEventListener('submit', formHandlers.changeDisplayName);
@@ -642,32 +547,20 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 
 	const twoFactorContainer = document.createElement('div');
 	twoFactorContainer.classList.add('flex', 'items-center', 'gap-2', 'relative', 'w-60', 'm-4');
-
-	// Creates a heading
 	const twoFactorHeading = document.createElement("h1");
 	twoFactorHeading.textContent = "Manage Two Factor Authentication";
 	twoFactorHeading.classList.add("text-3xl", "font-bold", "text-blue-600");
-
-	// Create the label span
 	const labelSpan = document.createElement("span");
 	labelSpan.id = "toggle-label";
 	labelSpan.className = "text-sm font-medium text-gray-800";
-
-	// Create the label wrapper
 	const label = document.createElement("label");
 	label.className = "relative inline-flex items-center cursor-pointer";
-
-	// Create the checkbox input
 	const twoFactorCheckbox = document.createElement("input");
 	twoFactorCheckbox.type = "checkbox";
 	twoFactorCheckbox.id = "toggle";
 	twoFactorCheckbox.className = "sr-only peer";
-
-	// Create the track div
 	const track = document.createElement("div");
 	track.id = "twoFactorTrack";
-
-	// Create the knob div
 	const knob = document.createElement("div");
 	knob.id = "twoFactorKnob";
 
@@ -682,15 +575,11 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 		track.className = "w-14 h-8 bg-gray-500 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-500 rounded-full peer peer-checked:bg-blue-500 transition-colors duration-300";
 		knob.className = "absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 transform peer-checked:translate-x-6";
 	}
-
-	// Create an error message span
 	const errorMessage = document.createElement("span");
 	errorMessage.id = "twoFactorError";
 	errorMessage.className = "text-red-500 text-sm ml-2";
 	errorMessage.style.minWidth = "1rem";
 	errorMessage.textContent = "";
-
-	// Append elements appropriately
 	label.appendChild(twoFactorCheckbox);
 	label.appendChild(track);
 	label.appendChild(knob);
@@ -698,15 +587,9 @@ export function manageTwoFactorAuth(workArea: HTMLDivElement | null) {
 	twoFactorContainer.appendChild(labelSpan);
 	twoFactorContainer.appendChild(label);
 	twoFactorContainer.appendChild(errorMessage);
-
-	// Add to the body (or any other container)
 	twoFactorForm.appendChild(twoFactorHeading);
 	twoFactorForm.appendChild(twoFactorContainer);
-
-	// Append twoFactorForm and login button to the body
 	workArea?.appendChild(twoFactorForm);
-
-	// Add toggle behavior
 	twoFactorCheckbox.addEventListener("change", (e: Event) => buttonHandlers.set2FA(e, twoFactorCheckbox, labelSpan, errorMessage));
 }
 
@@ -960,8 +843,6 @@ export async function tournamentsPage(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 	buildTournamentsPage(workArea);
 }
-
-// TODO : - game won't present errors, but won't start
 export async function gamePage(workArea: HTMLDivElement | null, matchId?: string) {
 	if (!workArea)
 		return;
