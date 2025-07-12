@@ -13,7 +13,6 @@ export async function validateEmptyBody(res, rep) {
 export function attachWebSocket(server, games) {
 	const wss = new WebSocketServer({ server });
 	wss.on('connection', (ws, request) => {
-		console.log('🟢 Cliente conectado ao WebSocket do jogo');
 
 		const [, queryString = ''] = request.url.split('?');
 		const params = new URLSearchParams(queryString);
@@ -37,15 +36,12 @@ export function attachWebSocket(server, games) {
 		game.on('state', sendState);
 
 		ws.on('message', msg => {
-			console.log('📥 Mensagem recebida do proxy:', msg.toString());
-
 			let data;
 			try {
 				if (msg instanceof Buffer) data = JSON.parse(msg.toString());
 				else if (typeof msg === 'string') data = JSON.parse(msg);
 				else return;
 
-				console.log('Dados parseados:', data);
 			} catch (err) {
 				console.error('Erro ao parsear mensagem:', err);
 				return;

@@ -42,7 +42,6 @@ export async function sendLink(db, {email, protocol, host}, fastify) {
     try {
 		await db.run(`INSERT INTO reset_password (user_id, token, expire) VALUES (?, ?, ?)`, [user.id, token, expire])
 	} catch (dbError) {
-		console.log('Database error details:', dbError)
 		const error = new Error('Something went wrong. Please try again later.')
 		error.statusCode = 500
 		error.originalError = dbError
@@ -50,14 +49,12 @@ export async function sendLink(db, {email, protocol, host}, fastify) {
 	}
 
     const resetLink = `${protocol}://${host}/reset-password?token=${encodeURIComponent(token)}`;
-    // Delays the email send for security reasons
     sleep(500);
     const linkSent = await sendResetLink(email, resetLink)
     if (!linkSent) {
         try {
             await db.run('DELETE FROM reset_password WHERE token = ?', [token]);
 	    } catch (dbError) {
-		    console.log('Database error details:', dbError)
 		    const error = new Error('Something went wrong. Please try again later.')
 		    error.statusCode = 500
 		    error.originalError = dbError
@@ -89,7 +86,6 @@ export async function resetPassword(db, { token, newPassword, confirmPassword })
         try {
             await db.run('DELETE FROM reset_password WHERE token = ?', [token]);
 	    } catch (dbError) {
-		    console.log('Database error details:', dbError)
 		    const error = new Error('Something went wrong. Please try again later.')
 		    error.statusCode = 500
 		    error.originalError = dbError

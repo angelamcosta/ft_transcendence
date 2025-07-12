@@ -33,7 +33,6 @@ export async function signOut(workArea: HTMLDivElement | null) {
         });
 
         const data = await response.json();
-        console.log('API response:', data);
         if (!response.ok) {
             const message = data?.error || 'logouy failed';
 
@@ -103,7 +102,6 @@ export async function set2FA(e: Event, checkbox: HTMLInputElement | null, span: 
         });
 
         const data = await response.json();
-        console.log('API response:', data);
         if (!response.ok) {
             const message = data?.error || 'Error setting 2FA.';
             console.error('Error setting 2FA: ', message);

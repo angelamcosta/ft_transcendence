@@ -96,6 +96,7 @@ CREATE TABLE matches (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     round INTEGER NOT NULL DEFAULT 1,
+	cli_booted boolean NOT NULL DEFAULT 0,
     FOREIGN KEY(tournament_id) REFERENCES tournaments(id),
     FOREIGN KEY(player1_id) REFERENCES players(id),
     FOREIGN KEY(player2_id) REFERENCES players(id)

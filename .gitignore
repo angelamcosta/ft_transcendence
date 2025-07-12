@@ -7,3 +7,4 @@ data/
 tests/
 jest.config.js
 package.json
+.vscode/

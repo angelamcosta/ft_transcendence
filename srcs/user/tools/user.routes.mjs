@@ -7,7 +7,6 @@ import crypto from 'crypto';
 import { pipeline } from 'stream/promises';
 
 export default async function userRoutes(fastify) {
-	// ! users
 	fastify.get('/users/', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -114,8 +113,6 @@ export default async function userRoutes(fastify) {
 		}
 	});
 
-	// ! block / unblock
-
 	fastify.get('/users/block', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -217,8 +214,6 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
-
-	// ! avatar
 	fastify.get('/users/:id/avatar', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -352,8 +347,6 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.internalServerError('Database delete failed: ' + err.message);
 		}
 	});
-
-	// ! friends
 	fastify.get('/users/friends', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -624,10 +617,13 @@ export default async function userRoutes(fastify) {
 		if (req.invite?.invite_status === 'pending')
 			throw fastify.httpErrors.badRequest('There is already a pending match invite');
 
-		const row = await db.get('SELECT status FROM matches WHERE (player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?)', userId, paramId, paramId, userId);
-
-		if (row?.status === 'pending')
-			throw fastify.httpErrors.badRequest(`There's already a match taking place`);
+		const existing = await db.get(`SELECT 1 FROM matches WHERE status = 'pending' 
+			AND tournament_id IS NULL AND ((player1_id = ? AND player2_id = ?) 
+			OR (player1_id = ? AND player2_id = ?))
+		`, [ userId, paramId, paramId, userId ]);
+		
+		if (existing)
+			throw fastify.httpErrors.badRequest('You already have an ongoing match with that user');
 
 		try {
 			await db.run(`INSERT INTO match_invites (user_id, friend_id) VALUES (?, ?)`, [userId, paramId]);
@@ -693,8 +689,6 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	})
-
-	// ! match history
 	fastify.get('/users/:id/history', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {

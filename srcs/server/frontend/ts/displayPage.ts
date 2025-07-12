@@ -1081,12 +1081,6 @@ export async function gamePage(workArea: HTMLDivElement | null, matchId?: string
 		return;
 	utils.cleanDiv(workArea);
 
-	// Saves to browser history
-	utils.addToHistory("/play");
-
-	// Add nav menu
-	utils.initAppNav();
-
 	const {canvas, namesRow, player1_name, player2_name, player1_id, player2_id, countdownDiv } = await pongPvpMatchUI(matchId!);
 
 	workArea.append(canvas, namesRow, countdownDiv);

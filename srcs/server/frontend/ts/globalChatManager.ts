@@ -208,6 +208,12 @@ export function setupGlobalChatSocket(
 
 		const msg = JSON.parse(dataStr);
 		switch (msg.type) {
+			case 'tournament-semis':
+				appendSystemMessage(chatContainer, `---------------------------------------------------\nSemi-finals starting!\n${msg.semi1.p1} vs ${msg.semi1.p2}  |  ${msg.semi2.p1} vs ${msg.semi2.p2}`, msg.tourName);
+				break;
+			case 'tournament-finals':
+				appendSystemMessage(chatContainer, `---------------------------------------------------\nFinals starting!\n${msg.player1} vs ${msg.player2}`, msg.tourName);
+				break;
 			case 'rename':
 				users.splice(0, users.length, ...(await getUsers()))
 				onlineUsers.delete(msg.old);
@@ -220,11 +226,9 @@ export function setupGlobalChatSocket(
 				break;
 			case 'join':
 				renderUserList(users, userListContainer, display_name);
-				appendSystemMessage(chatContainer, `${msg.display_name} joined the chat`);
 				break;
 			case 'leave':
 				renderUserList(users, userListContainer, display_name);
-				appendSystemMessage(chatContainer, `${msg.display_name} left the chat`);
 				break;
 			case 'dm-notification':
 				if (msg.from !== getActiveDM()) {
@@ -290,8 +294,16 @@ export function appendMessage(
 
 export function appendSystemMessage(
 	chatContainer: HTMLDivElement,
-	text: string
+	text: string,
+	tournament?: string,
 ) {
+	if (tournament) {
+		const title = document.createElement('div');
+		title.className = 'text-center font-bold';
+		title.textContent = tournament;
+		chatContainer.append(title);
+	}
+
 	const line = document.createElement('div');
 	line.className = 'text-center italic';
 	line.textContent = text;

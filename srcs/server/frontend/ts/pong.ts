@@ -1,4 +1,5 @@
 import { postResult } from "./pongUtils.js";
+import { profile } from "./displayPage.js";
 
 let activeSocket: WebSocket | null = null;
 let animationId: number | null = null;
@@ -19,7 +20,35 @@ export function stopGame() {
 		activeSocket = null;
 	}
 }
+
 (window as any).stopGame = stopGame;
+
+async function waitForCliBoot(
+	matchId: string,
+	signal: AbortSignal,
+	timeoutMs = 5000,
+	intervalMs = 150
+): Promise<boolean> {
+	const start = Date.now();
+	while (Date.now() - start < timeoutMs) {
+		if (signal.aborted)
+			return false;
+		try {
+			const res = await fetch(
+				`/game/${matchId}/boot`,
+				{ method: 'GET', credentials: 'include' }
+			);
+			if (res.ok) {
+				const { booted } = await res.json() as { booted: boolean };
+				if (booted) return true;
+			}
+		} catch (err: any) {
+			if (err.name === 'AbortError') return false;
+		}
+		await new Promise(r => setTimeout(r, intervalMs));
+	}
+	return false;
+}
 
 export async function initPong(
 	workArea: HTMLDivElement, canvas: HTMLCanvasElement,
@@ -27,14 +56,14 @@ export async function initPong(
 	player1_id?: string, player2_id?: string,
 	countdownDiv?: HTMLDivElement
 ) {
-
 	const params = new URLSearchParams(window.location.search);
 	const matchId = params.get('matchId');
+	let cliBooted: boolean;
 
 	const container = canvas.parentElement!;
 	container.style.position = 'relative';
+	canvas.style.display = 'block';
 	if (!matchId) {
-		canvas.style.display = 'none';
 		const overlay = document.createElement('div');
 		overlay.style.cssText = `
 			position: fixed; top:0; left:0; 
@@ -66,21 +95,50 @@ export async function initPong(
 				launchGame(true);
 			});
 	} else {
+		const controller = new AbortController()
+		const waitOverlay = document.createElement('div');
+		waitOverlay.style.cssText = `
+    	position:fixed; top:0; left:0;
+    	width:100vw; height:100vh;
+    	display:flex; flex-direction:column;
+    	align-items:center; justify-content:center;
+    	background:rgba(0,0,0,0.7);
+    	color:white; font-size:1.2rem;`;
+
+		waitOverlay.innerHTML = `
+    	<div style="margin-bottom:1rem">Waiting for CLI to start the game…</div>
+    	<button id="btn-skip">Skip Waiting</button>`;
+
+		container.appendChild(waitOverlay);
+
+		const skipPromise = new Promise<boolean>(resolve => {
+			waitOverlay
+				.querySelector<HTMLButtonElement>('#btn-skip')!
+				.addEventListener('click', () => controller.abort());
+		});
+		const bootPromise = waitForCliBoot(matchId, controller.signal, 30000, 350);
+
+		cliBooted = await Promise.race([bootPromise, skipPromise]);
+		waitOverlay.remove();
+		if (cliBooted) {
+			launchGame(false, matchId);
+			return;
+		}
 		await fetch(`/game/create/${matchId}`, { method: 'POST', credentials: 'include' });
 		await fetch(`/game/${matchId}/init`, { method: 'POST', credentials: 'include' });
-		launchGame(false, matchId);
+
 		const overlay = document.createElement('div');
 		overlay.style.cssText = `
-			position: fixed; top:0; left:0; 
-			width:100vw; height:100vh; 
-			display:flex; align-items:center; justify-content:center;
-			background: rgba(0,0,0,0.5);
+		position: fixed; top:0; left:0; 
+		width:100vw; height:100vh; 
+		display:flex; align-items:center; justify-content:center;
+		background: rgba(0,0,0,0.5);
 		`;
 
 		overlay.innerHTML = `
-			<button id="btn-start" style="margin-right:1rem;padding:1rem 2rem;font-size:1.2rem">
-			Start Game
-			</button>
+		<button id="btn-start" style="margin-right:1rem;padding:1rem 2rem;font-size:1.2rem">
+		Start Game
+		</button>
 		`;
 
 		container.appendChild(overlay);
@@ -91,6 +149,7 @@ export async function initPong(
 				canvas.style.display = 'block';
 				gameListenersAdded = false;
 				await fetch(`/game/${matchId}/start`, { method: 'POST', credentials: 'include' });
+				launchGame(false, matchId);
 			});
 	}
 
@@ -118,12 +177,6 @@ export async function initPong(
 		const socket = new WebSocket(wsUrl);
 		activeSocket = socket;
 
-		window.addEventListener('keydown', e => {
-			if (e.code === 'Escape' && socket.readyState === WebSocket.OPEN) {
-				socket.send(JSON.stringify({ type: 'stop' }));
-			}
-		});
-
 		socket.addEventListener('open', () => {
 			if (!matchId)
 				socket.send(JSON.stringify({ type: 'start' }));
@@ -144,7 +197,6 @@ export async function initPong(
 				const msg = JSON.parse(dataStr);
 				if (msg.type === 'state') {
 					state = msg.data as GameState;
-					// IA simples no cliente
 					if (vsComputer && state) {
 						const targetY = state.ball.y - HALF_PADDLE;
 						let action: '' | 'up' | 'down' = '';
@@ -162,7 +214,7 @@ export async function initPong(
 		const lastSent: Record<number, '' | 'up' | 'down'> = { 0: '', 1: '' };
 
 		async function sendControl(player: number, action: '' | 'up' | 'down') {
-			if (matchId) {
+			if (matchId && !cliBooted) {
 				if (lastSent[player] === action) return;
 				lastSent[player] = action;
 				const a = action === '' ? 'none' : action;
@@ -183,11 +235,9 @@ export async function initPong(
 		if (!gameListenersAdded) {
 			window.addEventListener('keydown', e => {
 				if (vsComputer) {
-					// vs CPU: usado apenas ↑ ↓ para o Player 1 (índice 0)
 					if (e.code === 'ArrowUp') sendControl(0, 'up');
 					if (e.code === 'ArrowDown') sendControl(0, 'down');
 				} else {
-					// PvP: W/S para Player 1 (índice 0); ↑/↓ para Player 2 (índice 1)
 					if (e.code === 'KeyW') sendControl(0, 'up');
 					if (e.code === 'KeyS') sendControl(0, 'down');
 					if (e.code === 'ArrowUp') sendControl(1, 'up');
@@ -280,6 +330,7 @@ export async function initPong(
 				} else if (matchId && player1_id && player2_id) {
 					if (!canvas.dataset.resultPosted) {
 						canvas.dataset.resultPosted = 'true';
+						postResult(matchId, s1, s2, player1_id, player2_id);
 						let countdown = 5;
 						if (countdownDiv)
 							countdownDiv.innerText = `Redirecting in ${countdown}…`;
@@ -289,7 +340,7 @@ export async function initPong(
 								countdownDiv.innerText = `Redirecting in ${countdown}…`;
 							if (countdown <= 0) {
 								clearInterval(timer);
-								postResult(workArea, matchId, s1, s2, player1_id, player2_id)
+								profile(workArea, localStorage.getItem('userId'!));
 							}
 						}, 1000);
 					}

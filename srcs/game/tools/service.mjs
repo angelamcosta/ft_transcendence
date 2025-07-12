@@ -6,6 +6,7 @@ export class GameService extends EventEmitter {
         this.reset();
         this.width = 1000;
         this.height = 600;
+        this.intervalId = null;
         this.resetTimeout = null;
     }
 
@@ -47,25 +48,16 @@ export class GameService extends EventEmitter {
 
         if (b.y <= 0 || b.y >= this.height)
             b.vy *= -1;
-
-        // Colisão com jogadores
         this.state.players.forEach((p, i) => {
             const playerX = i === 0 ? 0 : this.width - 10;
             const playerWidth = 10;
             const playerHeight = 100;
-
-            // Verifica se a bola está na zona horizontal da raquete
             if ((i === 0 && b.x < playerX + playerWidth) ||
                 (i === 1 && b.x > playerX)) {
-
-                // Verifica colisão vertical
                 if (b.y > p.y && b.y < p.y + playerHeight) {
-                    // Calcula o ângulo de rebatimento baseado no local do impacto
                     const hitPosition = (b.y - p.y) / playerHeight;
-                    const angle = hitPosition * Math.PI - Math.PI / 2; // -45° a +45°
-
-                    // Calcula nova direção
-                    const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy) * 1.1; // Aumenta velocidade
+                    const angle = hitPosition * Math.PI - Math.PI / 2;
+                    const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy) * 1.1;
                     b.vx = (i === 0 ? 1 : -1) * Math.cos(angle) * speed;
                     if (b.vx < 3 && b.vx > -3) {
                         if (b.vx >= 0) {
@@ -79,12 +71,10 @@ export class GameService extends EventEmitter {
                 }
             }
         });
-
-        // Verifica pontuação
-        if (b.x < -10) {  // Saiu completamente pela esquerda
+        if (b.x < -10) {
             this.state.scores[1]++;
             this.resetBall();
-        } else if (b.x > this.width + 10) {  // Saiu completamente pela direita
+        } else if (b.x > this.width + 10) {
             this.state.scores[0]++;
             this.resetBall();
         }
@@ -93,15 +83,14 @@ export class GameService extends EventEmitter {
     }
 
     resetBall() {
-        console.log("Resetting ball. Scores:", this.state.scores);
-
         clearInterval(this.intervalId);
         this.intervalId = null;
 
         const b = this.state.ball;
         b.x = this.width / 2;  // Centro horizontal
         b.y = this.height / 2; // Centro vertical
-        b.vx = b.vx > 0 ? -5 : 5; // Inverte direção
+        b.vx = b.vx > 0 ? -5 : 5;
+        b.vy = Math.floor(Math.random() * 11) - 5;
 
         // Adiciona um pequeno delay para dar tempo de ver o placar
         clearInterval(this.intervalId);
@@ -110,35 +99,25 @@ export class GameService extends EventEmitter {
         this.resetTimeout = setTimeout(() => {
             this.resetTimeout = null;
             this.start();
-        }, 1000); // 1 segundo de delay
+        }, 1000);
     }
 
     stop() {
-        // 1) cancelar loop
         if (this.intervalId) {
         clearInterval(this.intervalId);
         this.intervalId = null;
         }
-        // 2) cancelar resetBall pendente
         if (this.resetTimeout) {
         clearTimeout(this.resetTimeout);
         this.resetTimeout = null;
         }
-        // 3) repor estado inicial
         this.reset();
-        // opcional: emitir um evento específico de “ended”
         this.emit("ended", this.state);
     }
 
     control(playerIndex, action) {
-        console.log(`Controle: player=${playerIndex}, action=${action}`);
         let p = this.state.players[playerIndex];
         p.up = action === "up";
         p.down = action === "down";
     }
 }
-
-// TODO : - check if the games is over (the socket connection must be closed!) (the frontend must make it very clear that the game is over, and who won, and add to the db)
-// TODO : - deal with multiplayer
-// TODO : - create private matches logic
-// TODO : - create tournament logic

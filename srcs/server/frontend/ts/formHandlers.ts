@@ -1,6 +1,5 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
-import * as buttonHandlers from './buttonHandlers.js';
 import { globalSocket, onlineUsers } from './globalChatManager.js';
 
 export async function signUp(e: Event) {
