@@ -65,17 +65,12 @@ export async function initPong(
 	canvas.style.display = 'block';
 	if (!matchId) {
 		const overlay = document.createElement('div');
-		overlay.style.cssText = `
-			position: fixed; top:0; left:0; 
-			width:100vw; height:100vh; 
-			display:flex; align-items:center; justify-content:center;
-			background: rgba(0,0,0,0.5);
-		`;
+		overlay.className = 'fixed inset-0 flex items-center justify-center bg-black/50 gap-4';
 		overlay.innerHTML = `
-			<button id="btn-2p" style="margin-right:1rem;padding:1rem 2rem;font-size:1.2rem">
+			<button id="btn-2p" class="px-4 py-2 text-lg font-mono text-white hover:underline"">
 			2 Players
 			</button>
-			<button id="btn-ai" style="padding:1rem 2rem;font-size:1.2rem">
+			<button id="btn-ai" class="px-4 py-2 text-lg font-mono text-white hover:underline"">
 			Vs Computer
 			</button>
 		`;
@@ -97,17 +92,20 @@ export async function initPong(
 	} else {
 		const controller = new AbortController()
 		const waitOverlay = document.createElement('div');
-		waitOverlay.style.cssText = `
-    	position:fixed; top:0; left:0;
-    	width:100vw; height:100vh;
-    	display:flex; flex-direction:column;
-    	align-items:center; justify-content:center;
-    	background:rgba(0,0,0,0.7);
-    	color:white; font-size:1.2rem;`;
+		waitOverlay.className =
+  		'fixed top-0 left-0 w-screen h-screen flex flex-col items-center justify-center ' +
+  		'bg-black/70 text-white text-[1.2rem]';
 
 		waitOverlay.innerHTML = `
-    	<div style="margin-bottom:1rem">Waiting for CLI to start the game…</div>
-    	<button id="btn-skip">Skip Waiting</button>`;
+		<div class="flex flex-col items-center space-y-2">
+			<pre class="m-0 whitespace-pre font-mono text-center">
+		W/S &lt;-                              -&gt; Up/Down
+		Init CLI or press Skip to start immediately...
+			</pre>
+			<button id="btn-skip" class="font-mono text-white hover:underline">
+			Skip Waiting
+			</button>
+		</div>`;
 
 		container.appendChild(waitOverlay);
 
@@ -116,44 +114,24 @@ export async function initPong(
 				.querySelector<HTMLButtonElement>('#btn-skip')!
 				.addEventListener('click', () => controller.abort());
 		});
-		const bootPromise = waitForCliBoot(matchId, controller.signal, 30000, 350);
+		const bootPromise = waitForCliBoot(matchId, controller.signal, 30000, 500);
 
 		cliBooted = await Promise.race([bootPromise, skipPromise]);
 		waitOverlay.remove();
 		if (cliBooted) {
+			await fetch(`/game/${matchId}/boot/disable`,{ method: 'POST', credentials: 'include'});
 			launchGame(false, matchId);
 			return;
 		}
 		await fetch(`/game/create/${matchId}`, { method: 'POST', credentials: 'include' });
 		await fetch(`/game/${matchId}/init`, { method: 'POST', credentials: 'include' });
-
-		const overlay = document.createElement('div');
-		overlay.style.cssText = `
-		position: fixed; top:0; left:0; 
-		width:100vw; height:100vh; 
-		display:flex; align-items:center; justify-content:center;
-		background: rgba(0,0,0,0.5);
-		`;
-
-		overlay.innerHTML = `
-		<button id="btn-start" style="margin-right:1rem;padding:1rem 2rem;font-size:1.2rem">
-		Start Game
-		</button>
-		`;
-
-		container.appendChild(overlay);
-
-		(overlay.querySelector('#btn-start') as HTMLButtonElement)
-			.addEventListener('click', async () => {
-				overlay.remove();
-				canvas.style.display = 'block';
-				gameListenersAdded = false;
-				await fetch(`/game/${matchId}/start`, { method: 'POST', credentials: 'include' });
-				launchGame(false, matchId);
-			});
+		await fetch(`/game/${matchId}/start`, { method: 'POST', credentials: 'include' });
+		launchGame(false, matchId);
 	}
 
 	function launchGame(vsComputer: boolean, matchId?: string) {
+		let gameActive = true;
+
 		if (activeSocket) {
 			activeSocket.close();
 			activeSocket = null;
@@ -214,6 +192,7 @@ export async function initPong(
 		const lastSent: Record<number, '' | 'up' | 'down'> = { 0: '', 1: '' };
 
 		async function sendControl(player: number, action: '' | 'up' | 'down') {
+			if (!gameActive) return;
 			if (matchId && !cliBooted) {
 				if (lastSent[player] === action) return;
 				lastSent[player] = action;
@@ -258,6 +237,12 @@ export async function initPong(
 			});
 			gameListenersAdded = true;
 		}
+
+		socket.addEventListener('close', () => {
+			gameActive = false;
+			activeSocket = null;
+			gameListenersAdded = false;
+		})
 
 		async function draw() {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -311,15 +296,12 @@ export async function initPong(
 						const btn = document.createElement('button');
 						btn.id = 'btn-restart';
 						btn.textContent = 'Restart Game';
-						btn.style.cssText = `
-							position: absolute;
-							top: 60%;
-							left: 50%;
-							transform: translate(-50%, -50%);
-							padding: 1rem 2rem;
-							font-size: 1.2rem;
-							z-index: 100;
+						btn.className = `
+						absolute top-[60%] left-1/2 
+						-translate-x-1/2 -translate-y-1/2
+						px-4 py-2 text-lg font-mono text-white hover:underline
 						`;
+
 						btn.addEventListener('click', () => {
 							btn.remove();
 							gameListenersAdded = false;
