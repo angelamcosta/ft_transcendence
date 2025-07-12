@@ -617,10 +617,13 @@ export default async function userRoutes(fastify) {
 		if (req.invite?.invite_status === 'pending')
 			throw fastify.httpErrors.badRequest('There is already a pending match invite');
 
-		const row = await db.get('SELECT status FROM matches WHERE (player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?)', userId, paramId, paramId, userId);
-
-		if (row?.status === 'pending')
-			throw fastify.httpErrors.badRequest(`There's already a match taking place`);
+		const existing = await db.get(`SELECT 1 FROM matches WHERE status = 'pending' 
+			AND tournament_id IS NULL AND ((player1_id = ? AND player2_id = ?) 
+			OR (player1_id = ? AND player2_id = ?))
+		`, [ userId, paramId, paramId, userId ]);
+		
+		if (existing)
+			throw fastify.httpErrors.badRequest('You already have an ongoing match with that user');
 
 		try {
 			await db.run(`INSERT INTO match_invites (user_id, friend_id) VALUES (?, ?)`, [userId, paramId]);

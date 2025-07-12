@@ -1,27 +1,31 @@
 import { directMessagePage, friendsList, gamePage, profile } from './displayPage.js';
 import * as utils from './utils.js'
 
-type Action = { label: string; handler: () => void }
+type Action = { label: string; handler: () => void };
+type PendingMatch = { id: number; opponent: string };
 
 export function buildFriendsLayout() {
-	const container = document.createElement('div')
+	const container = document.createElement('div');
 	container.classList.add(
 		'flex', 'gap-6', 'p-6',
-		'max-w-[1050px]', 'mx-auto'
-	)
+		'max-w-[1400px]', 'mx-auto'
+	);
 
-	const cardBase = ['bg-white', 'rounded-xl', 'p-4', 'shadow', 'flex', 'flex-col', 'gap-4']
-	const left = document.createElement('div')
-	left.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	const cardBase = ['bg-white', 'rounded-xl', 'p-4', 'shadow', 'flex', 'flex-col', 'gap-4'];
+	const left = document.createElement('div');
+	left.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase);
 
-	const middle = document.createElement('div')
-	middle.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	const middle = document.createElement('div');
+	middle.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase);
 
-	const right = document.createElement('div')
-	right.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase)
+	const right = document.createElement('div');
+	right.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase);
 
-	container.append(left, middle, right)
-	return { container, left, middle, right }
+	const farRight = document.createElement('div');
+	farRight.classList.add('flex-1', 'flex', 'flex-col', 'gap-6', ...cardBase);
+
+	container.append(left, middle, right, farRight);
+	return { container, left, middle, right, farRight };
 }
 
 export function buildUserCard(
@@ -160,6 +164,52 @@ export function buildInviteCard(
 	return card
 }
 
+function buildPendingMatchesCard(
+	title: string,
+	matches: PendingMatch[],
+	onStart: (matchId: number) => void
+) {
+	const card = document.createElement('div');
+	card.classList.add('bg-white', 'rounded-xl', 'p-4', 'shadow', 'flex', 'flex-col', 'gap-4');
+
+	const h3 = document.createElement('h3');
+	h3.textContent = title;
+	h3.classList.add('text-lg', 'font-semibold');
+	card.append(h3);
+
+	if (matches.length === 0) {
+		const p = document.createElement('p');
+		p.textContent = 'No pending matches';
+		p.classList.add('text-gray-500');
+		card.append(p);
+	} else {
+		matches.forEach(m => {
+			const row = document.createElement('div');
+			row.classList.add(
+				'flex', 'items-center', 'justify-between',
+				'py-2', 'border-b', 'border-gray-200'
+			);
+
+			const name = document.createElement('span');
+			name.textContent = m.opponent;
+			name.classList.add('text-gray-900');
+
+			const btn = document.createElement('button');
+			btn.textContent = 'Start';
+			btn.classList.add(
+				'px-3', 'py-1', 'bg-blue-500', 'text-white',
+				'rounded', 'cursor-pointer', 'text-sm'
+			);
+			btn.addEventListener('click', () => onStart(m.id));
+
+			row.append(name, btn);
+			card.append(row);
+		});
+	}
+
+	return card;
+}
+
 export async function buildFriendsList(workArea: HTMLDivElement) {
 	const userId = Number(localStorage.getItem('userId')!);
 	const displayName = localStorage.getItem('displayName')!;
@@ -186,7 +236,11 @@ export async function buildFriendsList(workArea: HTMLDivElement) {
 		display_name: nameById.get(inv.friend_id) ?? 'Unknown'
 	}));
 
-	const { container, left, middle, right } = buildFriendsLayout()
+	const pending: PendingMatch[] = await fetch(`/matches/pending`, { credentials: 'include' })
+		.then(r => r.json())
+		.then(j => j.matches);
+
+	const { container, left, middle, right, farRight } = buildFriendsLayout()
 
 	left.append(
 		buildUserCard(
@@ -290,6 +344,13 @@ export async function buildFriendsList(workArea: HTMLDivElement) {
 			}
 		)
 	)
+
+	farRight.append(
+		buildPendingMatchesCard('Resume Matches', pending, matchId => {
+			window.history.pushState({}, '', `/game?matchId=${matchId}`);
+			gamePage(workArea, String(matchId));
+		})
+	);
 
 	return ({ container });
 }

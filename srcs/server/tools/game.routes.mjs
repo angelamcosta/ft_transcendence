@@ -43,11 +43,21 @@ export default async function gameRoutes(app) {
 		return reply.code(res.status).send(data);
 	});
 
+	app.post('/game/:id/boot', async (req, reply) => {
+		const { id } = req.params;
+		const res = await fetch(`${GAME_URL}/api/game/${id}/boot`, { dispatcher: tlsAgent, method: 'POST' });
+		const data = await res.json();
+		return reply.code(res.status).send(data);
+	});
+
+	app.get('/game/:id/boot', async (req, reply) => {
+		const { id } = req.params;
+		const res = await fetch(`${GAME_URL}/api/game/${id}/boot`, { dispatcher: tlsAgent, method: 'GET' });
+		const data = await res.json();
+		return reply.code(res.status).send(data);
+	});
+
 	app.get('/api/game/wss', { websocket: true, onRequest: authenticateRequest(app) }, (connection, req) => {
-		console.log('➡️ Novo WebSocket do front conectado ao proxy');
-
-		console.log('Conectando ao WebSocket do jogo:', GAME_WS);
-
 		const upstreamUrl = new URL(req.raw.url, GAME_WS).toString();
 		const upstream = new WebSocket(upstreamUrl, {
 			rejectUnauthorized: false,
@@ -59,7 +69,6 @@ export default async function gameRoutes(app) {
 
 		connection.on('message', buf => {
 			const data = buf.toString();
-			console.log('➡️ Mensagem do front para o container game:', data);
 
 			if (isUpstreamOpen) {
 				upstream.send(data);
@@ -69,20 +78,17 @@ export default async function gameRoutes(app) {
 		});
 
 		upstream.on('open', () => {
-			console.log('✅ Proxy conectado ao container game');
 			isUpstreamOpen = true;
 
 			messageQueue.forEach(msg => upstream.send(msg));
 			messageQueue = [];
 
 			upstream.on('message', msg => {
-				console.log('⬅️ Mensagem do container game para o front:', msg.toString());
 				connection.send(msg);
 			});
 		});
 
 		const closeBoth = () => {
-			console.log('🔌 Conexão encerrada');
 			upstream.close();
 			connection.close();
 		};
@@ -91,7 +97,7 @@ export default async function gameRoutes(app) {
 		upstream.on('close', closeBoth);
 
 		upstream.on('error', (err) => {
-			console.error('❌ Erro no WebSocket upstream:', err.message);
+			console.error('Erro no WebSocket upstream:', err.message);
 			console.error('Detalhes do erro:', err);
 		});
 	});
