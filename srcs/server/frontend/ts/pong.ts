@@ -1,4 +1,5 @@
 import { postResult } from "./pongUtils.js";
+import { profile } from "./displayPage.js";
 
 let activeSocket: WebSocket | null = null;
 let animationId: number | null = null;
@@ -338,6 +339,7 @@ export async function initPong(
 				} else if (matchId && player1_id && player2_id) {
 					if (!canvas.dataset.resultPosted) {
 						canvas.dataset.resultPosted = 'true';
+						postResult(matchId, s1, s2, player1_id, player2_id);
 						let countdown = 5;
 						if (countdownDiv)
 							countdownDiv.innerText = `Redirecting in ${countdown}…`;
@@ -347,7 +349,7 @@ export async function initPong(
 								countdownDiv.innerText = `Redirecting in ${countdown}…`;
 							if (countdown <= 0) {
 								clearInterval(timer);
-								postResult(workArea, matchId, s1, s2, player1_id, player2_id)
+								profile(workArea, localStorage.getItem('userId'!));
 							}
 						}, 1000);
 					}
