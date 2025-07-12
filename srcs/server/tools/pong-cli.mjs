@@ -21,6 +21,11 @@ async function main() {
 			{ httpsAgent: agent }
 		);
 
+		if (loginRes.data.twofa === 'enabled') {
+			process.stdout.write('\nTwo-factor authentication is enabled on this account, the CLI cannot be used.\n');
+			process.exit(1);
+		}
+
 		const setCookie = loginRes.headers['set-cookie'];
 		if (!setCookie) throw new Error('No Set-Cookie header from /login');
 		const cookieHeader = setCookie.map(c => c.split(';')[0]).join('; ');

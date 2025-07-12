@@ -147,8 +147,8 @@ export async function initPong(
 				overlay.remove();
 				canvas.style.display = 'block';
 				gameListenersAdded = false;
-				launchGame(false, matchId);
 				await fetch(`/game/${matchId}/start`, { method: 'POST', credentials: 'include' });
+				launchGame(false, matchId);
 			});
 	}
 
