@@ -7,7 +7,6 @@ import crypto from 'crypto';
 import { pipeline } from 'stream/promises';
 
 export default async function userRoutes(fastify) {
-	// ! users
 	fastify.get('/users/', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -114,8 +113,6 @@ export default async function userRoutes(fastify) {
 		}
 	});
 
-	// ! block / unblock
-
 	fastify.get('/users/block', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -217,8 +214,6 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	});
-
-	// ! avatar
 	fastify.get('/users/:id/avatar', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -352,8 +347,6 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.internalServerError('Database delete failed: ' + err.message);
 		}
 	});
-
-	// ! friends
 	fastify.get('/users/friends', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {
@@ -693,8 +686,6 @@ export default async function userRoutes(fastify) {
 			throw fastify.httpErrors.internalServerError('Database update failed: ' + err.message);
 		}
 	})
-
-	// ! match history
 	fastify.get('/users/:id/history', {
 		preValidation: fastify.authenticateRequest,
 	}, async (req, res) => {

@@ -50,7 +50,6 @@ export async function sendLink(db, {email, protocol, host}, fastify) {
 	}
 
     const resetLink = `${protocol}://${host}/reset-password?token=${encodeURIComponent(token)}`;
-    // Delays the email send for security reasons
     sleep(500);
     const linkSent = await sendResetLink(email, resetLink)
     if (!linkSent) {

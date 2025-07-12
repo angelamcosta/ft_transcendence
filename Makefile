@@ -3,7 +3,6 @@ all: build up
 build:
 	mkdir -p ./data/sqlite
 	mkdir -p ./data/public/avatars
-	mkdir -p ./data/public/images
 	docker-compose build
 
 up:
@@ -20,6 +19,5 @@ clean:
 	docker builder prune -a --force
 	sudo rm -rf ./data/sqlite
 	sudo rm -rf ./data/public/avatars
-	sudo rm -rf ./data/public/images
 
 re: clean all
