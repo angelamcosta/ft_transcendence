@@ -43,9 +43,16 @@ export default async function gameRoutes(app) {
 		return reply.code(res.status).send(data);
 	});
 
-	app.post('/game/:id/boot', async (req, reply) => {
+	app.post('/game/:id/boot/enable', async (req, reply) => {
 		const { id } = req.params;
-		const res = await fetch(`${GAME_URL}/api/game/${id}/boot`, { dispatcher: tlsAgent, method: 'POST' });
+		const res = await fetch(`${GAME_URL}/api/game/${id}/boot/enable`, { dispatcher: tlsAgent, method: 'POST' });
+		const data = await res.json();
+		return reply.code(res.status).send(data);
+	});
+
+	app.post('/game/:id/boot/disable', async (req, reply) => {
+		const { id } = req.params;
+		const res = await fetch(`${GAME_URL}/api/game/${id}/boot/disable`, { dispatcher: tlsAgent, method: 'POST' });
 		const data = await res.json();
 		return reply.code(res.status).send(data);
 	});
