@@ -146,7 +146,25 @@ export default async function matchRoutes(app) {
 			return reply.code(res.status).send(data);
 		} catch (e) {
 			console.error('Proxy /matches/:id/ error:', e);
-			return reply.code(500).send({ error: 'Error getting matche' });
+			return reply.code(500).send({ error: 'Error getting matches' });
+		}
+	})
+
+	app.get('/matches/pending', async (req, reply) => {
+		try {
+			const res = await fetch(`${MATCHES_URL}/api/matches/pending`, {
+				dispatcher: tlsAgent,
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					cookie: req.headers.cookie
+				},
+			});
+			const data = await res.json();
+			return reply.code(res.status).send(data);
+		} catch (e) {
+			console.error('Proxy /matches/pending error:', e);
+			return reply.code(500).send({ error: 'Error getting pending matches' });
 		}
 	})
 

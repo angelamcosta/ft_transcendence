@@ -200,8 +200,40 @@ export default async function matchRoutes(fastify) {
 			}
 		});
 
+	fastify.get('/matches/pending',
+		{ preValidation: fastify.authenticateRequest },
+		async (req, res) => {
+			try {
+				const userId = req.authUser.id;
+
+				const rows = await db.all(`
+					SELECT
+					m.id,
+					CASE
+						WHEN m.player1_id = ? THEN u2.display_name
+						WHEN m.player2_id = ? THEN u1.display_name
+					END AS opponent
+					FROM matches m
+						JOIN users u1 ON m.player1_id = u1.id
+						JOIN users u2 ON m.player2_id = u2.id
+					WHERE
+						m.status = 'pending'
+						AND (m.player1_id = ? OR m.player2_id = ?)
+						AND m.tournament_id IS NULL
+					ORDER BY m.created_at DESC
+					`, [userId, userId, userId, userId]);
+
+				return res.code(200).send({ matches: rows });
+			} catch (err) {
+				if (err.statusCode && err.statusCode !== 500)
+					throw err;
+				fastify.log.error(`Database error: ${err.message}`);
+				throw fastify.httpErrors.internalServerError('Database update failed: ', err.message);
+			}
+		})
+
 	// ! matchmaking
-	fastify.delete('/matchmaking/leave', async (req, reply) => {
+	fastify.delete('/matchmaking/leave', async (req, res) => {
 		try {
 			const { user_id } = req.body;
 
@@ -217,7 +249,7 @@ export default async function matchRoutes(fastify) {
 		}
 	});
 
-	fastify.post('/matchmaking/join', async (req, reply) => {
+	fastify.post('/matchmaking/join', async (req, res) => {
 		const user_id = req.body?.user_id;
 		try {
 			const exists = await db.get('SELECT 1 FROM matchmaking_queue WHERE player_id = ?', [user_id]);
