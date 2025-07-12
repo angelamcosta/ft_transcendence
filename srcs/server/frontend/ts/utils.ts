@@ -28,7 +28,6 @@ export interface TournamentMatch {
 
 export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
 	displayPage.menu(menuArea, workArea);
-	displayPage.dashboard(workArea);
 	document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
 	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
 	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
@@ -68,6 +67,7 @@ export function cleanLocalStorage() {
 	localStorage.removeItem('displayName');
 	localStorage.removeItem('email');
 	localStorage.removeItem('user2FA');
+	localStorage.removeItem('lastTargetId');
 }
 
 export function hasWhitespace(input: string): boolean {
@@ -200,4 +200,10 @@ export function showModal(message: string) {
 	box.append(messageBox, hr, footer);
 	backdrop.appendChild(box);
 	document.body.appendChild(backdrop);
+}
+
+export function addToHistory(path: string) {
+  if (location.pathname !== path) {
+    history.pushState({ path }, "", path);
+  }
 }
