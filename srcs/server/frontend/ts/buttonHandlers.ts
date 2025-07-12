@@ -44,31 +44,31 @@ export async function signOut(workArea: HTMLDivElement | null) {
         cleanGlobalChat();
         localStorage.clear();
         utils.cleanLocalStorage();
-        displayPage.landingPage(workArea, menuArea);
+        displayPage.landingPage(workArea);
     } catch (error) {
         console.error('Error sending form data:', error);
         alert('Logout failed! Catched on Try');
     }
 }
 
-export async function friendsList(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
-	displayPage.friendsList(workArea, menuArea);
+export async function friendsList(workArea: HTMLDivElement | null) {
+	displayPage.friendsList(workArea);
 }
 
-export async function profile(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
-	displayPage.profile(workArea, menuArea, null);
+export async function profile(workArea: HTMLDivElement | null) {
+	displayPage.profile(workArea, null);
 }
 
-export async function accountSettings(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
-    displayPage.accountSettings(workArea, menuArea);
+export async function accountSettings(workArea: HTMLDivElement | null) {
+    displayPage.accountSettings(workArea);
 }
 
-export function tournamentsPageHandler(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null) {
-    displayPage.tournamentsPage(workArea, menuArea);
+export function tournamentsPageHandler(workArea: HTMLDivElement | null) {
+    displayPage.tournamentsPage(workArea);
 }
 
-export async function chatPage(workArea: HTMLDivElement | null, menuArea: HTMLDivElement | null, userId: string, displayName: string) {
-    displayPage.chatPage(workArea, menuArea, userId, displayName);
+export async function chatPage(workArea: HTMLDivElement | null, userId: string, displayName: string) {
+    displayPage.chatPage(workArea, userId, displayName);
 }
 
 export async function set2FA(e: Event, checkbox: HTMLInputElement | null, span: HTMLSpanElement | null, errorMessage: HTMLSpanElement | null) {

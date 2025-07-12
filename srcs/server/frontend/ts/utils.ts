@@ -50,7 +50,13 @@ export async function isSignedIn() {
 	}
 }
 
-export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
+export function initAppNav() {
+	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
+
+	if (!workArea || !menuArea)
+		return;
+
 	const menu = menuArea?.querySelector('#menu') as HTMLDivElement | null;
 	if (menu)
 		return;
@@ -61,24 +67,30 @@ export function initAppNav(menuArea: HTMLDivElement | null, workArea: HTMLDivEle
 	const displayName = localStorage.getItem('displayName')!;
 	initGlobalChat(userId, displayName);
 	document.getElementById('signOutButton')?.addEventListener("click", () => buttonHandlers.signOut(workArea));
-	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea, menuArea));
-	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea, menuArea));
-	document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, menuArea, userId, displayName));
-	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.tournamentsPageHandler(workArea, menuArea));
-	document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea, menuArea));
-	document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea, menuArea));
+	document.getElementById('dashboardButton')?.addEventListener("click", () => displayPage.dashboard(workArea));
+	document.getElementById('accountSettingsButton')?.addEventListener("click", () => buttonHandlers.accountSettings(workArea));
+	document.getElementById('chatButton')?.addEventListener("click", () => buttonHandlers.chatPage(workArea, userId, displayName));
+	document.getElementById('playButton')?.addEventListener("click", () => buttonHandlers.tournamentsPageHandler(workArea));
+	document.getElementById('profileButton')?.addEventListener("click", () => buttonHandlers.profile(workArea));
+	document.getElementById('friendsButton')?.addEventListener("click", () => buttonHandlers.friendsList(workArea));
 	buttonHandlers.initThemeToggle();
 }
 
-export function initAppHeader(menuArea: HTMLDivElement | null, workArea: HTMLDivElement | null) {
+export function initAppHeader() {
+	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
+	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
+
+	if (!workArea || !menuArea)
+		return;
+
 	const header = menuArea?.querySelector('#header') as HTMLDivElement | null;
 	if (header)
 		return;
 
 	displayPage.header(menuArea);
 	buttonHandlers.initThemeToggle();
-	document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea, menuArea));
-	document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea, menuArea));
+	document.getElementById('landButton')?.addEventListener("click", () => displayPage.landingPage(workArea));
+	document.getElementById('signInButton')?.addEventListener("click", () => displayPage.signIn(workArea));
 	document.getElementById('signUpButton')?.addEventListener("click", () => displayPage.signUp(workArea, menuArea));
 }
 

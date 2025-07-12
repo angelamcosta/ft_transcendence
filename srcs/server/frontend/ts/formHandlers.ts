@@ -1,14 +1,12 @@
 import * as utils from './utils.js';
 import * as displayPage from './displayPage.js';
 import * as buttonHandlers from './buttonHandlers.js';
-import { globalSocket, initGlobalChat, onlineUsers } from './globalChatManager.js';
-import { getUnreadMessages } from './globalChatManager.js';
+import { globalSocket, onlineUsers } from './globalChatManager.js';
 
 export async function signUp(e: Event) {
 	e.preventDefault();
 
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
-	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
@@ -43,7 +41,7 @@ export async function signUp(e: Event) {
 			return;
 		}
 		const message = data?.success || 'Register success';
-		displayPage.signIn(workArea, menuArea, message);
+		displayPage.signIn(workArea, message);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Register failed! Catched on Try');
@@ -54,7 +52,6 @@ export async function signIn(e: Event) {
 	e.preventDefault();
 
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
-	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
@@ -110,10 +107,10 @@ export async function signIn(e: Event) {
 		}
 
 		if (user2FA === 'enabled') {
-			displayPage.verify2FA(workArea, menuArea);
+			displayPage.verify2FA(workArea);
 		}
 		else {
-			displayPage.dashboard(workArea, menuArea);
+			displayPage.dashboard(workArea);
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);
@@ -177,7 +174,6 @@ export async function resetPassword(e: Event) {
 	e.preventDefault();
 
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
-	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
 	const newPassword = formData.get('newPassword');
@@ -209,7 +205,7 @@ export async function resetPassword(e: Event) {
 			return;
 		}
 		const message = data?.success || 'Success on password reset';
-		displayPage.signIn(workArea, menuArea, message);
+		displayPage.signIn(workArea, message);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed reseting password');
@@ -220,7 +216,6 @@ export async function verify2FA(e: Event) {
 	e.preventDefault();
 
 	const workArea = (document.getElementById('appArea') as HTMLDivElement | null);
-	const menuArea = (document.getElementById('headerArea') as HTMLDivElement | null);
 
 	const form = e.target as HTMLFormElement;
 	const formData = new FormData(form);
@@ -249,7 +244,7 @@ export async function verify2FA(e: Event) {
 			}
 			return;
 		}
-		displayPage.dashboard(workArea, menuArea);
+		displayPage.dashboard(workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Login failed! Catched on Try');

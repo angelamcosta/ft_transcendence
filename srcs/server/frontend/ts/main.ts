@@ -4,7 +4,7 @@ import * as utils from './utils.js';
 
 async function resetPassword(token: string | null) {
 	if (!token || token === '') {
-		displayPage.notFound(workArea, menuArea);
+		displayPage.notFound(workArea);
 		return;
 	}
 
@@ -21,10 +21,10 @@ async function resetPassword(token: string | null) {
 
 		const data = await response.json();
 		if (!response.ok) {
-			displayPage.signIn(workArea, menuArea, data?.error || 'Invalid token', true);
+			displayPage.signIn(workArea, data?.error || 'Invalid token', true);
 		}
 		else {
-			displayPage.resetPassword(workArea, menuArea);
+			displayPage.resetPassword(workArea);
 		}
 	} catch (error) {
 		console.error('Error sending form data:', error);
@@ -33,7 +33,7 @@ async function resetPassword(token: string | null) {
 		if (error) {
 			errorMessage = 'Error: ' + error;
 		}
-		displayPage.signIn(workArea, menuArea, errorMessage , true);
+		displayPage.signIn(workArea, errorMessage , true);
 	}
 }
 
@@ -47,7 +47,7 @@ async function render(path: string | null) {
 	switch (path) {
 		case '/reset-password':
 			if (isSgned) {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			else {
 				const params = new URLSearchParams(window.location.search);
@@ -57,7 +57,7 @@ async function render(path: string | null) {
 			break;
 		case '/register':
 			if (isSgned) {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			else {
 				displayPage.signUp(workArea, menuArea);
@@ -65,66 +65,66 @@ async function render(path: string | null) {
 			break;
 		case '/login':
 			if (isSgned) {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			else {
-				displayPage.signIn(workArea,menuArea);
+				displayPage.signIn(workArea);
 			}
 			break;
 		case '/settings':
 			if (isSgned) {
-				displayPage.accountSettings(workArea, menuArea);
+				displayPage.accountSettings(workArea);
 			}
 			else {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/profile':
 			if (isSgned) {
 				const targetId = localStorage.getItem('lastTargetId')!;
-				displayPage.profile(workArea, menuArea, targetId);
+				displayPage.profile(workArea, targetId);
 			}
 			else {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/friends':
 			if (isSgned) {
-				displayPage.friendsList(workArea, menuArea);
+				displayPage.friendsList(workArea);
 			}
 			else {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/chat-room':
 			if (isSgned) {
 				const userId = localStorage.getItem('userId')!;
 				const displayName = localStorage.getItem('displayName')!;
-				displayPage.chatPage(workArea, menuArea, userId, displayName);
+				displayPage.chatPage(workArea, userId, displayName);
 			}
 			else {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/play':
 			if (isSgned) {
-				displayPage.tournamentsPage(workArea, menuArea);
+				displayPage.tournamentsPage(workArea);
 			}
 			else {
-				displayPage.notFound(workArea, menuArea);
+				displayPage.notFound(workArea);
 			}
 			break;
 		case '/':
 			if (isSgned) {
-				displayPage.dashboard(workArea, menuArea);
+				displayPage.dashboard(workArea);
 			}
 			else {
-				displayPage.landingPage(workArea, menuArea);
+				displayPage.landingPage(workArea);
 			}
 			break;
 		default:
 			utils.addToHistory(path);
-			displayPage.notFound(workArea, menuArea);
+			displayPage.notFound(workArea);
   	}
 }
 
