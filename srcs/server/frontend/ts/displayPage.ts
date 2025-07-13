@@ -56,7 +56,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	emailInput.placeholder = 'Enter your email';
 	emailInput.willValidate;
 	emailInput.required = true;
-	emailInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	emailInput.classList.add('flex-1', 'p-1', 'px-3', 'border', 'border-gray-300', 'rounded-sm', 'mt-2');
 
 	// Create an email input
 	const nameInput = document.createElement('input');
@@ -65,7 +65,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	nameInput.name = 'name';
 	nameInput.placeholder = 'Enter your display name';
 	nameInput.required = true;
-	nameInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	nameInput.classList.add('flex-1', 'p-1', 'px-3', 'border', 'border-gray-300', 'rounded-sm', 'mt-2');
 
 	const passwordContainer = document.createElement('div');
 	passwordContainer.classList.add('relative', 'w-60', 'm-4');
@@ -78,7 +78,7 @@ export function signUp(workArea: HTMLDivElement | null, menuArea: HTMLDivElement
 	passwordInput.placeholder = 'Enter your pasword';
 	passwordInput.minLength = 6;
 	passwordInput.required = true;
-	passwordInput.classList.add('w-full', 'pr-10', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	passwordInput.classList.add('flex-1', 'p-1', 'px-3', 'border', 'border-gray-300', 'rounded-sm');
 
 	// Create a toggle button
 	const toggleButton = document.createElement('button');
@@ -405,7 +405,7 @@ export function verify2FA(workArea: HTMLDivElement | null) {
 	codeInput.placeholder = 'Enter your code';
 	codeInput.willValidate;
 	codeInput.required = true;
-	codeInput.classList.add('w-60', 'm-4', 'border', 'border-blue-500', 'text-blue-700', 'rounded', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+	codeInput.classList.add('flex-1', 'p-1', 'px-3', 'border', 'border-gray-300', 'rounded-sm', 'mt-2');
 
 	const submitButton = document.createElement('button');
 	submitButton.type = 'submit';
