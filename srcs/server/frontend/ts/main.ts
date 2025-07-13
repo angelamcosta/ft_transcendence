@@ -114,6 +114,14 @@ async function render(path: string | null) {
 				displayPage.notFound(workArea);
 			}
 			break;
+		case '/game':
+			if (isSgned) {
+				displayPage.tournamentsPage(workArea);
+			}
+			else {
+				displayPage.notFound(workArea);
+			}
+			break;
 		case '/':
 			if (isSgned) {
 				displayPage.dashboard(workArea);
