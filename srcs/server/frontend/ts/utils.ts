@@ -190,77 +190,46 @@ export function sleep(ms: number): Promise<void> {
 
 export function showModal(message: string) {
 	const backdrop = document.createElement('div');
-	Object.assign(backdrop.style, {
-		position: 'fixed',
-		inset: '0',
-		background: 'rgba(0,0,0,0.5)',
-		display: 'flex',
-		justifyContent: 'center',
-		alignItems: 'center',
-		zIndex: '10000',
-	});
+	backdrop.className = `
+		fixed inset-0 z-[10000] flex items-center justify-center
+		bg-black/50
+	`;
 
 	const box = document.createElement('div');
-	Object.assign(box.style, {
-		background: '#fff',
-		borderRadius: '8px',
-		width: '320px',
-		maxWidth: '90%',
-		boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-		position: 'relative',
-		padding: '24px',
-		display: 'flex',
-		flexDirection: 'column',
-	});
+	box.className = `
+		bg-white rounded-xl w-80 max-w-[90%] shadow-xl
+		p-6 flex flex-col items-center
+	`;
 
 	const messageBox = document.createElement('div');
 	messageBox.textContent = message;
-	Object.assign(messageBox.style, {
-		background: '#f7f7f7',
-		padding: '16px',
-		borderRadius: '4px',
-		margin: '16px 0',
-		color: '#333',
-		fontSize: '1rem',
-		lineHeight: '1.4',
-		textAlign: 'center',
-	});
+	messageBox.className = `
+		bg-gray-100 text-gray-800 text-base text-center
+		p-4 rounded mb-4 w-full
+	`;
 
 	const hr = document.createElement('hr');
-	Object.assign(hr.style, {
-		border: 'none',
-		borderTop: '1px solid #ddd',
-		margin: '0 0 16px',
-	});
+	hr.className = `border-t border-gray-300 w-full mb-4`;
 
 	const footer = document.createElement('div');
-	Object.assign(footer.style, {
-		display: 'flex',
-		justifyContent: 'center',
-	});
+	footer.className = `flex justify-center gap-2`;
 
 	const okBtn = document.createElement('button');
 	okBtn.textContent = 'OK';
-	Object.assign(okBtn.style, {
-		padding: '4px 8px',
-		border: 'none',
-		borderRadius: '4px',
-		background: '#007bff',
-		color: '#fff',
-		cursor: 'pointer',
-		fontSize: '0.9rem',
-	});
+	okBtn.className = `
+		px-4 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700
+		rounded focus:outline-none
+	`;
 	okBtn.addEventListener('click', () => backdrop.remove());
 
 	footer.appendChild(okBtn);
-
 	box.append(messageBox, hr, footer);
 	backdrop.appendChild(box);
 	document.body.appendChild(backdrop);
 }
 
 export function addToHistory(path: string) {
-  if (location.pathname !== path) {
-    history.pushState({ path }, "", path);
-  }
+	if (location.pathname !== path) {
+		history.pushState({ path }, "", path);
+	}
 }

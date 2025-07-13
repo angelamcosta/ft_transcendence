@@ -288,6 +288,7 @@ export async function changePassword(e: Event) {
 
 		messageDiv.textContent = '';
 		utils.showModal('Password changed successfully!');
+		displayPage.dashboard(workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed changing password');
@@ -341,6 +342,7 @@ export async function changeDisplayName(e: Event) {
 		window.dispatchEvent(new CustomEvent('global-presence-updated'));
 		messageDiv.textContent = '';
 		utils.showModal('Display name changed successfully!');
+		displayPage.dashboard(workArea);
 	} catch (error) {
 		console.error('Error sending form data:', error);
 		alert('Failed changing display name');

@@ -282,7 +282,7 @@ export default async function userRoutes(fastify) {
 			await pipeline(data.file, fs.createWriteStream(uploadPath));
 			if (data.file.truncated) {
 				await fsp.unlink(uploadPath);
-				return reply.status(413).send({ error: 'Image exceeds 2MB limit.' });
+				return res.status(413).send({ message: 'Image exceeds 2MB limit.' });
 			}
 			const row = await db.get('SELECT avatar FROM users WHERE id = ?', [paramId]);
 			if (row && row.avatar && row.avatar !== 'default.png') {
