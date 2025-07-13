@@ -93,19 +93,21 @@ export async function initPong(
 		const controller = new AbortController()
 		const waitOverlay = document.createElement('div');
 		waitOverlay.className =
-  		'fixed top-0 left-0 w-screen h-screen flex flex-col items-center justify-center ' +
-  		'bg-black/70 text-white text-[1.2rem]';
+			'fixed top-0 left-0 w-screen h-screen flex flex-col items-center justify-center ' +
+			'bg-black/70 text-white text-[1.2rem]';
 
 		waitOverlay.innerHTML = `
 		<div class="flex flex-col items-center space-y-2">
-			<pre class="m-0 whitespace-pre font-mono text-center">
-		W/S &lt;-                              -&gt; Up/Down
-		Init CLI or press Skip to start immediately...
+		<div class="inline-block text-center font-mono">
+			<pre class="m-0 whitespace-pre">
+W/S <-            -> Up/Down
+The game is starting soon...
 			</pre>
-			<button id="btn-skip" class="font-mono text-white hover:underline">
-			Skip Waiting
+			<button id="btn-skip" class="text-white hover:underline mt-2">
+				Start now!
 			</button>
-		</div>`;
+		</div>
+	</div>`;
 
 		container.appendChild(waitOverlay);
 
@@ -119,7 +121,7 @@ export async function initPong(
 		cliBooted = await Promise.race([bootPromise, skipPromise]);
 		waitOverlay.remove();
 		if (cliBooted) {
-			await fetch(`/game/${matchId}/boot/disable`,{ method: 'POST', credentials: 'include'});
+			await fetch(`/game/${matchId}/boot/disable`, { method: 'POST', credentials: 'include' });
 			launchGame(false, matchId);
 			return;
 		}
