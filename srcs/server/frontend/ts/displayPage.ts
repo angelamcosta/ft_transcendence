@@ -1040,7 +1040,9 @@ export async function tournamentsPage(workArea: HTMLDivElement | null) {
 	utils.cleanDiv(workArea);
 
 	// Saves to browser history
-	utils.addToHistory("/play");
+	if (location.pathname !== '/game') {
+		utils.addToHistory("/play");
+	}
 
 	// Add nav menu
 	utils.initAppNav();
